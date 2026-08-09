@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#d9eef7" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23f28a12' d='M4 33 58 9 43 31l15 13L4 36l18-3Z'/%3E%3C/svg%3E" />
+    <meta
+      name="description"
+      content="An interactive cinematic flight experience featuring a stylized orange crop duster."
+    />
+    <title>Cropper Seven — Flight Experience</title>
+  </head>
+  <body>
+    <main id="app">
+      <canvas
+        id="game-canvas"
+        tabindex="0"
+        aria-label="Interactive 3D crop duster on an airport runway"
+      ></canvas>
+
+      <div id="cinematic-bars" aria-hidden="true">
+        <span></span>
+        <span></span>
+      </div>
+
+      <header id="brand-lockup" aria-label="Experience title">
+        <span class="brand-wing" aria-hidden="true"></span>
+        <div>
+          <p>Field Operations · Aircraft 07</p>
+          <h1>Cropper <em>Seven</em></h1>
+        </div>
+      </header>
+
+      <section id="flight-hud" aria-label="Flight status and telemetry">
+        <div id="phase-cluster">
+          <span class="eyebrow">Flight status</span>
+          <strong id="phase-label">RUNWAY READY</strong>
+          <span id="shot-label">Inspection camera</span>
+        </div>
+
+        <div id="telemetry" aria-label="Flight telemetry">
+          <div class="dial" data-unit="KTS">
+            <span>Airspeed</span>
+            <strong id="speed-value">000</strong>
+          </div>
+          <div class="dial" data-unit="FT">
+            <span>Altitude</span>
+            <strong id="altitude-value">000</strong>
+          </div>
+          <div class="dial rpm" data-unit="RPM">
+            <span>Engine</span>
+            <strong id="rpm-value">0000</strong>
+          </div>
+          <div id="throttle-dial" class="dial throttle manual-only" data-unit="%" hidden>
+            <span>Throttle</span>
+            <strong id="throttle-value">000</strong>
+          </div>
+        </div>
+      </section>
+
+      <section id="manual-flight-hud" class="manual-only" aria-label="Manual flight instruments" hidden>
+        <div id="pilot-alert" role="status" aria-live="polite" aria-atomic="true" hidden></div>
+
+        <div id="attitude-indicator" aria-hidden="true">
+          <span class="attitude-ring"></span>
+          <span id="attitude-horizon"><i></i></span>
+          <span class="attitude-aircraft"><i></i><i></i><b></b></span>
+        </div>
+
+        <div
+          id="pilot-controls"
+          aria-label="Keyboard pilot controls: W or Z increase throttle, S reduces throttle, down arrow pulls the nose up, up arrow pushes the nose down, left and right arrows bank, J and L control the rudder, Space brakes, and R resets"
+        >
+          <span class="eyebrow">
+            Controls
+            <small class="controls-running-copy" aria-hidden="true">Down pull &middot; Up push &middot; Left/right bank &middot; W/Z power</small>
+          </span>
+          <ul>
+            <li><span class="key-group"><kbd>W</kbd><kbd>Z</kbd><i>/</i><kbd>S</kbd></span><strong>Power + / -</strong></li>
+            <li class="flight-axes"><span class="key-group"><kbd>&darr;</kbd><kbd>&uarr;</kbd></span><strong>Pull / push</strong></li>
+            <li class="flight-axes"><span class="key-group"><kbd>&larr;</kbd><kbd>Q</kbd><kbd>A</kbd><i>/</i><kbd>&rarr;</kbd><kbd>D</kbd></span><strong>Bank left / right</strong></li>
+            <li><span class="key-group"><kbd>J</kbd><kbd>L</kbd></span><strong>Rudder</strong></li>
+            <li><span class="key-group"><kbd>Space</kbd></span><strong>Brake</strong></li>
+            <li><span class="key-group"><kbd>R</kbd></span><strong>Reset</strong></li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="inspection-hint" class="visible" aria-label="Inspection controls">
+        <span class="mouse-icon" aria-hidden="true"><i></i></span>
+        <div>
+          <strong>Inspect aircraft</strong>
+          <span>Drag to orbit · Scroll to zoom</span>
+        </div>
+      </section>
+
+      <section id="action-dock" aria-label="Flight controls">
+        <button id="flight-button" class="primary-action" type="button">
+          <span class="button-kicker">Manual flight</span>
+          <strong>Take controls</strong>
+          <i aria-hidden="true">→</i>
+        </button>
+        <button id="cinematic-button" class="secondary-action" type="button">
+          <span class="button-kicker">Autopilot showcase</span>
+          <strong>Watch cinematic</strong>
+        </button>
+        <div id="paint-control">
+          <button
+            id="paint-button"
+            class="icon-action"
+            type="button"
+            title="Change aircraft paint"
+            aria-label="Change aircraft paint"
+            aria-haspopup="dialog"
+            aria-controls="paint-panel"
+            aria-expanded="false"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12 3s6 6.4 6 11a6 6 0 0 1-12 0c0-4.6 6-11 6-11Z" />
+              <path d="M9 15.5c.5 1.3 1.5 2 3 2" />
+            </svg>
+            <span class="paint-button-color" aria-hidden="true"></span>
+          </button>
+
+          <div id="paint-panel" role="dialog" aria-labelledby="paint-panel-title" hidden>
+            <div class="paint-panel-heading">
+              <div>
+                <span>Hangar finish</span>
+                <strong id="paint-panel-title">Aircraft paint</strong>
+              </div>
+              <button id="paint-close-button" type="button" aria-label="Close aircraft paint">×</button>
+            </div>
+
+            <div id="paint-presets" aria-label="Aircraft paint presets">
+              <button class="paint-swatch" type="button" data-color="#ed870c" aria-label="Crop orange" aria-pressed="true" style="--swatch: #ed870c"></button>
+              <button class="paint-swatch" type="button" data-color="#c84732" aria-label="Racing red" aria-pressed="false" style="--swatch: #c84732"></button>
+              <button class="paint-swatch" type="button" data-color="#3479a8" aria-label="Aero blue" aria-pressed="false" style="--swatch: #3479a8"></button>
+              <button class="paint-swatch" type="button" data-color="#4c7650" aria-label="Forest green" aria-pressed="false" style="--swatch: #4c7650"></button>
+              <button class="paint-swatch" type="button" data-color="#c7952e" aria-label="Desert gold" aria-pressed="false" style="--swatch: #c7952e"></button>
+              <button class="paint-swatch" type="button" data-color="#3a4146" aria-label="Graphite" aria-pressed="false" style="--swatch: #3a4146"></button>
+            </div>
+
+            <label class="paint-custom-control" for="paint-color-input">
+              <span>
+                <small>Custom</small>
+                <output id="paint-color-value" for="paint-color-input">#ED870C</output>
+              </span>
+              <input id="paint-color-input" type="color" value="#ed870c" aria-label="Custom aircraft paint color" />
+            </label>
+          </div>
+        </div>
+        <button id="reset-button" class="icon-action" type="button" title="Reset aircraft" aria-label="Reset aircraft">
+          ↻
+        </button>
+        <button id="sound-button" class="icon-action" type="button" title="Mute sound" aria-label="Mute sound" aria-pressed="false">
+          <span class="sound-on">♪</span><span class="sound-off">×</span>
+        </button>
+        <button
+          id="fullscreen-button"
+          class="icon-action"
+          type="button"
+          title="Enter full screen (F)"
+          aria-label="Enter full screen"
+          aria-keyshortcuts="F"
+          aria-pressed="false"
+        >
+          <svg class="fullscreen-enter" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5" />
+          </svg>
+          <svg class="fullscreen-exit" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M9 4v5H4M20 9h-5V4M15 20v-5h5M4 15h5v5" />
+          </svg>
+        </button>
+      </section>
+
+      <section id="flight-progress" aria-label="Flight sequence progress">
+        <div class="progress-copy">
+          <span id="progress-time">00:00</span>
+          <strong id="progress-label">Preflight inspection</strong>
+          <span id="progress-total">00:48</span>
+        </div>
+        <div class="progress-track">
+          <i id="progress-fill"></i>
+          <ol aria-hidden="true">
+            <li data-step="parked"><span></span>Parked</li>
+            <li data-step="takeoff"><span></span>Takeoff</li>
+            <li data-step="flight"><span></span>Flight</li>
+            <li data-step="landing"><span></span>Landing</li>
+            <li data-step="complete"><span></span>Home</li>
+          </ol>
+        </div>
+      </section>
+
+      <div id="sequence-title" aria-live="polite">
+        <span id="sequence-number">01</span>
+        <div>
+          <p id="sequence-kicker">Departure</p>
+          <strong id="sequence-heading">Engine start</strong>
+        </div>
+      </div>
+
+      <div id="focus-vignette" aria-hidden="true"></div>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
