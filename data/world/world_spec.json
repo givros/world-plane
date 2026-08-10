@@ -1,0 +1,307 @@
+{
+  "schemaVersion": "1.0.0",
+  "specificationId": "planes3d-world-baseline",
+  "status": "descriptive-baseline-not-runtime-authority",
+  "capturedAt": "2026-08-10",
+  "sourceRevision": "917550d",
+  "sourceAuthority": {
+    "current": [
+      "src/world/RunwayWorld.ts",
+      "src/world/InfiniteBiomeWorld.ts",
+      "src/world/BiomeCatalog.ts",
+      "src/world/BiomeWorldArt.ts",
+      "src/world/UrbanBiomeArt.ts",
+      "src/assets/MaterialLibrary.ts",
+      "src/assets/AirplaneModel.ts",
+      "src/systems/ManualFlightController.ts",
+      "src/systems/FlightSequence.ts",
+      "src/game/Game.ts"
+    ],
+    "migrationPolicy": "Structured artifacts remain descriptive until a tested zero-delta adapter explicitly transfers authority for a selected region."
+  },
+  "engine": {
+    "name": "Three.js",
+    "version": "0.184.0",
+    "renderer": "WebGLRenderer",
+    "language": "TypeScript 6.0.3",
+    "buildTool": "Vite 8.0.13",
+    "physics": {
+      "kind": "custom-flight-and-height-contact",
+      "externalEngine": null,
+      "fixedStepSeconds": 0.008333333333333333
+    }
+  },
+  "coordinateSystem": {
+    "units": "meter-like-world-units",
+    "metersPerWorldUnit": 1,
+    "unitStatus": "inferred-from-existing-physics-dimensions-and-adopted-for-worldclaw",
+    "handedness": "right",
+    "upAxis": "+Y",
+    "runwayForwardAxis": "+Z",
+    "worldOrigin": [0, 0, 0],
+    "serializedPlacementSpace": "chunk-local",
+    "currentRuntimePlacementExceptions": [
+      {
+        "owner": "natural-biome-global-instanced-meshes",
+        "space": "world-absolute",
+        "adapterAction": "Convert chunk-local artifact transforms exactly once when populating the existing global pools."
+      }
+    ]
+  },
+  "visualDirection": {
+    "name": "stylized-sunlit-low-poly-flight-world",
+    "principles": [
+      "Readable silhouettes from aircraft distance",
+      "Warm countryside airfield as the origin anchor",
+      "Distinct high-contrast biome palettes",
+      "Low-poly faceted repeated props",
+      "Atmospheric fog and travelling horizon conceal streaming bounds",
+      "Shared materials and instancing over unique surface detail",
+      "Regional richness without changing operational geometry"
+    ],
+    "lighting": {
+      "toneMapping": "ACESFilmic",
+      "outputColorSpace": "sRGB",
+      "sunDirection": [-0.48, 0.58, -0.65],
+      "realtimeShadowUpdateAltitudeBelowMeters": 12
+    }
+  },
+  "worldScale": {
+    "topology": "unbounded-deterministic-procedural-plane-with-fixed-origin-overlay",
+    "chunk": {
+      "sizeMeters": 1280,
+      "centered": true,
+      "segmentsPerSide": 40,
+      "samplesPerSide": 41,
+      "cellSizeMeters": 32,
+      "triangleSplit": "three-plane-geometry-b-to-d-diagonal",
+      "sharedEdgeRule": "bit-identical-float32-samples"
+    },
+    "streaming": {
+      "owner": "InfiniteBiomeWorld",
+      "activeGrid": [3, 3],
+      "activeChunkCount": 9,
+      "loadedFootprintMeters": [3840, 3840],
+      "focus": "controlled-aircraft-position",
+      "slotPolicy": "fixed-recycled-pool",
+      "authoredCoveragePolicy": "authored-when-valid-otherwise-current-procedural-fallback"
+    },
+    "fogMetersAtGround": {
+      "near": 580,
+      "far": 1040
+    },
+    "biomeGenerator": {
+      "kind": "deterministic-jittered-voronoi",
+      "regionSpanChunks": 4,
+      "siteJitter": 0.72,
+      "terrainTransitionWidthMeters": 300,
+      "defaultSeedHex": "0x071c0a57",
+      "originChunkOverride": "sunlit-meadow"
+    }
+  },
+  "worldLayers": [
+    {
+      "id": "layer-fixed-airport",
+      "priority": 300,
+      "regionIds": ["region-airport-origin"],
+      "owner": "RunwayWorld",
+      "streamingVisibilityCondition": "chunk-0:0-loaded"
+    },
+    {
+      "id": "layer-airport-semantic-zones",
+      "priority": 400,
+      "owner": "RunwayWorld",
+      "regionGraphCollection": "zones"
+    },
+    {
+      "id": "layer-procedural-biomes",
+      "priority": 100,
+      "owner": "InfiniteBiomeWorld",
+      "regionIds": [
+        "region-biome-sunlit-meadow",
+        "region-biome-sahara-dunes",
+        "region-biome-alpine-peaks",
+        "region-biome-arctic-tundra",
+        "region-biome-volcanic-wastes",
+        "region-biome-emerald-marsh",
+        "region-biome-red-rock-canyon",
+        "region-biome-autumn-forest",
+        "region-biome-tropical-lagoon",
+        "region-biome-crystal-salt-flats",
+        "region-biome-metropolitan-core",
+        "region-biome-azure-harbor",
+        "region-biome-ironworks-district",
+        "region-biome-sunstone-citadel"
+      ]
+    }
+  ],
+  "terrain": {
+    "currentHeightSource": "deterministic-runtime-procedural-function",
+    "heightQuery": {
+      "api": "InfiniteBiomeWorld.getTerrainHeight(worldX, worldZ)",
+      "synchronous": true,
+      "totalForAllFiniteCoordinates": true,
+      "deterministic": true,
+      "allocationFreeNormalPath": true,
+      "matchesRenderedTriangles": true
+    },
+    "airportFlattening": {
+      "innerSquareHalfExtentMeters": 390,
+      "blendDistanceMeters": 170,
+      "flatTerrainElevationMeters": -0.245,
+      "propAndUrbanReserveHalfExtentMeters": 430
+    },
+    "authoredArtifactPolicy": {
+      "initialPilotChangesHeight": false,
+      "requiredSamples": [41, 41],
+      "finiteValuesOnly": true,
+      "sharedEdgeHashRequired": true,
+      "fallbackOnInvalid": "current-procedural-height"
+    }
+  },
+  "materials": {
+    "airfieldSetId": "material-set-airfield",
+    "biomeSetId": "material-set-biome-shared",
+    "urbanSetId": "material-set-urban-pooled",
+    "terrainColoring": "vertex-color-with-biome-and-slope-blend",
+    "streamedTextureCountBaseline": 0
+  },
+  "regionalPresentation": {
+    "semanticRasterMapCurrentlyExists": false,
+    "regionalAudio": "absent",
+    "regionalLighting": "absent",
+    "currentAudioOwnership": "global-gameplay-and-presentation",
+    "currentLightingOwnership": "fixed-airport-world-plus-biome-material-palette"
+  },
+  "access": {
+    "aircraft": {
+      "status": "implemented",
+      "runwayRegionId": "region-airport-origin",
+      "spawnId": "spawn-aircraft-primary",
+      "criticalRouteIds": [
+        "route-airport-manual-runway-departure",
+        "route-autopilot-showcase",
+        "route-manual-dynamic-terrain-landing",
+        "route-airport-manual-landing-relaunch",
+        "route-reset-to-airport"
+      ]
+    },
+    "roads": {
+      "status": "visual-only",
+      "drivableVehicleSystem": false
+    },
+    "water": {
+      "status": "visual-only",
+      "boatOrBuoyancySystem": false
+    },
+    "farming": {
+      "status": "decorative-only",
+      "gameplaySystem": false,
+      "visualZoneIds": [
+        "zone-airport-west-harvest-field",
+        "zone-airport-east-harvest-field"
+      ]
+    },
+    "onFoot": {
+      "status": "absent"
+    }
+  },
+  "systemStatus": {
+    "manualFlight": "implemented",
+    "autopilot": "implemented",
+    "inspectionCamera": "implemented",
+    "audioAndVfx": "implemented",
+    "buildingAndPropCollision": "absent",
+    "playerCharacter": "absent",
+    "groundVehicles": "absent",
+    "boats": "absent",
+    "farmingGameplay": "absent",
+    "multiplayer": "absent",
+    "networking": "absent",
+    "generalSpawnSystem": "absent",
+    "missionSystem": "absent",
+    "worldSave": "absent",
+    "persistence": {
+      "status": "aircraft-paint-only",
+      "storage": "localStorage",
+      "key": "cropper-seven-aircraft-paint"
+    }
+  },
+  "performanceBudgets": {
+    "scope": "whole-scene-parked-desktop",
+    "drawCallsMax": 260,
+    "trianglesMax": 180000,
+    "geometriesMax": 240,
+    "texturesMax": 16,
+    "streaming": {
+      "terrainSlots": 9,
+      "naturalInstancesPerFamilyMax": 2304,
+      "urbanBoxesPerSlotMax": 384,
+      "urbanRoofsPerSlotMax": 128,
+      "droppedInstancesMax": 0,
+      "resourceGrowthAcrossCycles": 0
+    },
+    "regressionPolicy": {
+      "matchedSustainedFrameTimePercentMax": 5,
+      "stableCounterIncreasePercentReviewThreshold": 10
+    }
+  },
+  "artifactRequirements": {
+    "runtimeNetworkCalls": false,
+    "runtimeAiCalls": false,
+    "schemaValidation": true,
+    "contentHashes": true,
+    "deterministicCompilerOutput": true,
+    "chunkLocalTransforms": true,
+    "knownAssetIdsOnly": true,
+    "capacityValidation": true,
+    "originReservationValidation": true,
+    "proceduralFallbackRequired": true,
+    "viteBaseSafePaths": [
+      "/",
+      "/world-plane/"
+    ]
+  },
+  "linkedSpecifications": {
+    "regionGraph": "data/world/region_graph.json",
+    "assetRegistry": "data/world/asset_registry.json",
+    "gameplayRoutes": "data/world/gameplay_routes.json",
+    "audit": "docs/worldclaw/current-world-audit.md",
+    "pilotPlan": "docs/worldclaw/pilot-region-plan.md",
+    "integrationPlan": "docs/worldclaw/integration-plan.md"
+  },
+  "pilot": {
+    "id": "pilot-chunk-near-airport-arctic-tundra",
+    "chunkId": "chunk:0:1",
+    "chunkCoordinates": [0, 1],
+    "chunkCenter": [0, 0, 1280],
+    "chunkBoundsXZ": [-640, 640, 640, 1920],
+    "regionId": "region-biome-arctic-tundra",
+    "changesTerrainInFirstSlice": false,
+    "generatesAssetsInFirstSlice": false,
+    "purpose": "Validate terrain serialization, four shared edges, registry identity, deterministic transforms, natural-prop instancing, off-airport landing, initial-window streaming, fallback, reset, and performance before composition changes."
+  },
+  "stage0BaselineRepairs": [
+    {
+      "id": "baseline-urban-shader",
+      "formerSeverity": "blocking",
+      "status": "resolved",
+      "summary": "Procedural urban MeshBasicMaterial shader injection referenced undefined objectNormal.",
+      "resolution": "The shader now derives a correctly transformed world normal from the always-declared vertex normal; an active urban chunk compiles without browser errors."
+    },
+    {
+      "id": "baseline-terrain-test-selector",
+      "formerSeverity": "blocking",
+      "status": "resolved",
+      "summary": "Terrain contact test could select urban meshes by shared chunkKey and contained obsolete 800 m chunk math.",
+      "resolution": "Terrain now has an explicit worldLayer identity, and the test uses the exported 1280 m chunk contract and requires exactly one terrain match."
+    },
+    {
+      "id": "baseline-ci-no-tests",
+      "formerSeverity": "release-risk",
+      "status": "resolved",
+      "summary": "Deployment workflow built and deployed without running the test suite.",
+      "resolution": "Deployment now gates upload on Node regressions, desktop Playwright, the production build, and a packaged /world-plane/ browser smoke."
+    }
+  ]
+}

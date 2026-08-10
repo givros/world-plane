@@ -1,0 +1,36 @@
+{
+  "passed": true,
+  "kind": "animation-fbx",
+  "source_blend": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase.blend",
+  "source_blend_sha256": "4530ebe1e8c642df5e47db9ad875c74fe995100561d385ef34a8efc38bd19572",
+  "asset": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\anim\\walk.fbx",
+  "asset_sha256": "cae19de9a84eb3c28f6d32636c8aad7332976ab8deb6a14363f4a32401d97c86",
+  "export_report": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\reports\\CharacterBase_export.json",
+  "export_report_sha256": "5e6e519e829b20d0d461685f747892445b3075eb3dd8fa2e9e19473a62c64789",
+  "action_name": "Walk",
+  "blender_version": "5.1.2",
+  "details": {
+    "objects": [
+      [
+        "CharacterRig",
+        "ARMATURE"
+      ]
+    ],
+    "action_name_requested": "Walk",
+    "action_name_imported": "CharacterRig|Walk",
+    "frame_range": [
+      1,
+      32
+    ],
+    "fps": 30.0,
+    "bone_count": 49,
+    "pose_matrix_max_delta": 6.22868537902832e-06,
+    "worst_pose_delta": {
+      "frame": 17,
+      "bone": "f_index.03.R",
+      "delta": 6.22868537902832e-06
+    },
+    "raw_texture_contract": {}
+  },
+  "failures": {}
+}

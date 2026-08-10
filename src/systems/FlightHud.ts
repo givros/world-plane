@@ -1,4 +1,5 @@
 import type { FlightMode } from './FlightSequence';
+import type { CharacterId } from '../entities/PlayableCharacter';
 
 export interface FlightHudSnapshot {
   mode: FlightMode;
@@ -21,6 +22,9 @@ export interface FlightHudSnapshot {
   running: boolean;
   cameraShot?: string;
   completed?: boolean;
+  controlMode?: 'inspection' | 'on-foot' | 'piloting' | 'autopilot';
+  interactionPrompt?: string;
+  hubVisible?: boolean;
 }
 
 type FlightHudOptions = {
@@ -30,6 +34,15 @@ type FlightHudOptions = {
   onMuteChange: (muted: boolean) => void;
   initialPaintColor: string;
   onPaintColorChange: (hexColor: string) => void;
+  initialCharacter?: CharacterId;
+  onCharacterChange?: (characterId: CharacterId) => void;
+};
+
+export type FlightHudDiagnostics = {
+  visible: boolean;
+  settingsOpen: boolean;
+  selectedCharacter: CharacterId;
+  aircraftPaint: string;
 };
 
 type PhaseCopy = {
@@ -55,32 +68,16 @@ const PHASE_COPY: Record<string, PhaseCopy> = {
     progress: 'Manual flight',
     step: 'flight',
   },
-  crashed: {
-    status: 'Aircraft stopped',
-    progress: 'Reset to runway',
-    step: 'complete',
-  },
   anticipation: {
     status: 'Cleared to depart',
     progress: 'Engine start',
     step: 'parked',
     title: ['01', 'Departure', 'Engine start'],
   },
-  spinup: {
-    status: 'Propeller live',
-    progress: 'Powering up',
-    step: 'takeoff',
-  },
   'prop-spin-up': {
     status: 'Propeller live',
     progress: 'Powering up',
     step: 'takeoff',
-  },
-  takeoff: {
-    status: 'Takeoff roll',
-    progress: 'Accelerating',
-    step: 'takeoff',
-    title: ['02', 'Runway 36', 'Takeoff roll'],
   },
   'takeoff-roll': {
     status: 'Takeoff roll',
@@ -104,12 +101,6 @@ const PHASE_COPY: Record<string, PhaseCopy> = {
     progress: 'Crosswind departure',
     step: 'flight',
   },
-  cruise: {
-    status: 'In flight',
-    progress: 'Valley circuit',
-    step: 'flight',
-    title: ['04', 'Field circuit', 'Open skies'],
-  },
   'scenic-outbound': {
     status: 'In flight',
     progress: 'Valley departure',
@@ -126,36 +117,15 @@ const PHASE_COPY: Record<string, PhaseCopy> = {
     progress: 'Downwind leg',
     step: 'flight',
   },
-  flight: {
-    status: 'In flight',
-    progress: 'Valley circuit',
-    step: 'flight',
-    title: ['04', 'Field circuit', 'Open skies'],
-  },
-  turn: {
-    status: 'Banking',
-    progress: 'Turning downwind',
-    step: 'flight',
-  },
   descent: {
     status: 'Descending',
     progress: 'Return to field',
     step: 'landing',
     title: ['05', 'Return', 'Landing approach'],
   },
-  approach: {
-    status: 'Final approach',
-    progress: 'Runway aligned',
-    step: 'landing',
-  },
   'final-approach': {
     status: 'Final approach',
     progress: 'Runway aligned',
-    step: 'landing',
-  },
-  flare: {
-    status: 'Landing flare',
-    progress: 'Hold it off',
     step: 'landing',
   },
   touchdown: {
@@ -186,12 +156,6 @@ const PHASE_COPY: Record<string, PhaseCopy> = {
     step: 'complete',
     title: ['07', 'Mission complete', 'A perfect landing'],
   },
-  completed: {
-    status: 'Safely home',
-    progress: 'Flight complete',
-    step: 'complete',
-    title: ['07', 'Mission complete', 'A perfect landing'],
-  },
 };
 
 export class FlightHud {
@@ -210,14 +174,21 @@ export class FlightHud {
   private readonly manualFlightHud = this.getElement('#manual-flight-hud');
   private readonly attitudeIndicator = this.getElement('#attitude-indicator');
   private readonly pilotAlert = this.getElement('#pilot-alert');
+  private readonly interactionPrompt = this.getElement('#interaction-prompt');
+  private readonly interactionPromptLabel = this.getElement('#interaction-prompt span');
+  private readonly controlsRunningCopy = this.getElement('.controls-running-copy');
+  private readonly pilotControls = this.getElement('#pilot-controls');
+  private readonly welcomeHub = this.getElement('#welcome-hub');
+  private readonly characterSelector = this.getElement('#character-selector');
+  private readonly characterChoices = Array.from(document.querySelectorAll<HTMLButtonElement>('.character-choice'));
   private readonly flightButton = this.getElement<HTMLButtonElement>('#flight-button');
   private readonly cinematicButton = this.getElement<HTMLButtonElement>('#cinematic-button');
+  private readonly settingsButton = this.getElement<HTMLButtonElement>('#settings-button');
+  private readonly settingsPanel = this.getElement<HTMLDialogElement>('#settings-panel');
+  private readonly settingsSoundInput = this.getElement<HTMLInputElement>('#settings-sound-input');
   private readonly resetButton = this.getElement<HTMLButtonElement>('#reset-button');
   private readonly soundButton = this.getElement<HTMLButtonElement>('#sound-button');
   private readonly paintControl = this.getElement('#paint-control');
-  private readonly paintButton = this.getElement<HTMLButtonElement>('#paint-button');
-  private readonly paintPanel = this.getElement('#paint-panel');
-  private readonly paintCloseButton = this.getElement<HTMLButtonElement>('#paint-close-button');
   private readonly paintPresets = this.getElement('#paint-presets');
   private readonly paintColorInput = this.getElement<HTMLInputElement>('#paint-color-input');
   private readonly paintColorValue = this.getElement<HTMLOutputElement>('#paint-color-value');
@@ -235,37 +206,51 @@ export class FlightHud {
   private previousPhase = '';
   private previousPilotAlert = '';
   private titleTimer = 0;
+  private selectedCharacter: CharacterId = 'pilot';
 
   constructor(private readonly options: FlightHudOptions) {
     this.flightButton.addEventListener('click', this.onStartManualClick);
     this.cinematicButton.addEventListener('click', this.onStartAutopilotClick);
+    this.settingsButton.addEventListener('click', this.onSettingsClick);
+    this.settingsSoundInput.addEventListener('change', this.onSettingsSoundChange);
+    this.characterSelector.addEventListener('click', this.onCharacterClick);
+    this.characterSelector.addEventListener('keydown', this.onCharacterKeyDown);
     this.resetButton.addEventListener('click', this.onResetClick);
     this.soundButton.addEventListener('click', this.onSoundClick);
-    this.paintButton.addEventListener('click', this.onPaintButtonClick);
-    this.paintCloseButton.addEventListener('click', this.onPaintCloseClick);
     this.paintPresets.addEventListener('click', this.onPaintPresetClick);
     this.paintPresets.addEventListener('keydown', this.onPaintPresetKeyDown);
     this.paintColorInput.addEventListener('input', this.onPaintColorInput);
-    document.addEventListener('pointerdown', this.onDocumentPointerDown);
-    window.addEventListener('keydown', this.onPaintPanelKeyDown);
     this.fullscreenButton.addEventListener('click', this.onFullscreenClick);
     document.addEventListener('fullscreenchange', this.onFullscreenChange);
     window.addEventListener('keydown', this.onFullscreenKeyDown);
     this.fullscreenButton.hidden = !document.fullscreenEnabled;
     this.setPaintColor(this.options.initialPaintColor);
+    this.setCharacter(this.options.initialCharacter ?? 'pilot');
     this.syncFullscreenButton();
   }
 
   update(snapshot: FlightHudSnapshot): void {
     const phaseKey = this.normalizePhase(snapshot.phase);
-    const copy = PHASE_COPY[phaseKey] ?? {
-      status: this.humanize(snapshot.phase),
-      progress: 'Flight in progress',
-      step: 'flight' as const,
-    };
+    const isManual = snapshot.mode === 'manual';
+    const isOnFoot = snapshot.controlMode === 'on-foot';
+    const copy = isOnFoot
+      ? {
+        status: 'On foot',
+        progress: 'Free ground exploration',
+        step: 'parked' as const,
+      }
+      : isManual && snapshot.running
+      ? this.manualSandboxCopy(snapshot)
+      : PHASE_COPY[phaseKey] ?? {
+        status: this.humanize(snapshot.phase),
+        progress: 'Flight in progress',
+        step: 'flight' as const,
+      };
 
     this.phaseLabel.textContent = copy.status.toUpperCase();
-    this.shotLabel.textContent = this.humanize(snapshot.cameraShot ?? 'Cinematic camera');
+    this.shotLabel.textContent = isOnFoot
+      ? 'Character camera'
+      : this.humanize(snapshot.cameraShot ?? 'Cinematic camera');
     this.progressLabel.textContent = copy.progress;
 
     const speedKnots = Math.max(0, snapshot.speed * 1.94384);
@@ -286,21 +271,29 @@ export class FlightHud {
     this.progressFill.style.width = `${(progress * 100).toFixed(2)}%`;
     this.updateSteps(copy.step);
 
-    const isManual = snapshot.mode === 'manual';
     const parked = phaseKey === 'parked';
     const complete = phaseKey === 'complete' || phaseKey === 'completed' || Boolean(snapshot.completed);
     const running = Boolean(snapshot.running);
-    const ended = complete || snapshot.crashed || phaseKey === 'crashed';
-    if (running && !this.paintPanel.hasAttribute('hidden')) this.setPaintPanelOpen(false, false);
+    const ended = !isManual && (complete || snapshot.crashed || phaseKey === 'crashed');
+    this.welcomeHub.hidden = !(snapshot.hubVisible ?? !running);
+    if (this.welcomeHub.hidden && this.settingsPanel.open) this.settingsPanel.close();
     this.manualFlightHud.hidden = !isManual;
-    this.throttleDial.hidden = !isManual;
-    this.inspectionHint.classList.toggle('visible', !isManual && (parked || complete));
+    this.throttleDial.hidden = !isManual || isOnFoot;
+    this.attitudeIndicator.hidden = isOnFoot;
+    this.inspectionHint.classList.toggle(
+      'visible',
+      (isManual && running) || (!isManual && (parked || complete)),
+    );
     document.body.classList.toggle('manual-flight', isManual);
+    document.body.classList.toggle('on-foot', isOnFoot);
     document.body.classList.toggle('cinematic', !isManual && running);
     document.body.classList.toggle('flight-running', running);
     document.body.classList.toggle('flight-parked', parked);
     document.body.classList.toggle('flight-ended', ended);
-    document.body.classList.toggle('flight-crashed', snapshot.crashed || phaseKey === 'crashed');
+    document.body.classList.toggle(
+      'flight-crashed',
+      !isManual && (snapshot.crashed || phaseKey === 'crashed'),
+    );
     document.body.classList.toggle('manual-preflight', isManual && parked && !running);
     // This compact chase-view cue follows the aircraft's screen-space bank.
     // A cockpit-mounted artificial horizon would counter-rotate, but that reads
@@ -310,6 +303,18 @@ export class FlightHud {
     this.attitudeIndicator.style.setProperty('--attitude-bank', `${bankDegrees.toFixed(2)}deg`);
     this.attitudeIndicator.style.setProperty('--attitude-pitch', `${pitchOffset.toFixed(2)}px`);
     this.updatePilotAlert(snapshot, phaseKey);
+    const interactionMessage = snapshot.interactionPrompt?.trim() ?? '';
+    this.interactionPrompt.hidden = interactionMessage.length === 0;
+    this.interactionPromptLabel.textContent = interactionMessage || 'Enter aircraft';
+    this.controlsRunningCopy.textContent = isOnFoot
+      ? 'WASD / ZQSD move · Shift run · Space jump · E enter'
+      : 'Down pull · Up push · Left/right bank · W/Z power';
+    this.pilotControls.setAttribute(
+      'aria-label',
+      isOnFoot
+        ? 'Character controls: W or Z moves forward, S moves backward, A or Q moves left, D moves right, Shift runs, Space jumps, E enters the aircraft, and R resets'
+        : 'Keyboard pilot controls: W or Z increase throttle, S reduces throttle, down arrow pulls the nose up, up arrow pushes the nose down, left and right arrows bank, J and L control the rudder, Space brakes, and R resets',
+    );
 
     this.flightButton.disabled = running;
     this.cinematicButton.disabled = running;
@@ -318,10 +323,10 @@ export class FlightHud {
     const cinematicKicker = this.cinematicButton.querySelector<HTMLElement>('.button-kicker');
     const cinematicLabel = this.cinematicButton.querySelector<HTMLElement>('strong');
     if (manualKicker) {
-      manualKicker.textContent = isManual && running ? 'You have the controls' : 'Manual flight';
+      manualKicker.textContent = isManual && running ? 'Open world active' : 'Open world';
     }
     if (manualLabel) {
-      manualLabel.textContent = isManual && running ? 'Pilot active' : snapshot.crashed ? 'Try again' : 'Take controls';
+      manualLabel.textContent = isManual && running ? 'Playing' : 'Play';
     }
     if (cinematicKicker) {
       cinematicKicker.textContent = !isManual && running ? 'Cinematic in progress' : 'Autopilot showcase';
@@ -343,7 +348,9 @@ export class FlightHud {
   private updatePilotAlert(snapshot: FlightHudSnapshot, phaseKey: string): void {
     let message = '';
     let tone = 'info';
-    if (snapshot.crashed || phaseKey === 'crashed') {
+    if (snapshot.controlMode === 'on-foot') {
+      message = 'ON FOOT — CONTROLS ACTIVE';
+    } else if (snapshot.mode !== 'manual' && (snapshot.crashed || phaseKey === 'crashed')) {
       message = 'AIRCRAFT STOPPED — PRESS R TO RESET';
       tone = 'danger';
     } else if (snapshot.stall) {
@@ -351,26 +358,17 @@ export class FlightHud {
       tone = 'danger';
     } else if (
       snapshot.onGround
-      && snapshot.speed >= 24
-      && snapshot.throttle >= 0.45
-      && snapshot.running
-    ) {
-      message = 'ROTATE — HOLD ↓';
-      tone = 'advisory';
-    } else if (
-      snapshot.onGround
       && snapshot.running
       && (phaseKey === 'touchdown' || phaseKey === 'rollout')
     ) {
-      message = 'LANDED — BRAKE OR ADD POWER';
+      message = 'GROUND CONTACT — CONTROLS ACTIVE';
       tone = 'info';
     } else if (
       snapshot.onGround
       && snapshot.running
       && phaseKey === 'manual-ready'
-      && (snapshot.airborneSeconds ?? 0) > 0
     ) {
-      message = 'READY — ADD POWER TO TAKE OFF AGAIN';
+      message = 'GROUND MODE — TAXI, STOP OR TAKE OFF';
       tone = 'info';
     } else if (!snapshot.onGround && snapshot.altitude < 4 && snapshot.verticalSpeed < -1.4) {
       message = 'FLARE — PULL ↓';
@@ -385,8 +383,24 @@ export class FlightHud {
     }
   }
 
+  private manualSandboxCopy(snapshot: FlightHudSnapshot): PhaseCopy {
+    if (!snapshot.onGround) {
+      return {
+        status: 'Free flight',
+        progress: 'Open world active',
+        step: 'flight',
+      };
+    }
+    return {
+      status: snapshot.speed > 0.3 ? 'Ground exploration' : 'Ground mode',
+      progress: 'Controls active',
+      step: 'parked',
+    };
+  }
+
   setMuted(muted: boolean): void {
     this.muted = muted;
+    this.settingsSoundInput.checked = !muted;
     this.soundButton.setAttribute('aria-pressed', String(muted));
     this.soundButton.setAttribute('aria-label', muted ? 'Enable sound' : 'Mute sound');
     this.soundButton.title = muted ? 'Enable sound' : 'Mute sound';
@@ -403,36 +417,77 @@ export class FlightHud {
     }
   }
 
+  setCharacter(characterId: CharacterId, notify = false): void {
+    this.selectedCharacter = characterId;
+    for (const choice of this.characterChoices) {
+      const selected = choice.dataset.character === characterId;
+      choice.setAttribute('aria-pressed', String(selected));
+      choice.tabIndex = selected ? 0 : -1;
+    }
+    if (notify) this.options.onCharacterChange?.(characterId);
+  }
+
+  getDiagnostics(): FlightHudDiagnostics {
+    return {
+      visible: !this.welcomeHub.hidden,
+      settingsOpen: this.settingsPanel.open,
+      selectedCharacter: this.selectedCharacter,
+      aircraftPaint: this.paintColorInput.value,
+    };
+  }
+
   dispose(): void {
     window.clearTimeout(this.titleTimer);
     this.flightButton.removeEventListener('click', this.onStartManualClick);
     this.cinematicButton.removeEventListener('click', this.onStartAutopilotClick);
+    this.settingsButton.removeEventListener('click', this.onSettingsClick);
+    this.settingsSoundInput.removeEventListener('change', this.onSettingsSoundChange);
+    this.characterSelector.removeEventListener('click', this.onCharacterClick);
+    this.characterSelector.removeEventListener('keydown', this.onCharacterKeyDown);
     this.resetButton.removeEventListener('click', this.onResetClick);
     this.soundButton.removeEventListener('click', this.onSoundClick);
-    this.paintButton.removeEventListener('click', this.onPaintButtonClick);
-    this.paintCloseButton.removeEventListener('click', this.onPaintCloseClick);
     this.paintPresets.removeEventListener('click', this.onPaintPresetClick);
     this.paintPresets.removeEventListener('keydown', this.onPaintPresetKeyDown);
     this.paintColorInput.removeEventListener('input', this.onPaintColorInput);
-    document.removeEventListener('pointerdown', this.onDocumentPointerDown);
-    window.removeEventListener('keydown', this.onPaintPanelKeyDown);
     this.fullscreenButton.removeEventListener('click', this.onFullscreenClick);
     document.removeEventListener('fullscreenchange', this.onFullscreenChange);
     window.removeEventListener('keydown', this.onFullscreenKeyDown);
   }
 
   private readonly onStartManualClick = () => {
-    this.setPaintPanelOpen(false, false);
     this.options.onStartManual();
   };
 
   private readonly onStartAutopilotClick = () => {
-    this.setPaintPanelOpen(false, false);
     this.options.onStartAutopilot();
   };
 
+  private readonly onSettingsClick = (): void => {
+    this.settingsPanel.showModal();
+  };
+
+  private readonly onSettingsSoundChange = (): void => {
+    this.setMuted(!this.settingsSoundInput.checked);
+    this.options.onMuteChange(this.muted);
+  };
+
+  private readonly onCharacterClick = (event: Event): void => {
+    const choice = (event.target as HTMLElement).closest<HTMLButtonElement>('.character-choice');
+    if (choice) this.setCharacter(choice.dataset.character as CharacterId, true);
+  };
+
+  private readonly onCharacterKeyDown = (event: KeyboardEvent): void => {
+    if (!event.code.startsWith('Arrow')) return;
+    const current = this.characterChoices.indexOf(event.target as HTMLButtonElement);
+    if (current < 0) return;
+    event.preventDefault();
+    const direction = event.code === 'ArrowLeft' || event.code === 'ArrowUp' ? -1 : 1;
+    const choice = this.characterChoices[(current + direction + this.characterChoices.length) % this.characterChoices.length];
+    this.setCharacter(choice.dataset.character as CharacterId, true);
+    choice.focus();
+  };
+
   private readonly onResetClick = () => {
-    this.setPaintPanelOpen(false, false);
     this.options.onReset();
   };
 
@@ -440,14 +495,6 @@ export class FlightHud {
     this.muted = !this.muted;
     this.setMuted(this.muted);
     this.options.onMuteChange(this.muted);
-  };
-
-  private readonly onPaintButtonClick = (): void => {
-    this.setPaintPanelOpen(this.paintPanel.hasAttribute('hidden'), true);
-  };
-
-  private readonly onPaintCloseClick = (): void => {
-    this.setPaintPanelOpen(false, true);
   };
 
   private readonly onPaintPresetClick = (event: Event): void => {
@@ -472,19 +519,6 @@ export class FlightHud {
     this.applyPaintColor(this.paintColorInput.value);
   };
 
-  private readonly onDocumentPointerDown = (event: PointerEvent): void => {
-    if (this.paintPanel.hasAttribute('hidden')) return;
-    const target = event.target as Node | null;
-    if (target && !this.paintControl.contains(target)) this.setPaintPanelOpen(false, false);
-  };
-
-  private readonly onPaintPanelKeyDown = (event: KeyboardEvent): void => {
-    if (event.code !== 'Escape' || this.paintPanel.hasAttribute('hidden')) return;
-    event.preventDefault();
-    event.stopPropagation();
-    this.setPaintPanelOpen(false, true);
-  };
-
   private readonly onFullscreenClick = (): void => {
     void this.toggleFullscreen();
   };
@@ -498,7 +532,6 @@ export class FlightHud {
       || event.altKey
     ) return;
 
-    if (!this.paintPanel.hasAttribute('hidden')) return;
     const target = event.target as HTMLElement | null;
     if (target?.matches('input, textarea, select') || target?.isContentEditable) return;
     event.preventDefault();
@@ -544,18 +577,6 @@ export class FlightHud {
     if (!normalized) return;
     this.setPaintColor(normalized);
     this.options.onPaintColorChange(normalized);
-  }
-
-  private setPaintPanelOpen(open: boolean, manageFocus: boolean): void {
-    this.paintPanel.hidden = !open;
-    this.paintButton.setAttribute('aria-expanded', String(open));
-    if (open) {
-      if (!manageFocus) return;
-      const selected = this.paintSwatches.find((swatch) => swatch.getAttribute('aria-pressed') === 'true');
-      window.requestAnimationFrame(() => (selected ?? this.paintColorInput).focus());
-    } else if (manageFocus) {
-      this.paintButton.focus({ preventScroll: true });
-    }
   }
 
   private normalizePaintColor(value: string): string | null {

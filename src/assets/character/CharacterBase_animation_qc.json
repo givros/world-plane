@@ -1,0 +1,176 @@
+{
+  "passed": true,
+  "visual_acceptance_required": true,
+  "selected_clips": [
+    "idle",
+    "walk",
+    "run",
+    "jump"
+  ],
+  "selected_actions": [
+    "Idle",
+    "Walk",
+    "Run",
+    "Jump"
+  ],
+  "working_blend": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase.blend",
+  "working_blend_sha256": "4530ebe1e8c642df5e47db9ad875c74fe995100561d385ef34a8efc38bd19572",
+  "actions": [
+    {
+      "action": "Idle",
+      "frame_start": 1,
+      "frame_end": 251,
+      "sample_frames": [
+        1,
+        64,
+        126,
+        188,
+        251
+      ],
+      "renders": [
+        {
+          "frame": 1,
+          "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_animation_qc\\idle\\idle_001.png",
+          "sha256": "d0615ef5157061333396bbc6e39b4b0d42485b410373d15bb63594824f07a4c5"
+        },
+        {
+          "frame": 64,
+          "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_animation_qc\\idle\\idle_064.png",
+          "sha256": "d7ba1f4c01eaca92af566f9bf6e3cb0b0030db77b0dfde9c5bb96acf8a2b6e80"
+        },
+        {
+          "frame": 126,
+          "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_animation_qc\\idle\\idle_126.png",
+          "sha256": "841d5caeb1ca1b5bccd6833a46a6e83696ba839ab6cbee914570dac02b65dddb"
+        },
+        {
+          "frame": 188,
+          "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_animation_qc\\idle\\idle_188.png",
+          "sha256": "c52338225e26f23d27f6b72d5884ba684a21da462f28cf8105692e5786630a54"
+        },
+        {
+          "frame": 251,
+          "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_animation_qc\\idle\\idle_251.png",
+          "sha256": "b94121e899ab66468a622ad2b4bc2d3d612fd0ff777c4e970daa8704cd519725"
+        }
+      ]
+    },
+    {
+      "action": "Walk",
+      "frame_start": 1,
+      "frame_end": 32,
+      "sample_frames": [
+        1,
+        9,
+        16,
+        24,
+        32
+      ],
+      "renders": [
+        {
+          "frame": 1,
+          "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_animation_qc\\walk\\walk_001.png",
+          "sha256": "28d983fa4544d4e7408a00e580e1160f0505ee089d5cf2d8fe3107298c089354"
+        },
+        {
+          "frame": 9,
+          "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_animation_qc\\walk\\walk_009.png",
+          "sha256": "7920f6f50b697f132dc92b3463f621dfd374c87614630b787c9e50534b130475"
+        },
+        {
+          "frame": 16,
+          "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_animation_qc\\walk\\walk_016.png",
+          "sha256": "b87c1a580d00f3647485e9c236f096a8c44c860ea2418b37c273ccea35cd42a9"
+        },
+        {
+          "frame": 24,
+          "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_animation_qc\\walk\\walk_024.png",
+          "sha256": "4faaddf0fa0369081d9eedfbb280d3f63d31d5d19950facb9d7b5384df973c2e"
+        },
+        {
+          "frame": 32,
+          "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_animation_qc\\walk\\walk_032.png",
+          "sha256": "e0061713f862fd9499c5cbc09c94e64768bd0829f38e8c0cd5760ff0899d63be"
+        }
+      ]
+    },
+    {
+      "action": "Run",
+      "frame_start": 1,
+      "frame_end": 20,
+      "sample_frames": [
+        1,
+        6,
+        10,
+        15,
+        20
+      ],
+      "renders": [
+        {
+          "frame": 1,
+          "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_animation_qc\\run\\run_001.png",
+          "sha256": "3fe2ef68bbc83b0bd3165233ddeff20f74274072b07107a6c87bd29e7e3730d3"
+        },
+        {
+          "frame": 6,
+          "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_animation_qc\\run\\run_006.png",
+          "sha256": "aff4baf45ff237d6da9d8fae6a465c28f3c651638845842d9043091ec68a263b"
+        },
+        {
+          "frame": 10,
+          "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_animation_qc\\run\\run_010.png",
+          "sha256": "753eebf6d6b4cab5ed3fdf06a8a7c85bd9f83e83a5d101b0cf3657a63a07c3b0"
+        },
+        {
+          "frame": 15,
+          "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_animation_qc\\run\\run_015.png",
+          "sha256": "994e2d5b56c7d6b38f94247d4bd3ebe0f2517cc5627694b184cf59bb89f7e4fd"
+        },
+        {
+          "frame": 20,
+          "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_animation_qc\\run\\run_020.png",
+          "sha256": "1d0761d4ec5638b03098dd4eb4a14c40948c375459683e29a52f22d18dbd791e"
+        }
+      ]
+    },
+    {
+      "action": "Jump",
+      "frame_start": 1,
+      "frame_end": 58,
+      "sample_frames": [
+        1,
+        15,
+        30,
+        44,
+        58
+      ],
+      "renders": [
+        {
+          "frame": 1,
+          "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_animation_qc\\jump\\jump_001.png",
+          "sha256": "5a6f0510943302507741a3c5054c0bb90c1e6b1fed3163706927b44e1c4cb6b4"
+        },
+        {
+          "frame": 15,
+          "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_animation_qc\\jump\\jump_015.png",
+          "sha256": "7b94555723d2f8e800a1fd0b8f268e45e5b3a5629ab2257d8e8d949cd34a1129"
+        },
+        {
+          "frame": 30,
+          "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_animation_qc\\jump\\jump_030.png",
+          "sha256": "e26f97c058c2dfb1f1b454e8a5a18a18470e2f8877610e8d95750da50023893d"
+        },
+        {
+          "frame": 44,
+          "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_animation_qc\\jump\\jump_044.png",
+          "sha256": "2469cadc981042b756dd3a320f3a0747d5a401eae6b2a21e2e6af4b848a9a726"
+        },
+        {
+          "frame": 58,
+          "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_animation_qc\\jump\\jump_058.png",
+          "sha256": "20a13922075366c1f74cc708da59e6d5fa9aa15e46844915388c75f8fb8d382e"
+        }
+      ]
+    }
+  ]
+}

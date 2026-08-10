@@ -1,0 +1,56 @@
+{
+  "status": "ok",
+  "preset": "pants_and_long_sleeve_shirt",
+  "working_blend": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase.blend",
+  "output_blend": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase.blend",
+  "updated_in_place": true,
+  "initialized_this_run": true,
+  "initial_revision_sha256": "CB35008D924D35BD4C3C2ACDAFDEE6551B0C738C1B0FF137FF067B617E050477",
+  "final_revision_sha256": "50A67F4C03439ECDE46AB302E7FC9EA528FB05D488F0113D26A40E45E437DE90",
+  "revision_chain": [
+    {
+      "garment": "preset_pants",
+      "before": "CB35008D924D35BD4C3C2ACDAFDEE6551B0C738C1B0FF137FF067B617E050477",
+      "after": "2F01F0CC2F018D3A14DE3245657966B2CD3D2F42A12474837CAD0770470529BD",
+      "replaced_existing": false
+    },
+    {
+      "garment": "preset_long_sleeve_shirt",
+      "before": "2F01F0CC2F018D3A14DE3245657966B2CD3D2F42A12474837CAD0770470529BD",
+      "after": "50A67F4C03439ECDE46AB302E7FC9EA528FB05D488F0113D26A40E45E437DE90",
+      "replaced_existing": false
+    }
+  ],
+  "output_glb": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase.glb",
+  "output_glb_sha256": "4BA178412E62001F808463DFBAD5F1E91EA77E4CC5319EF568B199AD7454431F",
+  "pants_report": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_pants_report.json",
+  "base_report": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_base_report.json",
+  "shirt_report": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_shirt_report.json",
+  "components_before": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_outfit_components_before.json",
+  "components_after": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_outfit_components_after.json",
+  "component_guard_report": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_outfit_component_comparison.json",
+  "component_guard_passed": true,
+  "allowed_component_scopes": [
+    "garment:preset_pants",
+    "garment:preset_long_sleeve_shirt"
+  ],
+  "build_report": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_shirt_report.json",
+  "blend_validation": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_validation.json",
+  "glb_validation": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_glb_validation.json",
+  "qc_dir": null,
+  "qc_images": [],
+  "blend_validation_passed": true,
+  "glb_validation_passed": true,
+  "objects": [
+    "CharacterBase",
+    "Pants",
+    "LongSleeveShirt",
+    "CharacterRig"
+  ],
+  "visibility_properties": [
+    "CharacterRig[\"show_pants\"]",
+    "CharacterRig[\"show_long_sleeve_shirt\"]"
+  ],
+  "layering": "LongSleeveShirt physically outside Pants at the waist",
+  "external_3d_services": []
+}

@@ -1,0 +1,12 @@
+{
+  "left": {
+    "chunkId": "chunk:-12:-5",
+    "edge": "north",
+    "samples": [0, 0.125, -1.5, 3.25, 4.75]
+  },
+  "right": {
+    "chunkId": "chunk:-12:-6",
+    "edge": "south",
+    "samples": [0, 0.125, -1.5, 3.25, 4.7501]
+  }
+}

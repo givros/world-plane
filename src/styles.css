@@ -270,6 +270,46 @@ button {
   color: #fff8e9;
 }
 
+#interaction-prompt {
+  position: absolute;
+  z-index: 7;
+  left: 50%;
+  bottom: 190px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 15px 9px 10px;
+  border: 1px solid rgba(255, 171, 37, 0.74);
+  border-radius: 999px;
+  color: #fff;
+  background: rgba(7, 17, 22, 0.86);
+  box-shadow: 0 12px 28px rgba(1, 8, 11, 0.3);
+  font-family: Bahnschrift, "Arial Narrow", sans-serif;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transform: translateX(-50%);
+  backdrop-filter: blur(12px);
+}
+
+#interaction-prompt[hidden] {
+  display: none !important;
+}
+
+#interaction-prompt kbd {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.52);
+  border-bottom-width: 2px;
+  border-radius: 6px;
+  color: #101a1e;
+  background: var(--orange-hot);
+  font: 900 14px/1 Bahnschrift, "Arial Narrow", sans-serif;
+}
+
 #attitude-indicator {
   --attitude-bank: 0deg;
   --attitude-pitch: 0px;
@@ -469,6 +509,23 @@ body.manual-flight.flight-running #flight-hud {
 }
 
 body.manual-flight.flight-running #phase-cluster {
+  display: none;
+}
+
+body.on-foot #flight-hud {
+  right: auto;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+body.on-foot #phase-cluster {
+  display: block;
+  width: 176px;
+  text-align: center;
+}
+
+body.on-foot #telemetry,
+body.on-foot #attitude-indicator {
   display: none;
 }
 
@@ -1233,4 +1290,616 @@ body.cinematic #inspection-hint {
   #inspection-hint { bottom: 96px; }
   #pilot-controls { bottom: 86px; }
   #pilot-alert { top: 88px; }
+}
+
+/* Ready room */
+#welcome-hub {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  overflow: hidden;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(5, 14, 18, 0.93) 0, rgba(7, 17, 21, 0.84) 38%, rgba(7, 17, 21, 0.18) 68%, transparent 84%),
+    linear-gradient(0deg, rgba(5, 13, 17, 0.24), transparent 38%);
+}
+
+#welcome-hub[hidden] {
+  display: none;
+}
+
+.hub-shell {
+  position: absolute;
+  top: 50%;
+  left: clamp(72px, 8vw, 130px);
+  width: min(590px, calc(100vw - 430px));
+  padding: 28px 30px 23px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-top: 2px solid var(--orange-hot);
+  color: #fff;
+  background:
+    linear-gradient(135deg, rgba(24, 37, 41, 0.94), rgba(7, 17, 21, 0.9)),
+    repeating-linear-gradient(90deg, transparent 0 22px, rgba(255, 255, 255, 0.02) 23px);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.34);
+  pointer-events: auto;
+  transform: translateY(-45%);
+  backdrop-filter: blur(18px);
+}
+
+.hub-shell::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 76px;
+  height: 5px;
+  background: var(--orange);
+  clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%);
+}
+
+.hub-rail {
+  position: absolute;
+  top: 50%;
+  left: clamp(27px, 3.6vw, 58px);
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  color: rgba(255, 255, 255, 0.62);
+  font-family: Bahnschrift, "Arial Narrow", sans-serif;
+  transform: translateY(-45%);
+}
+
+.hub-rail span {
+  color: var(--orange-hot);
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+}
+
+.hub-rail i {
+  width: 1px;
+  height: 242px;
+  background: linear-gradient(var(--orange), rgba(255, 255, 255, 0.1));
+}
+
+.hub-rail small {
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  writing-mode: vertical-rl;
+}
+
+.hub-heading {
+  margin-bottom: 21px;
+}
+
+.hub-heading p,
+.hub-heading h2,
+.hub-heading > span {
+  margin: 0;
+  font-family: Bahnschrift, "Arial Narrow", sans-serif;
+}
+
+.hub-heading p {
+  color: rgba(255, 184, 65, 0.9);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.hub-heading p span {
+  margin-left: 9px;
+  padding-left: 10px;
+  border-left: 1px solid rgba(255, 255, 255, 0.22);
+  color: rgba(255, 255, 255, 0.52);
+}
+
+.hub-heading h2 {
+  margin: 5px 0 2px;
+  font-size: clamp(28px, 3vw, 40px);
+  font-weight: 800;
+  letter-spacing: -0.035em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.hub-heading > span {
+  color: rgba(255, 255, 255, 0.54);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+}
+
+.hub-loadout {
+  display: grid;
+  grid-template-columns: 1.65fr 1fr;
+  gap: 13px;
+}
+
+#character-selector,
+.aircraft-selector {
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  margin: 0;
+}
+
+#character-selector legend,
+.aircraft-selector h3 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  padding: 0 0 7px;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: Bahnschrift, "Arial Narrow", sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+#character-selector legend b,
+.aircraft-selector h3 b {
+  color: var(--orange-hot);
+  font-size: 10px;
+}
+
+.character-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.character-choice {
+  position: relative;
+  display: grid;
+  min-width: 0;
+  height: 98px;
+  padding: 9px 7px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  color: rgba(255, 255, 255, 0.64);
+  background: rgba(255, 255, 255, 0.035);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 160ms ease, background 160ms ease, transform 160ms ease;
+}
+
+.character-choice:hover {
+  border-color: rgba(255, 255, 255, 0.36);
+  background: rgba(255, 255, 255, 0.075);
+  transform: translateY(-2px);
+}
+
+.character-choice[aria-pressed="true"] {
+  border-color: color-mix(in srgb, var(--suit) 65%, white);
+  color: #fff;
+  background: linear-gradient(rgba(255, 255, 255, 0.08), color-mix(in srgb, var(--suit) 18%, transparent));
+  box-shadow: inset 0 -2px var(--suit);
+}
+
+.character-choice[aria-pressed="true"]::after {
+  content: "✓";
+  position: absolute;
+  top: 6px;
+  right: 7px;
+  color: var(--orange-hot);
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.pilot-portrait {
+  position: relative;
+  display: block;
+  width: 36px;
+  height: 45px;
+  margin: 0 auto 4px;
+  overflow: hidden;
+}
+
+.pilot-portrait::before {
+  content: "";
+  position: absolute;
+  top: 2px;
+  left: 11px;
+  width: 15px;
+  height: 17px;
+  border-radius: 45% 45% 40% 40%;
+  background: #ad7856;
+  box-shadow: inset 0 5px #41352d;
+}
+
+.pilot-portrait::after {
+  content: "";
+  position: absolute;
+  right: 3px;
+  bottom: -7px;
+  left: 3px;
+  height: 31px;
+  border-radius: 12px 12px 2px 2px;
+  background: var(--suit);
+  clip-path: polygon(18% 0, 82% 0, 100% 100%, 0 100%);
+}
+
+.character-choice span,
+.character-choice strong,
+.character-choice small {
+  display: block;
+  min-width: 0;
+  font-family: Bahnschrift, "Arial Narrow", sans-serif;
+}
+
+.character-choice strong {
+  overflow: hidden;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+}
+
+.character-choice small {
+  margin-top: 1px;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 7px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+#welcome-hub #paint-control {
+  display: block;
+}
+
+.aircraft-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 62px 1fr;
+  grid-template-rows: 1fr;
+  width: 100%;
+  height: 58px;
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #fff;
+  background: rgba(255, 255, 255, 0.04);
+  text-align: left;
+}
+
+.aircraft-silhouette {
+  position: relative;
+  grid-row: 1;
+  align-self: center;
+  width: 54px;
+  height: 46px;
+  filter: drop-shadow(0 6px 7px rgba(0, 0, 0, 0.25));
+}
+
+.aircraft-silhouette::before {
+  content: "";
+  position: absolute;
+  top: 19px;
+  left: 2px;
+  width: 50px;
+  height: 9px;
+  background: var(--paint-color);
+  clip-path: polygon(0 30%, 43% 0, 56% 0, 100% 30%, 93% 74%, 57% 55%, 55% 100%, 45% 100%, 43% 55%, 7% 74%);
+}
+
+.aircraft-silhouette i {
+  position: absolute;
+  top: 3px;
+  left: 22px;
+  width: 10px;
+  height: 39px;
+  border-radius: 50% 50% 25% 25%;
+  background: linear-gradient(#fff7e7 0 25%, var(--paint-color) 27% 100%);
+}
+
+.aircraft-name {
+  align-self: end;
+}
+
+.aircraft-name small,
+.aircraft-name strong {
+  display: block;
+  font-family: Bahnschrift, "Arial Narrow", sans-serif;
+  text-transform: uppercase;
+}
+
+.aircraft-name small {
+  color: rgba(255, 255, 255, 0.44);
+  font-size: 7px;
+  letter-spacing: 0.13em;
+}
+
+.aircraft-name strong {
+  margin-top: 2px;
+  font-size: 13px;
+  letter-spacing: 0.035em;
+}
+
+#welcome-hub .paint-button-color {
+  top: 9px;
+  right: 9px;
+  bottom: auto;
+  width: 15px;
+  height: 15px;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+}
+
+#welcome-hub #paint-presets {
+  gap: 5px;
+  margin: 7px 0;
+}
+
+#welcome-hub .paint-custom-control {
+  min-height: 29px;
+  padding: 3px 5px 3px 8px;
+}
+
+#welcome-hub #paint-color-input {
+  width: 34px;
+  height: 23px;
+}
+
+.hub-menu {
+  display: grid;
+  grid-template-columns: 1.55fr 1fr;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+#welcome-hub .primary-action,
+#welcome-hub .secondary-action {
+  min-height: 54px;
+}
+
+#welcome-hub .primary-action {
+  width: 100%;
+}
+
+#welcome-hub .secondary-action {
+  width: 100%;
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.hub-cinematic {
+  display: block;
+  padding: 9px 0 0;
+  border: 0;
+  color: rgba(255, 255, 255, 0.48);
+  background: none;
+  cursor: pointer;
+  font-family: Bahnschrift, "Arial Narrow", sans-serif;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+}
+
+.hub-cinematic span {
+  display: inline-block;
+  margin-left: 5px;
+  color: var(--orange-hot);
+  transition: transform 160ms ease;
+}
+
+.hub-cinematic:hover {
+  color: #fff;
+}
+
+.hub-cinematic:hover span {
+  transform: translateX(4px);
+}
+
+.character-choice:focus-visible,
+.hub-cinematic:focus-visible,
+#settings-button:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+body:has(#welcome-hub:not([hidden])) #flight-hud,
+body:has(#welcome-hub:not([hidden])) #manual-flight-hud,
+body:has(#welcome-hub:not([hidden])) #inspection-hint,
+body:has(#welcome-hub:not([hidden])) #flight-progress,
+body:has(#welcome-hub:not([hidden])) #action-dock {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#settings-panel {
+  width: min(430px, calc(100vw - 80px));
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-top: 2px solid var(--orange-hot);
+  color: #fff;
+  background: rgba(7, 17, 21, 0.96);
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.58);
+  backdrop-filter: blur(20px);
+}
+
+#settings-panel::backdrop {
+  background: rgba(3, 9, 12, 0.68);
+  backdrop-filter: blur(5px);
+}
+
+.settings-card {
+  padding: 22px;
+}
+
+.settings-card header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.13);
+}
+
+.settings-card header span,
+.settings-card header h2 {
+  display: block;
+  margin: 0;
+  font-family: Bahnschrift, "Arial Narrow", sans-serif;
+  text-transform: uppercase;
+}
+
+.settings-card header span,
+.settings-reference > span {
+  color: rgba(255, 184, 65, 0.82);
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.settings-card header h2 {
+  margin-top: 2px;
+  font-size: 25px;
+  letter-spacing: 0.03em;
+}
+
+#settings-close-button {
+  width: 31px;
+  height: 31px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: rgba(255, 255, 255, 0.68);
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  font-size: 20px;
+}
+
+.settings-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 17px 0;
+  cursor: pointer;
+}
+
+.settings-toggle span,
+.settings-toggle strong,
+.settings-toggle small {
+  display: block;
+}
+
+.settings-toggle strong {
+  font-family: Bahnschrift, "Arial Narrow", sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.settings-toggle small {
+  margin-top: 3px;
+  color: rgba(255, 255, 255, 0.46);
+  font-size: 10px;
+}
+
+.settings-toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.settings-toggle i {
+  position: relative;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.26);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.settings-toggle i::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.74);
+  transition: transform 150ms ease, background 150ms ease;
+}
+
+.settings-toggle input:checked + i {
+  border-color: rgba(255, 171, 37, 0.78);
+  background: rgba(242, 138, 18, 0.24);
+}
+
+.settings-toggle input:checked + i::after {
+  background: var(--orange-hot);
+  transform: translateX(20px);
+}
+
+.settings-toggle input:focus-visible + i,
+#settings-close-button:focus-visible,
+.settings-done:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 3px;
+}
+
+.settings-reference {
+  padding: 14px;
+  border-left: 2px solid var(--orange);
+  background: rgba(255, 255, 255, 0.045);
+}
+
+.settings-reference p {
+  margin: 9px 0 0;
+  color: rgba(255, 255, 255, 0.56);
+  font-size: 10px;
+}
+
+.settings-reference kbd {
+  margin-right: 3px;
+  padding: 2px 5px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 3px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.07);
+  font: 700 8px/1 Bahnschrift, "Arial Narrow", sans-serif;
+}
+
+.settings-done {
+  width: 100%;
+  margin-top: 17px;
+  padding: 11px;
+  border: 0;
+  color: #1b1409;
+  background: linear-gradient(125deg, #ffb22d, #ef7f09);
+  cursor: pointer;
+  font-family: Bahnschrift, "Arial Narrow", sans-serif;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 1100px) {
+  .hub-shell {
+    left: 74px;
+    width: min(550px, calc(100vw - 350px));
+    padding: 23px 24px 20px;
+  }
+
+  .hub-rail { left: 30px; }
+}
+
+@media (max-height: 760px) {
+  .hub-shell {
+    padding-top: 20px;
+    padding-bottom: 18px;
+    transform: translateY(-43%);
+  }
+
+  .hub-heading { margin-bottom: 14px; }
+  .hub-heading h2 { font-size: 29px; }
+  .character-choice { height: 88px; }
+  .pilot-portrait { height: 37px; }
+  .hub-menu { margin-top: 13px; }
 }

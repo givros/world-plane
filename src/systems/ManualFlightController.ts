@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import type {
   AircraftMotionRig,
-  FlightPhase,
   FlightRunwayLayout,
   FlightSnapshot,
 } from './FlightSequence';
@@ -52,10 +51,11 @@ const LIFTOFF_CONTACT_GRACE_SECONDS = 0.22;
 const LIFTOFF_SUPPORT_CLEARANCE = 0.06;
 const TOUCHDOWN_CONTACT_GUARD_SECONDS = 0.2;
 const TERRAIN_SLOPE_SAMPLE_DISTANCE = 2.5;
-const MAX_LANDING_SLOPE = 8 * DEG_TO_RAD;
+const MAX_LANDING_SLOPE = 12 * DEG_TO_RAD;
 const MIN_SAFE_TOUCHDOWN_SPEED = 10;
 const MAX_SAFE_TOUCHDOWN_SPEED = 56;
 const MAX_SAFE_TOUCHDOWN_SINK_RATE = 5.2;
+const MAX_FLARED_TOUCHDOWN_SINK_RATE = 7.2;
 const MAX_SAFE_TOUCHDOWN_BANK = 18 * DEG_TO_RAD;
 const MIN_SAFE_TOUCHDOWN_PITCH = -5 * DEG_TO_RAD;
 const MAX_SAFE_TOUCHDOWN_PITCH = 16 * DEG_TO_RAD;
@@ -327,7 +327,7 @@ export class ManualFlightController {
     this.speed = THREE.MathUtils.clamp(
       this.speed + (engineForce - rollingResistance - braking) * delta,
       0,
-      58,
+      MAX_SPEED,
     );
 
     // The aircraft faces local +Z, so the pilot's visual right is local -X.
@@ -527,23 +527,26 @@ export class ManualFlightController {
   }
 
   private evaluateAirborneGroundContact(): void {
-    let wheelClearance = Number.POSITIVE_INFINITY;
+    let mainClearance = Number.POSITIVE_INFINITY;
     for (const wheel of this.mainWheels) {
-      wheelClearance = Math.min(
-        wheelClearance,
+      mainClearance = Math.min(
+        mainClearance,
         this.supportClearance(wheel.position, this.mainWheelRadius),
       );
     }
-    if (this.auxiliaryWheel) {
-      wheelClearance = Math.min(
-        wheelClearance,
-        this.supportClearance(this.auxiliaryWheel.position, this.auxiliaryWheelRadius),
-      );
-    }
+    const auxiliaryClearance = this.auxiliaryWheel
+      ? this.supportClearance(this.auxiliaryWheel.position, this.auxiliaryWheelRadius)
+      : Number.POSITIVE_INFINITY;
+    const wheelClearance = Math.min(mainClearance, auxiliaryClearance);
 
     if (wheelClearance <= 0) {
       if (this.verticalSpeed <= 0) {
-        this.handleGroundImpact(wheelClearance);
+        // The production taildragger's auxiliary wheel sits 5.39 m behind the
+        // mains. During an ordinary flare it therefore touches first while both
+        // main wheels are still visibly clear of the terrain. Treat that as a
+        // supported flared touchdown, not as a terminal one-point impact.
+        const auxiliaryTouchedFirst = auxiliaryClearance <= 0 && mainClearance > 0;
+        this.handleGroundImpact(wheelClearance, auxiliaryTouchedFirst);
         if (this.onGround || this.mutableState.crashed) return;
       } else {
         // A support can still be fractionally below the surface while the aircraft
@@ -562,11 +565,11 @@ export class ManualFlightController {
       // of a genuine prop strike. Wheel contact is evaluated first so an ordinary
       // gear-first touchdown cannot be misclassified by a same-step overlap.
       this.root.position.y -= propellerClearance;
-      this.crash('crashed');
+      this.recoverGroundContact();
     }
   }
 
-  private handleGroundImpact(wheelClearance: number): void {
+  private handleGroundImpact(wheelClearance: number, auxiliaryTouchedFirst: boolean): void {
     if (wheelClearance < 0) this.root.position.y -= wheelClearance;
     const lateralOffset = Math.abs(this.root.position.x - this.runway.centerlineX);
     const mainGearHalfTrack = this.mainWheels.reduce(
@@ -581,7 +584,10 @@ export class ManualFlightController {
       Math.abs(shortestAngle(this.yaw - Math.PI)),
     );
     const surfaceSlope = this.surfaceSlopeAt(this.root.position.x, this.root.position.z);
-    const safe = this.verticalSpeed >= -MAX_SAFE_TOUCHDOWN_SINK_RATE
+    const maximumSinkRate = auxiliaryTouchedFirst
+      ? MAX_FLARED_TOUCHDOWN_SINK_RATE
+      : MAX_SAFE_TOUCHDOWN_SINK_RATE;
+    const safe = this.verticalSpeed >= -maximumSinkRate
       && this.speed >= MIN_SAFE_TOUCHDOWN_SPEED
       && this.speed <= MAX_SAFE_TOUCHDOWN_SPEED
       && Math.abs(this.bank) <= MAX_SAFE_TOUCHDOWN_BANK
@@ -591,7 +597,7 @@ export class ManualFlightController {
       && (!insideRunway || runwayHeadingError <= 42 * DEG_TO_RAD);
 
     if (!safe) {
-      this.crash('crashed');
+      this.recoverGroundContact();
       return;
     }
 
@@ -600,39 +606,65 @@ export class ManualFlightController {
     this.touchdownSeconds = 0;
     this.speed *= Math.cos(this.flightPathAngle);
     this.flightPathAngle = 0;
-    this.angleOfAttack = this.pitch;
+    this.angleOfAttack = 0;
     this.stallSeverity = 0;
     this.verticalSpeed = 0;
-    this.pitchRate *= 0.18;
-    this.rollRate *= 0.16;
+    this.pitchRate = 0;
+    this.rollRate = 0;
     this.yawRate *= 0.35;
-    this.bank *= 0.28;
-    this.pitch = Math.max(0, this.pitch * 0.58);
+    this.bank = 0;
+    this.pitch = 0;
+    // All authored wheel bottoms are coplanar in the neutral ground pose. Settle
+    // to that pose immediately so a valid landing cannot remain balanced on the
+    // tail wheel with the main gear suspended in mid-air.
+    this.updateOrientation();
+    this.constrainGroundEnvelope();
     this.mutableState.phase = 'touchdown';
     this.mutableState.completed = false;
     this.mutableState.running = true;
     this.mutableState.inspectionAllowed = false;
   }
 
-  private crash(phase: FlightPhase): void {
-    this.active = false;
-    this.speed = 0;
-    this.throttle = 0;
+  private recoverGroundContact(): void {
+    const horizontalSpeed = this.speed * Math.max(0, Math.cos(this.flightPathAngle));
+    this.onGround = true;
+    this.landingRollActive = true;
+    this.liftoffSeconds = 0;
+    this.touchdownSeconds = 0;
+    this.speed = Number.isFinite(horizontalSpeed)
+      ? THREE.MathUtils.clamp(horizontalSpeed, 0, MAX_SPEED)
+      : 0;
     this.verticalSpeed = 0;
     this.pitchRate = 0;
     this.rollRate = 0;
     this.yawRate = 0;
+    this.flightPathAngle = 0;
+    this.angleOfAttack = 0;
     this.stallSeverity = 0;
-    this.root.position.y = Math.max(
-      this.groundReferenceYAt(this.root.position.x, this.root.position.z),
-      this.root.position.y,
+    if (!Number.isFinite(this.root.position.x)) this.root.position.x = this.runway.centerlineX;
+    if (!Number.isFinite(this.root.position.z)) this.root.position.z = this.runway.parkingZ;
+    const groundReferenceY = this.groundReferenceYAt(
+      this.root.position.x,
+      this.root.position.z,
     );
-    this.mutableState.phase = phase;
-    this.mutableState.crashed = true;
-    this.mutableState.running = false;
+    this.root.position.y = Math.max(
+      groundReferenceY,
+      Number.isFinite(this.root.position.y) ? this.root.position.y : groundReferenceY,
+    );
+    if (!Number.isFinite(this.yaw)) this.yaw = 0;
+    // A terrain impulse cancels the downward component, not the aircraft's
+    // forward momentum or the pilot's throttle setting. Preserve both, settle
+    // onto the authored support envelope, and let rolling resistance, drag and
+    // braking dissipate speed continuously in the normal 120 Hz ground model.
+    this.pitch = 0;
+    this.bank = 0;
+    this.updateOrientation();
+    this.constrainGroundEnvelope();
+    this.mutableState.phase = 'touchdown';
+    this.mutableState.crashed = false;
+    this.mutableState.running = true;
     this.mutableState.completed = false;
     this.mutableState.inspectionAllowed = false;
-    this.mutableState.propellerRpm = 0;
   }
 
   private updateOrientation(): void {

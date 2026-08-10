@@ -1,0 +1,320 @@
+{
+  "passed": true,
+  "working_blend": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase.blend",
+  "working_blend_sha256_before": "50a67f4c03439ecde46ab302e7fc9ea528fb05d488f0113d26a40e45e437de90",
+  "working_blend_sha256_after": "4530ebe1e8c642df5e47db9ad875c74fe995100561d385ef34a8efc38bd19572",
+  "saved_in_place": true,
+  "atomic_save": {
+    "strategy": "save-copy-and-os.replace",
+    "pending_removed": true,
+    "saved_in_place": true
+  },
+  "selected_clips": [
+    "idle",
+    "walk",
+    "run",
+    "jump"
+  ],
+  "selected_actions": [
+    "Idle",
+    "Walk",
+    "Run",
+    "Jump"
+  ],
+  "active_action_after_save": null,
+  "neutral_t_pose_delta": 0.0,
+  "bones": 49,
+  "fps": 30,
+  "animation_revision_before": 0,
+  "animation_revision_after": 1,
+  "animation_library_before": [],
+  "animation_library_after": [
+    "Idle",
+    "Walk",
+    "Run",
+    "Jump"
+  ],
+  "rig_rotation_mode_before": "XYZ",
+  "rig_rotation_mode_after": "QUATERNION",
+  "pose_rotation_modes_before": {
+    "pelvis": "QUATERNION",
+    "spine1": "QUATERNION",
+    "spine2": "QUATERNION",
+    "spine3": "QUATERNION",
+    "spine4": "QUATERNION",
+    "spine5": "QUATERNION",
+    "head": "QUATERNION",
+    "shoulder.L": "YXZ",
+    "upper_arm.L": "QUATERNION",
+    "forearm.L": "QUATERNION",
+    "hand.L": "QUATERNION",
+    "palm.01.L": "YXZ",
+    "f_index.01.L": "QUATERNION",
+    "f_index.02.L": "QUATERNION",
+    "f_index.03.L": "QUATERNION",
+    "thumb.01.L": "QUATERNION",
+    "thumb.02.L": "QUATERNION",
+    "thumb.03.L": "QUATERNION",
+    "palm.04.L": "YXZ",
+    "f_pinky.01.L": "QUATERNION",
+    "f_pinky.02.L": "QUATERNION",
+    "f_pinky.03.L": "QUATERNION",
+    "shoulder.R": "YXZ",
+    "upper_arm.R": "QUATERNION",
+    "forearm.R": "QUATERNION",
+    "hand.R": "QUATERNION",
+    "palm.01.R": "YXZ",
+    "f_index.01.R": "QUATERNION",
+    "f_index.02.R": "QUATERNION",
+    "f_index.03.R": "QUATERNION",
+    "thumb.01.R": "QUATERNION",
+    "thumb.02.R": "QUATERNION",
+    "thumb.03.R": "QUATERNION",
+    "palm.04.R": "YXZ",
+    "f_pinky.01.R": "QUATERNION",
+    "f_pinky.02.R": "QUATERNION",
+    "f_pinky.03.R": "QUATERNION",
+    "thigh.L": "QUATERNION",
+    "shin.L": "QUATERNION",
+    "foot.L": "QUATERNION",
+    "toe.L": "QUATERNION",
+    "thigh.R": "QUATERNION",
+    "shin.R": "QUATERNION",
+    "foot.R": "QUATERNION",
+    "toe.R": "QUATERNION",
+    "IKPole.L": "QUATERNION",
+    "IkTarget.L": "QUATERNION",
+    "IKPole.R": "QUATERNION",
+    "IkTarget.R": "QUATERNION"
+  },
+  "pose_rotation_modes_after": {
+    "pelvis": "QUATERNION",
+    "spine1": "QUATERNION",
+    "spine2": "QUATERNION",
+    "spine3": "QUATERNION",
+    "spine4": "QUATERNION",
+    "spine5": "QUATERNION",
+    "head": "QUATERNION",
+    "shoulder.L": "QUATERNION",
+    "upper_arm.L": "QUATERNION",
+    "forearm.L": "QUATERNION",
+    "hand.L": "QUATERNION",
+    "palm.01.L": "QUATERNION",
+    "f_index.01.L": "QUATERNION",
+    "f_index.02.L": "QUATERNION",
+    "f_index.03.L": "QUATERNION",
+    "thumb.01.L": "QUATERNION",
+    "thumb.02.L": "QUATERNION",
+    "thumb.03.L": "QUATERNION",
+    "palm.04.L": "QUATERNION",
+    "f_pinky.01.L": "QUATERNION",
+    "f_pinky.02.L": "QUATERNION",
+    "f_pinky.03.L": "QUATERNION",
+    "shoulder.R": "QUATERNION",
+    "upper_arm.R": "QUATERNION",
+    "forearm.R": "QUATERNION",
+    "hand.R": "QUATERNION",
+    "palm.01.R": "QUATERNION",
+    "f_index.01.R": "QUATERNION",
+    "f_index.02.R": "QUATERNION",
+    "f_index.03.R": "QUATERNION",
+    "thumb.01.R": "QUATERNION",
+    "thumb.02.R": "QUATERNION",
+    "thumb.03.R": "QUATERNION",
+    "palm.04.R": "QUATERNION",
+    "f_pinky.01.R": "QUATERNION",
+    "f_pinky.02.R": "QUATERNION",
+    "f_pinky.03.R": "QUATERNION",
+    "thigh.L": "QUATERNION",
+    "shin.L": "QUATERNION",
+    "foot.L": "QUATERNION",
+    "toe.L": "QUATERNION",
+    "thigh.R": "QUATERNION",
+    "shin.R": "QUATERNION",
+    "foot.R": "QUATERNION",
+    "toe.R": "QUATERNION",
+    "IKPole.L": "QUATERNION",
+    "IkTarget.L": "QUATERNION",
+    "IKPole.R": "QUATERNION",
+    "IkTarget.R": "QUATERNION"
+  },
+  "bone_behavior_changes": [
+    {
+      "bone": "foot.L",
+      "before": {
+        "use_inherit_rotation": false,
+        "inherit_scale": "FULL",
+        "use_local_location": true
+      },
+      "after": {
+        "use_inherit_rotation": true,
+        "inherit_scale": "FULL",
+        "use_local_location": true
+      }
+    },
+    {
+      "bone": "foot.R",
+      "before": {
+        "use_inherit_rotation": false,
+        "inherit_scale": "FULL",
+        "use_local_location": true
+      },
+      "after": {
+        "use_inherit_rotation": true,
+        "inherit_scale": "FULL",
+        "use_local_location": true
+      }
+    }
+  ],
+  "scene_integrity_before": {
+    "objects": [
+      [
+        "CharacterBase",
+        "MESH"
+      ],
+      [
+        "CharacterRig",
+        "ARMATURE"
+      ],
+      [
+        "LongSleeveShirt",
+        "MESH"
+      ],
+      [
+        "Pants",
+        "MESH"
+      ]
+    ],
+    "meshes": {
+      "CharacterBase": "20053e4d7ea355413a50dea99aa9e3291bdd71cf2937ee8c281028c5187e6250",
+      "LongSleeveShirt": "e80e62ac7d24418064e5535811a1c9eb4d9128b867ce8c07865ae83d697b5b47",
+      "Pants": "a95b1884a21b7826ba74840fb9c2fe5d3dba063520b13c73f4be6892c881637c"
+    },
+    "armature_rest": "e60ff1ca4f7acf254831687aa767ee5b7e11a85d4b4672a9ad61057f70666ef7"
+  },
+  "scene_integrity_after": {
+    "objects": [
+      [
+        "CharacterBase",
+        "MESH"
+      ],
+      [
+        "CharacterRig",
+        "ARMATURE"
+      ],
+      [
+        "LongSleeveShirt",
+        "MESH"
+      ],
+      [
+        "Pants",
+        "MESH"
+      ]
+    ],
+    "meshes": {
+      "CharacterBase": "20053e4d7ea355413a50dea99aa9e3291bdd71cf2937ee8c281028c5187e6250",
+      "LongSleeveShirt": "e80e62ac7d24418064e5535811a1c9eb4d9128b867ce8c07865ae83d697b5b47",
+      "Pants": "a95b1884a21b7826ba74840fb9c2fe5d3dba063520b13c73f4be6892c881637c"
+    },
+    "armature_rest": "e60ff1ca4f7acf254831687aa767ee5b7e11a85d4b4672a9ad61057f70666ef7"
+  },
+  "core_integrity_before": {
+    "objects": [
+      [
+        "CharacterBase",
+        "MESH"
+      ],
+      [
+        "CharacterRig",
+        "ARMATURE"
+      ],
+      [
+        "LongSleeveShirt",
+        "MESH"
+      ],
+      [
+        "Pants",
+        "MESH"
+      ]
+    ],
+    "meshes": {
+      "CharacterBase": "20053e4d7ea355413a50dea99aa9e3291bdd71cf2937ee8c281028c5187e6250",
+      "LongSleeveShirt": "e80e62ac7d24418064e5535811a1c9eb4d9128b867ce8c07865ae83d697b5b47",
+      "Pants": "a95b1884a21b7826ba74840fb9c2fe5d3dba063520b13c73f4be6892c881637c"
+    },
+    "armature_rest": "e60ff1ca4f7acf254831687aa767ee5b7e11a85d4b4672a9ad61057f70666ef7"
+  },
+  "core_integrity_after": {
+    "objects": [
+      [
+        "CharacterBase",
+        "MESH"
+      ],
+      [
+        "CharacterRig",
+        "ARMATURE"
+      ],
+      [
+        "LongSleeveShirt",
+        "MESH"
+      ],
+      [
+        "Pants",
+        "MESH"
+      ]
+    ],
+    "meshes": {
+      "CharacterBase": "20053e4d7ea355413a50dea99aa9e3291bdd71cf2937ee8c281028c5187e6250",
+      "LongSleeveShirt": "e80e62ac7d24418064e5535811a1c9eb4d9128b867ce8c07865ae83d697b5b47",
+      "Pants": "a95b1884a21b7826ba74840fb9c2fe5d3dba063520b13c73f4be6892c881637c"
+    },
+    "armature_rest": "e60ff1ca4f7acf254831687aa767ee5b7e11a85d4b4672a9ad61057f70666ef7"
+  },
+  "action_signatures_before": {},
+  "action_signatures_after": {
+    "Idle": "c411c3fd34a040ea9192aebf7c3e134bb9607178ac19f7f2a6e25891bc2ee8d2",
+    "Jump": "335913ad190abaabd7f1dcf533ebee9c5f591f6a0ffc93f11e8c0a3790bafed1",
+    "Run": "e17ded658484bb1a947d3d59f8cd555c2e8e5e30c7dfd9f5ed0ad4431936e9d0",
+    "Walk": "45839e5713621b8f9b151c6043e74ba44105501841095885ffce746afd5b4ca3"
+  },
+  "protected_action_signatures_before": {},
+  "protected_action_signatures_after": {},
+  "actions": [
+    {
+      "action": "Idle",
+      "source_fbx": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\anim\\idle.fbx",
+      "source_fbx_sha256": "502883ff97e83724e25f14372177b5407d8120cbb2a0acc5a7bda0b4f5a21376",
+      "frame_start": 1,
+      "frame_end": 251,
+      "rest_matrix_max_delta": 1.4472752809524536e-05,
+      "constraints_disabled_by_action": 7
+    },
+    {
+      "action": "Walk",
+      "source_fbx": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\anim\\walk.fbx",
+      "source_fbx_sha256": "202c6c7e2e640193f61754516f13e258123dfd57d171fa8b98fd495913e42ef2",
+      "frame_start": 1,
+      "frame_end": 32,
+      "rest_matrix_max_delta": 1.4472752809524536e-05,
+      "constraints_disabled_by_action": 7
+    },
+    {
+      "action": "Run",
+      "source_fbx": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\anim\\run.fbx",
+      "source_fbx_sha256": "8238a6dd1892b8cc5328f623fcbf9773e75aeedee29db09b2e96a09723207088",
+      "frame_start": 1,
+      "frame_end": 20,
+      "rest_matrix_max_delta": 1.4472752809524536e-05,
+      "constraints_disabled_by_action": 7
+    },
+    {
+      "action": "Jump",
+      "source_fbx": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\anim\\jump.fbx",
+      "source_fbx_sha256": "967c37db7cfd69d382b64f382dc2f0ff012bf930feea36f6d3c0e756c95cc737",
+      "frame_start": 1,
+      "frame_end": 58,
+      "rest_matrix_max_delta": 1.4472752809524536e-05,
+      "constraints_disabled_by_action": 7
+    }
+  ]
+}

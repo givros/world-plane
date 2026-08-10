@@ -93,11 +93,6 @@ export class AudioSystem {
     this.cue(420, 710, 0.18);
   }
 
-  /** Kept as a lightweight compatibility cue for scaffold-era call sites. */
-  pickup(index = 0): void {
-    this.cue(360 + index * 12, 640 + index * 16, 0.16);
-  }
-
   reset(): void {
     this.cue(520, 300, 0.12);
     this.previousPhase = 'parked';

@@ -1,0 +1,539 @@
+{
+  "schemaVersion": "1.0.0",
+  "status": "descriptive-baseline-not-runtime-authority",
+  "sourceRevision": "917550d",
+  "classificationValues": [
+    "existing-asset",
+    "repeated-environmental-prototype",
+    "hero-asset",
+    "interactive-asset"
+  ],
+  "registryPolicies": {
+    "unknownIdsRejected": true,
+    "generatedAssetMetadataRequired": [
+      "source",
+      "ownershipOrLicense",
+      "contentHash",
+      "unitScale",
+      "pivotPolicy",
+      "materialPolicy",
+      "lodPolicy",
+      "collisionPolicy"
+    ],
+    "repeatedAssetsMustUseInstancing": true,
+    "interactiveAssetsMustHaveIndependentMovingParts": true,
+    "worldCollisionMustBeExplicit": true,
+    "runtimeGenerationServiceUrlsAllowed": false,
+    "runtimeGenerationCredentialsAllowed": false
+  },
+  "materialSets": [
+    {
+      "id": "material-set-airfield",
+      "source": "src/assets/MaterialLibrary.ts#createAirportMaterialLibrary",
+      "kind": "procedural-shared-material-library",
+      "namedRoleCount": 34,
+      "generatedDataTextureCount": 4,
+      "externalTextureCount": 0,
+      "roles": [
+        "asphalt",
+        "concrete",
+        "runway-paint",
+        "taxi-paint",
+        "light-grass",
+        "deep-grass",
+        "harvest-field",
+        "earth",
+        "foliage",
+        "trunk",
+        "hangar-surfaces",
+        "metals",
+        "glass",
+        "wood",
+        "windsock-fabric",
+        "hay",
+        "cloud",
+        "runway-lights"
+      ]
+    },
+    {
+      "id": "material-set-biome-shared",
+      "source": "src/world/BiomeWorldArt.ts#createBiomePropResources",
+      "kind": "procedural-shared-material-library",
+      "materialCount": 8,
+      "externalTextureCount": 0,
+      "roles": [
+        "bark-and-deadwood",
+        "foliage",
+        "ground-cover",
+        "mineral",
+        "water-and-ice",
+        "snow-and-salt",
+        "crystal",
+        "glow"
+      ]
+    },
+    {
+      "id": "material-set-urban-pooled",
+      "source": "src/world/UrbanBiomeArt.ts#createUrbanBiomeResources",
+      "kind": "procedural-pooled-materials",
+      "externalTextureCount": 0
+    }
+  ],
+  "assets": [
+    {
+      "id": "existing-airport-field-layer",
+      "classification": "existing-asset",
+      "status": "existing",
+      "sourceKind": "procedural-typescript",
+      "source": "src/world/RunwayWorld.ts#createFieldLayer",
+      "runtimeOwner": "RunwayWorld",
+      "editableAsIndependentFile": false,
+      "collision": "none"
+    },
+    {
+      "id": "existing-runway-18-36",
+      "classification": "existing-asset",
+      "status": "existing-gameplay-critical",
+      "sourceKind": "procedural-typescript",
+      "source": "src/world/RunwayWorld.ts#createRunwaySurface",
+      "runtimeOwner": "RunwayWorld",
+      "collision": "game-height-override",
+      "preserveTransform": true
+    },
+    {
+      "id": "existing-airport-taxiway-apron",
+      "classification": "existing-asset",
+      "status": "existing-visual-only",
+      "sourceKind": "procedural-typescript",
+      "source": "src/world/RunwayWorld.ts#createTaxiway",
+      "runtimeOwner": "RunwayWorld",
+      "collision": "none"
+    },
+    {
+      "id": "existing-airport-lighting",
+      "classification": "existing-asset",
+      "status": "existing",
+      "sourceKind": "procedural-typescript",
+      "source": "src/world/RunwayWorld.ts#createRunwayLights",
+      "runtimeOwner": "RunwayWorld",
+      "collision": "none"
+    },
+    {
+      "id": "existing-airport-fence",
+      "classification": "existing-asset",
+      "status": "existing-visual-only",
+      "sourceKind": "procedural-typescript",
+      "source": "src/world/RunwayWorld.ts#createFence",
+      "runtimeOwner": "RunwayWorld",
+      "collision": "none"
+    },
+    {
+      "id": "existing-airport-windsock",
+      "classification": "existing-asset",
+      "status": "existing-animated-visual",
+      "sourceKind": "procedural-typescript-hierarchy",
+      "source": "src/world/RunwayWorld.ts#createWindsock",
+      "runtimeOwner": "RunwayWorld",
+      "interaction": "none",
+      "collision": "none"
+    },
+    {
+      "id": "existing-airport-sky-clouds",
+      "classification": "existing-asset",
+      "status": "existing",
+      "sourceKind": "procedural-typescript",
+      "source": "src/world/RunwayWorld.ts#createSkyDome/createCloudSystem",
+      "runtimeOwner": "RunwayWorld",
+      "collision": "none"
+    },
+    {
+      "id": "existing-airport-light-rig",
+      "classification": "existing-asset",
+      "status": "existing",
+      "sourceKind": "procedural-typescript",
+      "source": "src/world/RunwayWorld.ts#createLightingRig",
+      "runtimeOwner": "RunwayWorld"
+    },
+    {
+      "id": "existing-streamed-terrain",
+      "classification": "existing-asset",
+      "status": "existing-gameplay-critical",
+      "sourceKind": "pooled-procedural-typescript",
+      "source": "src/world/InfiniteBiomeWorld.ts#createChunkSlot/writeTerrainSlot",
+      "runtimeOwner": "InfiniteBiomeWorld",
+      "slotCount": 9,
+      "geometryPerSlot": "PlaneGeometry-40-by-40",
+      "collision": "exact-shared-height-grid"
+    },
+    {
+      "id": "existing-biome-horizon",
+      "classification": "existing-asset",
+      "status": "existing",
+      "sourceKind": "procedural-typescript",
+      "source": "src/world/BiomeWorldArt.ts#createBiomeHorizonSystem",
+      "runtimeOwner": "InfiniteBiomeWorld",
+      "collision": "none"
+    },
+    {
+      "id": "existing-urban-box-pool",
+      "classification": "repeated-environmental-prototype",
+      "status": "existing",
+      "sourceKind": "procedural-instanced-geometry",
+      "source": "src/world/UrbanBiomeArt.ts#createUrbanBiomeResources",
+      "runtimeOwner": "InfiniteBiomeWorld",
+      "capacityPerChunkSlot": 384,
+      "collision": "none"
+    },
+    {
+      "id": "existing-urban-roof-pool",
+      "classification": "repeated-environmental-prototype",
+      "status": "existing",
+      "sourceKind": "procedural-instanced-geometry",
+      "source": "src/world/UrbanBiomeArt.ts#createUrbanBiomeResources",
+      "runtimeOwner": "InfiniteBiomeWorld",
+      "capacityPerChunkSlot": 128,
+      "collision": "none"
+    },
+    {
+      "id": "existing-airplane-reference-image",
+      "classification": "existing-asset",
+      "status": "reference-only-unused-at-runtime",
+      "sourceKind": "png",
+      "source": "public/reference/airplane-reference.png",
+      "dimensionsPixels": [1440, 1080],
+      "bytes": 790022,
+      "sha256": "36fae9b6efb4791cc4e6ef5de3fc2892a7cf994e77f9162159de2d4c34661480",
+      "ownershipOrLicense": "unknown",
+      "runtimeUsed": false
+    },
+    {
+      "id": "proto-biome-trunk",
+      "classification": "repeated-environmental-prototype",
+      "status": "existing",
+      "sourceKind": "procedural-instanced-geometry",
+      "source": "src/world/BiomeWorldArt.ts",
+      "runtimeFamily": "trunk",
+      "sharedActiveCapacity": 2304
+    },
+    {
+      "id": "proto-biome-canopy",
+      "classification": "repeated-environmental-prototype",
+      "status": "existing",
+      "sourceKind": "procedural-instanced-geometry",
+      "source": "src/world/BiomeWorldArt.ts",
+      "runtimeFamily": "canopy",
+      "sharedActiveCapacity": 2304
+    },
+    {
+      "id": "proto-biome-conifer",
+      "classification": "repeated-environmental-prototype",
+      "status": "existing",
+      "sourceKind": "procedural-instanced-geometry",
+      "source": "src/world/BiomeWorldArt.ts",
+      "runtimeFamily": "conifer",
+      "sharedActiveCapacity": 2304
+    },
+    {
+      "id": "proto-biome-frond",
+      "classification": "repeated-environmental-prototype",
+      "status": "existing",
+      "sourceKind": "procedural-instanced-geometry",
+      "source": "src/world/BiomeWorldArt.ts",
+      "runtimeFamily": "frond",
+      "sharedActiveCapacity": 2304
+    },
+    {
+      "id": "proto-biome-ground-cover",
+      "classification": "repeated-environmental-prototype",
+      "status": "existing",
+      "sourceKind": "procedural-instanced-geometry",
+      "source": "src/world/BiomeWorldArt.ts",
+      "runtimeFamily": "groundCover",
+      "sharedActiveCapacity": 2304
+    },
+    {
+      "id": "proto-biome-reed",
+      "classification": "repeated-environmental-prototype",
+      "status": "existing",
+      "sourceKind": "procedural-instanced-geometry",
+      "source": "src/world/BiomeWorldArt.ts",
+      "runtimeFamily": "reed",
+      "sharedActiveCapacity": 2304
+    },
+    {
+      "id": "proto-biome-cactus",
+      "classification": "repeated-environmental-prototype",
+      "status": "existing",
+      "sourceKind": "procedural-instanced-geometry",
+      "source": "src/world/BiomeWorldArt.ts",
+      "runtimeFamily": "cactus",
+      "sharedActiveCapacity": 2304
+    },
+    {
+      "id": "proto-biome-deadwood",
+      "classification": "repeated-environmental-prototype",
+      "status": "existing",
+      "sourceKind": "procedural-instanced-geometry",
+      "source": "src/world/BiomeWorldArt.ts",
+      "runtimeFamily": "deadwood",
+      "sharedActiveCapacity": 2304
+    },
+    {
+      "id": "proto-biome-rock",
+      "classification": "repeated-environmental-prototype",
+      "status": "existing",
+      "sourceKind": "procedural-instanced-geometry",
+      "source": "src/world/BiomeWorldArt.ts",
+      "runtimeFamily": "rock",
+      "sharedActiveCapacity": 2304
+    },
+    {
+      "id": "proto-biome-mesa",
+      "classification": "repeated-environmental-prototype",
+      "status": "existing",
+      "sourceKind": "procedural-instanced-geometry",
+      "source": "src/world/BiomeWorldArt.ts",
+      "runtimeFamily": "mesa",
+      "sharedActiveCapacity": 2304
+    },
+    {
+      "id": "proto-biome-crystal",
+      "classification": "repeated-environmental-prototype",
+      "status": "existing",
+      "sourceKind": "procedural-instanced-geometry",
+      "source": "src/world/BiomeWorldArt.ts",
+      "runtimeFamily": "crystal",
+      "sharedActiveCapacity": 2304
+    },
+    {
+      "id": "proto-biome-snow",
+      "classification": "repeated-environmental-prototype",
+      "status": "existing",
+      "sourceKind": "procedural-instanced-geometry",
+      "source": "src/world/BiomeWorldArt.ts",
+      "runtimeFamily": "snow",
+      "sharedActiveCapacity": 2304
+    },
+    {
+      "id": "proto-biome-water",
+      "classification": "repeated-environmental-prototype",
+      "status": "existing-visual-only",
+      "sourceKind": "procedural-instanced-geometry",
+      "source": "src/world/BiomeWorldArt.ts",
+      "runtimeFamily": "water",
+      "sharedActiveCapacity": 2304,
+      "navigation": "none",
+      "collision": "none"
+    },
+    {
+      "id": "proto-biome-glow",
+      "classification": "repeated-environmental-prototype",
+      "status": "existing",
+      "sourceKind": "procedural-instanced-geometry",
+      "source": "src/world/BiomeWorldArt.ts",
+      "runtimeFamily": "glow",
+      "sharedActiveCapacity": 2304
+    },
+    {
+      "id": "proto-airport-field-furrow",
+      "classification": "repeated-environmental-prototype",
+      "status": "existing",
+      "sourceKind": "procedural-instanced-geometry",
+      "source": "src/world/RunwayWorld.ts#createFieldLayer",
+      "instanceCount": 28
+    },
+    {
+      "id": "proto-airport-fence-post",
+      "classification": "repeated-environmental-prototype",
+      "status": "existing",
+      "sourceKind": "procedural-instanced-geometry",
+      "source": "src/world/RunwayWorld.ts#createFence",
+      "instanceCount": 25
+    },
+    {
+      "id": "proto-airport-tree-trunk",
+      "classification": "repeated-environmental-prototype",
+      "status": "existing",
+      "sourceKind": "procedural-instanced-geometry",
+      "source": "src/world/RunwayWorld.ts#createTrees",
+      "instanceCount": 64
+    },
+    {
+      "id": "proto-airport-tree-lower-canopy",
+      "classification": "repeated-environmental-prototype",
+      "status": "existing",
+      "sourceKind": "procedural-instanced-geometry",
+      "source": "src/world/RunwayWorld.ts#createTrees",
+      "instanceCount": 64
+    },
+    {
+      "id": "proto-airport-tree-upper-canopy",
+      "classification": "repeated-environmental-prototype",
+      "status": "existing",
+      "sourceKind": "procedural-instanced-geometry",
+      "source": "src/world/RunwayWorld.ts#createTrees",
+      "instanceCount": 64
+    },
+    {
+      "id": "proto-airport-hay-bale",
+      "classification": "repeated-environmental-prototype",
+      "status": "existing",
+      "sourceKind": "procedural-instanced-geometry",
+      "source": "src/world/RunwayWorld.ts#createHayBales",
+      "instanceCount": 18
+    },
+    {
+      "id": "proto-airport-cloud-puff",
+      "classification": "repeated-environmental-prototype",
+      "status": "existing",
+      "sourceKind": "procedural-instanced-geometry",
+      "source": "src/world/RunwayWorld.ts#createCloudSystem",
+      "instanceCount": 85
+    },
+    {
+      "id": "hero-main-orange-trim-hangar",
+      "classification": "hero-asset",
+      "status": "existing",
+      "sourceKind": "procedural-typescript-multimesh",
+      "source": "src/world/RunwayWorld.ts#createBuildings",
+      "standaloneAsset": false,
+      "collision": "none"
+    },
+    {
+      "id": "hero-maintenance-hangar",
+      "classification": "hero-asset",
+      "status": "existing",
+      "sourceKind": "procedural-typescript-multimesh",
+      "source": "src/world/RunwayWorld.ts#createBuildings",
+      "standaloneAsset": false,
+      "collision": "none"
+    },
+    {
+      "id": "hero-east-field-farm-shed",
+      "classification": "hero-asset",
+      "status": "existing",
+      "sourceKind": "procedural-typescript-multimesh",
+      "source": "src/world/RunwayWorld.ts#createBuildings",
+      "standaloneAsset": false,
+      "collision": "none",
+      "interaction": "none"
+    },
+    {
+      "id": "hero-airport-operations-office",
+      "classification": "hero-asset",
+      "status": "existing",
+      "sourceKind": "procedural-typescript-multimesh",
+      "source": "src/world/RunwayWorld.ts#createAirportOffice",
+      "standaloneAsset": false,
+      "collision": "none"
+    },
+    {
+      "id": "hero-airfield-fuel-depot",
+      "classification": "hero-asset",
+      "status": "existing",
+      "sourceKind": "procedural-typescript-multimesh",
+      "source": "src/world/RunwayWorld.ts#createFuelDepot",
+      "standaloneAsset": false,
+      "collision": "none",
+      "interaction": "none"
+    },
+    {
+      "id": "hero-aerium-spire",
+      "classification": "hero-asset",
+      "status": "existing-procedural-landmark-pattern",
+      "sourceKind": "pooled-instanced-composition",
+      "source": "src/world/UrbanBiomeArt.ts",
+      "standaloneAsset": false,
+      "instancePolicy": "one-pattern-per-matching-city-chunk"
+    },
+    {
+      "id": "hero-azure-beacon",
+      "classification": "hero-asset",
+      "status": "existing-procedural-landmark-pattern",
+      "sourceKind": "pooled-instanced-composition",
+      "source": "src/world/UrbanBiomeArt.ts",
+      "standaloneAsset": false,
+      "instancePolicy": "one-pattern-per-matching-city-chunk"
+    },
+    {
+      "id": "hero-grand-foundry",
+      "classification": "hero-asset",
+      "status": "existing-procedural-landmark-pattern",
+      "sourceKind": "pooled-instanced-composition",
+      "source": "src/world/UrbanBiomeArt.ts",
+      "standaloneAsset": false,
+      "instancePolicy": "one-pattern-per-matching-city-chunk"
+    },
+    {
+      "id": "hero-sunstone-minaret",
+      "classification": "hero-asset",
+      "status": "existing-procedural-landmark-pattern",
+      "sourceKind": "pooled-instanced-composition",
+      "source": "src/world/UrbanBiomeArt.ts",
+      "standaloneAsset": false,
+      "instancePolicy": "one-pattern-per-matching-city-chunk"
+    },
+    {
+      "id": "interactive-airplane-taildragger",
+      "classification": "interactive-asset",
+      "status": "existing-gameplay-critical",
+      "sourceKind": "procedural-typescript-hierarchy",
+      "source": "src/assets/AirplaneModel.ts#createAirplaneModel",
+      "runtimeOwner": "Game",
+      "streamedWithWorld": false,
+      "dimensionsMeters": {
+        "overallLength": 9.8,
+        "wingspan": 11.76,
+        "propellerVisibleRadius": 1.81,
+        "propellerSafetyRadius": 1.86,
+        "mainWheelRadius": 0.52,
+        "tailWheelRadius": 0.2
+      },
+      "movingParts": [
+        "propeller",
+        "left-main-wheel",
+        "right-main-wheel",
+        "tail-wheel",
+        "left-aileron",
+        "right-aileron",
+        "elevator",
+        "rudder"
+      ],
+      "sockets": [
+        "exhaust",
+        "left-wingtip",
+        "right-wingtip",
+        "camera-focus"
+      ],
+      "visibleCollisionBehavior": "wheel-tailwheel-and-propeller-height-support",
+      "hiddenProxyMeshes": [
+        {
+          "kind": "capsule-metadata-and-mesh",
+          "radius": 0.96,
+          "length": 6.75,
+          "offset": [0, 2.14, -0.02]
+        },
+        {
+          "kind": "wing-box-metadata-and-mesh",
+          "size": [11.76, 0.45, 2.2],
+          "offset": [0, 2.23, 0.1]
+        }
+      ],
+      "hiddenProxyConsumptionByWorldCollision": false,
+      "preserveHierarchy": true
+    }
+  ],
+  "pilot": {
+    "id": "pilot-chunk-near-airport-arctic-tundra",
+    "existingAssetIds": [
+      "existing-streamed-terrain",
+      "proto-biome-rock",
+      "proto-biome-crystal",
+      "proto-biome-snow",
+      "proto-biome-water",
+      "interactive-airplane-taildragger"
+    ],
+    "requiredHeroAssetIds": [],
+    "approvedMissingAssetIds": []
+  }
+}

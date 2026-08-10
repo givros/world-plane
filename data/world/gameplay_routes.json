@@ -1,0 +1,344 @@
+{
+  "schemaVersion": "1.0.0",
+  "status": "descriptive-baseline-not-runtime-authority",
+  "sourceRevision": "917550d",
+  "coordinateSystem": {
+    "units": "meters",
+    "upAxis": "+Y",
+    "worldRunwayForward": "+Z",
+    "aircraftLocalForward": "+Z"
+  },
+  "actors": [
+    {
+      "id": "actor-airplane-taildragger",
+      "assetId": "interactive-airplane-taildragger",
+      "control": "single-local-player",
+      "spawnIds": ["spawn-aircraft-primary"]
+    }
+  ],
+  "spawns": [
+    {
+      "id": "spawn-aircraft-primary",
+      "kind": "controlled-aircraft",
+      "regionId": "region-airport-origin",
+      "zoneId": "zone-airport-runway-18-36",
+      "positionMeters": [0, 0, -112],
+      "positionMeaning": "runway-surface-reference-before-aircraft-model-ground-offset",
+      "yawRadians": 0,
+      "preferredDepartureAxis": "+Z",
+      "safeConditions": [
+        "Origin stream window is centered on chunk 0:0",
+        "Runway height override is y=0",
+        "Aircraft wheels and propeller start clear",
+        "Airport scenery is visible"
+      ]
+    }
+  ],
+  "operationalZones": [
+    {
+      "id": "zone-airport-runway-18-36",
+      "kind": "aircraft-runway",
+      "centerlineX": 0,
+      "visibleBoundsMeters": {
+        "x": [-12, 12],
+        "z": [-180, 180],
+        "y": 0
+      },
+      "heightOverrideBoundsMeters": {
+        "x": [-13.5, 13.5],
+        "z": [-180, 180],
+        "y": 0
+      },
+      "thresholdZMeters": [-150, 150],
+      "preferredTakeoffDirection": "+Z"
+    },
+    {
+      "id": "zone-airport-runway-safe-corridor",
+      "kind": "placement-reservation",
+      "centerlineX": 0,
+      "halfWidthMeters": 18,
+      "status": "metadata-and-worldclaw-placement-rule",
+      "mechanicallyEnforcedByCurrentFlightController": false
+    },
+    {
+      "id": "zone-airport-origin-reserve",
+      "kind": "procedural-placement-reservation",
+      "boundsMeters": {
+        "x": [-430, 430],
+        "z": [-430, 430]
+      },
+      "boundaryRule": "max(abs(x),abs(z)) < 430",
+      "mechanicallyEnforcedForBiomeAndUrbanPlacement": true
+    }
+  ],
+  "airfieldMetadata": {
+    "rolloutStopPositionMeters": [0, 0, 104],
+    "activeControllerFinalStopZMeters": 124,
+    "mismatchPolicy": "Preserve both values; z=124 is the active controller behavior until an explicit coordinated migration."
+  },
+  "routes": [
+    {
+      "id": "route-airport-manual-runway-departure",
+      "sourceStatus": "existing",
+      "critical": true,
+      "kind": "intended-aircraft-operation",
+      "regionIds": ["region-airport-origin"],
+      "actorIds": ["actor-airplane-taildragger"],
+      "vehicleAccess": ["aircraft"],
+      "startSpawnId": "spawn-aircraft-primary",
+      "intendedCenterlinePathMeters": [
+        [0, 0, -112],
+        [0, 0, 105]
+      ],
+      "takeoffGate": {
+        "minimumSpeedMetersPerSecond": 29,
+        "minimumThrottle": 0.5,
+        "minimumPitchDegreesExclusive": 5,
+        "runwayBoundsRequired": false
+      },
+      "terrainFollowing": true,
+      "preserve": [
+        "spawn transform",
+        "positive-Z departure",
+        "runway terrain height",
+        "clear ground roll",
+        "manual control ownership"
+      ]
+    },
+    {
+      "id": "route-autopilot-showcase",
+      "sourceStatus": "existing",
+      "critical": true,
+      "kind": "authored-aircraft-catmull-rom",
+      "regionIds": ["region-airport-origin"],
+      "actorIds": ["actor-airplane-taildragger"],
+      "vehicleAccess": ["aircraft"],
+      "totalDurationSeconds": 55.2,
+      "airborneDurationSeconds": 30,
+      "curveType": "centripetal",
+      "sampleCount": 900,
+      "groundStartMeters": [0, 0, -112],
+      "controlPointYMode": "aircraft-root-ground-y-plus-listed-offset",
+      "airborneControlPointsMeters": [
+        [0, 0, 105],
+        [0, 16, 160],
+        [0, 50, 250],
+        [35, 78, 340],
+        [120, 96, 385],
+        [205, 108, 330],
+        [240, 110, 185],
+        [232, 108, 15],
+        [210, 102, -155],
+        [175, 90, -275],
+        [110, 78, -350],
+        [35, 64, -370],
+        [-25, 52, -335],
+        [-55, 42, -270],
+        [-32, 34, -215],
+        [-6, 24, -190],
+        [0, 15, -165],
+        [0, 6, -128],
+        [0, 0, -104]
+      ],
+      "landingGroundReferencesMeters": [
+        [0, 0, -104],
+        [0, 0, -24],
+        [0, 0, 115],
+        [0, 0, 124]
+      ],
+      "terrainFollowing": false,
+      "obstacleAvoidance": false,
+      "horizontalControlPointEnvelopeMeters": {
+        "x": [-55, 240],
+        "z": [-370, 385]
+      },
+      "preserve": [
+        "all spline control points",
+        "runway surface elevation",
+        "approach clearance",
+        "camera sight lines",
+        "completion and replay behavior"
+      ]
+    },
+    {
+      "id": "route-manual-dynamic-terrain-landing",
+      "sourceStatus": "existing",
+      "critical": true,
+      "kind": "dynamic-operational-envelope",
+      "regionIds": [
+        "region-biome-sunlit-meadow",
+        "region-biome-sahara-dunes",
+        "region-biome-alpine-peaks",
+        "region-biome-arctic-tundra",
+        "region-biome-volcanic-wastes",
+        "region-biome-emerald-marsh",
+        "region-biome-red-rock-canyon",
+        "region-biome-autumn-forest",
+        "region-biome-tropical-lagoon",
+        "region-biome-crystal-salt-flats",
+        "region-biome-metropolitan-core",
+        "region-biome-azure-harbor",
+        "region-biome-ironworks-district",
+        "region-biome-sunstone-citadel"
+      ],
+      "actorIds": ["actor-airplane-taildragger"],
+      "vehicleAccess": ["aircraft"],
+      "target": "any-rendered-streamed-terrain",
+      "safeTouchdown": {
+        "speedMetersPerSecond": {
+          "minimum": 10,
+          "maximum": 56
+        },
+        "minimumVerticalSpeedMetersPerSecond": -5.2,
+        "maximumAbsoluteBankDegrees": 18,
+        "pitchDegrees": {
+          "minimum": -5,
+          "maximum": 16
+        },
+        "maximumSurfaceSlopeDegrees": 8,
+        "slopeSampleOffsetMeters": 2.5,
+        "runwayHeadingErrorMaximumDegrees": 42
+      },
+      "preserve": [
+        "off-airport terrain landability",
+        "synchronous height availability",
+        "render-and-collision triangle agreement",
+        "wheel and propeller contact behavior"
+      ]
+    },
+    {
+      "id": "route-airport-manual-landing-relaunch",
+      "sourceStatus": "existing",
+      "critical": true,
+      "kind": "repeatable-aircraft-operation",
+      "regionIds": ["region-airport-origin"],
+      "actorIds": ["actor-airplane-taildragger"],
+      "referenceTouchdownMeters": [0, 0, -104],
+      "touchdownPositionEnforcedInManualMode": false,
+      "outcomes": [
+        "brake-to-full-stop-and-remain-running",
+        "relaunch-after-full-stop",
+        "powered-touch-and-go"
+      ],
+      "touchAndGoContactGuardSeconds": 0.2,
+      "manualCompletionOnSafeStop": false
+    },
+    {
+      "id": "route-reset-to-airport",
+      "sourceStatus": "existing",
+      "critical": true,
+      "kind": "recovery-teleport-and-state-reset",
+      "regionIds": ["region-airport-origin"],
+      "actorIds": ["actor-airplane-taildragger"],
+      "from": "any-manual-or-autopilot-state",
+      "toSpawnId": "spawn-aircraft-primary",
+      "streamCenterChunk": [0, 0],
+      "loadedChunkCount": 9,
+      "preserve": [
+        "input clear",
+        "controller clear",
+        "crash clear",
+        "VFX and audio clear",
+        "camera reset",
+        "airport visibility restore",
+        "origin stream recenter"
+      ]
+    }
+  ],
+  "visualOnlyPaths": [
+    {
+      "id": "route-airport-taxiway-apron",
+      "regionIds": ["region-airport-origin"],
+      "kind": "catmull-rom-ribbon-and-apron",
+      "controlPointsMeters": [
+        [-11.9, -0.025, -24],
+        [-17, -0.025, -24],
+        [-26, -0.025, -30],
+        [-36, -0.025, -40],
+        [-48, -0.025, -47]
+      ],
+      "apronCenterMeters": [-54, -0.045, -49],
+      "drivableSurfaceRegistered": false,
+      "collision": false
+    },
+    {
+      "id": "network-urban-road-grid",
+      "regionIds": [
+        "region-biome-metropolitan-core",
+        "region-biome-azure-harbor",
+        "region-biome-ironworks-district",
+        "region-biome-sunstone-citadel"
+      ],
+      "kind": "visual-eight-by-eight-grid",
+      "cellSpacingMeters": 160,
+      "roadWidthMeters": 30,
+      "drivableSurfaceRegistered": false,
+      "collision": false
+    }
+  ],
+  "controls": {
+    "desktopKeyboardOnly": true,
+    "throttleUp": ["KeyW", "KeyZ"],
+    "throttleDown": ["KeyS"],
+    "pitchUp": ["ArrowDown"],
+    "pitchDown": ["ArrowUp"],
+    "rollLeft": ["ArrowLeft", "KeyA", "KeyQ"],
+    "rollRight": ["ArrowRight", "KeyD"],
+    "yawLeft": ["KeyJ"],
+    "yawRight": ["KeyL"],
+    "brake": ["Space"],
+    "reset": ["KeyR"],
+    "startWhenStopped": ["Enter"],
+    "fullscreen": ["KeyF"],
+    "inspectionViews": ["Digit1", "Digit2", "Digit3", "Digit4"],
+    "touchFlightControls": false,
+    "gamepadControls": false
+  },
+  "collision": {
+    "terrain": "implemented-height-sampling",
+    "runway": "implemented-height-override",
+    "buildings": "absent",
+    "props": "absent",
+    "roadsAndTaxiway": "absent",
+    "water": "absent",
+    "aircraftVisibleProxyConsumption": "absent"
+  },
+  "persistence": {
+    "worldState": "absent",
+    "aircraftPaint": {
+      "status": "implemented",
+      "storage": "localStorage",
+      "key": "cropper-seven-aircraft-paint",
+      "format": "six-digit-hex-color"
+    }
+  },
+  "multiplayer": {
+    "status": "absent",
+    "networkAuthority": null,
+    "networkObjectIds": [],
+    "spawns": [],
+    "requirements": [
+      "Do not introduce or claim multiplayer behavior in the WorldClaw pilot."
+    ]
+  },
+  "farming": {
+    "status": "absent",
+    "visualSceneryOnly": true,
+    "vehicleRoutes": [],
+    "objectives": []
+  },
+  "preservedRuntimeApi": {
+    "windowObject": "__AIRPLANE_EXPERIENCE__",
+    "members": [
+      "start",
+      "startAutopilot",
+      "startManual",
+      "reset",
+      "setTimeScale",
+      "setReviewMode",
+      "setPaintColor",
+      "state",
+      "diagnostics"
+    ]
+  }
+}

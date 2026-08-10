@@ -6,9 +6,15 @@ import {
   type CityBiomeId,
 } from './BiomeCatalog';
 import { createPropMaterial } from './BiomeWorldArt';
+import type {
+  WorldChunkPrototypeBatch,
+  WorldChunkPrototypeTransform,
+} from './WorldChunkSource';
 
 export const URBAN_BOX_CAPACITY = 384;
 export const URBAN_ROOF_CAPACITY = 128;
+export const URBAN_BOX_ASSET_ID = 'existing-urban-box-pool';
+export const URBAN_ROOF_ASSET_ID = 'existing-urban-roof-pool';
 
 export type UrbanChunkStats = {
   boxCount: number;
@@ -230,15 +236,21 @@ function createUrbanMaterial(): THREE.MeshBasicMaterial {
       )
       .replace(
         'vec4 biomeWorldPosition = vec4(transformed, 1.0);',
-        `#ifdef USE_INSTANCING
+        `vec3 urbanObjectNormal = vec3(normal);
+         #ifdef USE_INSTANCING
            vUrbanScaleY = length(instanceMatrix[1].xyz);
-           vUrbanWorldNormal = normalize(
-             mat3(modelMatrix) * mat3(instanceMatrix) * objectNormal
+           mat3 urbanInstanceNormalMatrix = mat3(instanceMatrix);
+           urbanObjectNormal /= vec3(
+             dot(urbanInstanceNormalMatrix[0], urbanInstanceNormalMatrix[0]),
+             dot(urbanInstanceNormalMatrix[1], urbanInstanceNormalMatrix[1]),
+             dot(urbanInstanceNormalMatrix[2], urbanInstanceNormalMatrix[2])
            );
+           urbanObjectNormal = urbanInstanceNormalMatrix * urbanObjectNormal;
          #else
            vUrbanScaleY = 1.0;
-           vUrbanWorldNormal = normalize(mat3(modelMatrix) * objectNormal);
          #endif
+         vec3 urbanViewNormal = normalMatrix * urbanObjectNormal;
+         vUrbanWorldNormal = inverseTransformDirection(urbanViewNormal, viewMatrix);
          vec4 biomeWorldPosition = vec4(transformed, 1.0);`,
       );
     shader.fragmentShader = shader.fragmentShader
@@ -286,7 +298,7 @@ function createUrbanMaterial(): THREE.MeshBasicMaterial {
          float biomeFogFactor = smoothstep(fogNear, fogFar, vFogDepth);`,
       );
   };
-  material.customProgramCacheKey = () => 'procedural-urban-directional-fog-windows-v1';
+  material.customProgramCacheKey = () => 'procedural-urban-directional-fog-windows-v2';
   return material;
 }
 
@@ -880,5 +892,136 @@ export function populateUrbanChunk(
     }
   }
 
+  finalizeUrbanSlot(slot);
+}
+
+function serializeUrbanMesh(
+  mesh: THREE.InstancedMesh,
+  count: number,
+): readonly WorldChunkPrototypeTransform[] {
+  const matrix = new THREE.Matrix4();
+  const position = new THREE.Vector3();
+  const rotation = new THREE.Quaternion();
+  const scale = new THREE.Vector3();
+  const color = new THREE.Color();
+  const transforms: WorldChunkPrototypeTransform[] = [];
+  for (let index = 0; index < count; index += 1) {
+    mesh.getMatrixAt(index, matrix);
+    matrix.decompose(position, rotation, scale);
+    mesh.getColorAt(index, color);
+    transforms.push({
+      translation: [
+        Math.fround(position.x),
+        Math.fround(position.y),
+        Math.fround(position.z),
+      ],
+      rotation: [
+        Math.fround(rotation.x),
+        Math.fround(rotation.y),
+        Math.fround(rotation.z),
+        Math.fround(rotation.w),
+      ],
+      scale: [
+        Math.fround(scale.x),
+        Math.fround(scale.y),
+        Math.fround(scale.z),
+      ],
+      colorLinearRgb: [
+        Math.fround(color.r),
+        Math.fround(color.g),
+        Math.fround(color.b),
+      ],
+    });
+  }
+  return transforms;
+}
+
+/** Offline-only identity export of the existing urban composition. */
+export function createProceduralUrbanPrototypeBatches(
+  context: UrbanPopulationContext,
+): readonly WorldChunkPrototypeBatch[] {
+  if (!isCityBiomeId(context.biome.id)) return [];
+  const group = new THREE.Group();
+  const resources = createUrbanBiomeResources(group, 1);
+  const slot = resources.slots[0];
+  try {
+    populateUrbanChunk(slot, context);
+    return [
+      {
+        assetId: URBAN_BOX_ASSET_ID,
+        transforms: serializeUrbanMesh(slot.boxMesh, slot.stats.boxCount),
+      },
+      {
+        assetId: URBAN_ROOF_ASSET_ID,
+        transforms: serializeUrbanMesh(slot.roofMesh, slot.stats.roofCount),
+      },
+    ];
+  } finally {
+    resources.geometries.forEach((geometry) => geometry.dispose());
+    resources.materials.forEach((material) => material.dispose());
+  }
+}
+
+export function populateAuthoredUrbanPrototypeBatches(
+  slot: UrbanChunkSlot,
+  context: UrbanPopulationContext,
+  batches: readonly WorldChunkPrototypeBatch[],
+): void {
+  clearUrbanChunk(slot);
+  slot.boxMesh.position.set(
+    context.chunkX * context.chunkSize,
+    0,
+    context.chunkZ * context.chunkSize,
+  );
+  slot.roofMesh.position.copy(slot.boxMesh.position);
+  slot.boxMesh.userData.chunkKey = `${String(context.chunkX)}:${String(context.chunkZ)}`;
+  slot.roofMesh.userData.chunkKey = slot.boxMesh.userData.chunkKey;
+  slot.boxMesh.userData.biomeId = context.biome.id;
+  slot.roofMesh.userData.biomeId = context.biome.id;
+  if (!isCityBiomeId(context.biome.id)) return;
+
+  const style = URBAN_STYLES[context.biome.id];
+  slot.stats.visualRoles = style.roles;
+  slot.stats.landmarkId = style.landmarkId;
+  slot.stats.districtCount = 4;
+  const matrix = new THREE.Matrix4();
+  const position = new THREE.Vector3();
+  const rotation = new THREE.Quaternion();
+  const scale = new THREE.Vector3();
+  const color = new THREE.Color();
+
+  const writeBatch = (
+    assetId: string,
+    mesh: THREE.InstancedMesh,
+    capacity: number,
+    kind: 'box' | 'roof',
+  ): void => {
+    const batch = batches.find((candidate) => candidate.assetId === assetId);
+    if (!batch) return;
+    batch.transforms.forEach((transform) => {
+      const index = kind === 'box' ? slot.stats.boxCount : slot.stats.roofCount;
+      if (index >= capacity) {
+        slot.stats.droppedInstances += 1;
+        return;
+      }
+      position.fromArray(transform.translation);
+      rotation.fromArray(transform.rotation);
+      scale.fromArray(transform.scale);
+      matrix.compose(position, rotation, scale);
+      color.setRGB(
+        transform.colorLinearRgb[0],
+        transform.colorLinearRgb[1],
+        transform.colorLinearRgb[2],
+        THREE.LinearSRGBColorSpace,
+      );
+      mesh.setMatrixAt(index, matrix);
+      mesh.setColorAt(index, color);
+      if (kind === 'box') slot.stats.boxCount += 1;
+      else slot.stats.roofCount += 1;
+    });
+  };
+
+  writeBatch(URBAN_BOX_ASSET_ID, slot.boxMesh, URBAN_BOX_CAPACITY, 'box');
+  writeBatch(URBAN_ROOF_ASSET_ID, slot.roofMesh, URBAN_ROOF_CAPACITY, 'roof');
   finalizeUrbanSlot(slot);
 }

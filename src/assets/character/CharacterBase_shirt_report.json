@@ -1,0 +1,163 @@
+{
+  "source_file": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase.blend",
+  "source_file_sha256": "2F01F0CC2F018D3A14DE3245657966B2CD3D2F42A12474837CAD0770470529BD",
+  "output_file": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase.blend",
+  "working_blend": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase.blend",
+  "revision_before_sha256": "2F01F0CC2F018D3A14DE3245657966B2CD3D2F42A12474837CAD0770470529BD",
+  "revision_after_sha256": "50A67F4C03439ECDE46AB302E7FC9EA528FB05D488F0113D26A40E45E437DE90",
+  "updated_in_place": true,
+  "replaced_existing": false,
+  "garment_id": "preset_long_sleeve_shirt",
+  "garment_revision_before": 0,
+  "garment_revision_after": 1,
+  "visibility_before": true,
+  "visibility_after": true,
+  "character_mesh_signature_before": "E9BA39BFE5446C997403367F3A31B46F8D63332FF6868FAD5C2DD76E858B22C1",
+  "character_mesh_signature_after": "E9BA39BFE5446C997403367F3A31B46F8D63332FF6868FAD5C2DD76E858B22C1",
+  "pants_mesh_signature_before": "C4B656089C50A0D29AC4DEFAADA500D7E1409239B529F8100E4A4B444CF299BB",
+  "pants_mesh_signature_after": "C4B656089C50A0D29AC4DEFAADA500D7E1409239B529F8100E4A4B444CF299BB",
+  "source_faces_used": 304,
+  "source_vertices_used": 326,
+  "source_components": 1,
+  "boundary_loops": [
+    8,
+    8,
+    12,
+    20
+  ],
+  "hem_vertices": 20,
+  "hem_z": 0.582,
+  "shirt_vertices": 358,
+  "shirt_edges": 680,
+  "shirt_faces": 320,
+  "collar_faces": 0,
+  "cuff_faces": 16,
+  "flipped_faces_corrected": 8,
+  "vertex_groups": 47,
+  "modifiers": [
+    [
+      "Garment Thickness",
+      "SOLIDIFY"
+    ],
+    [
+      "Armature",
+      "ARMATURE"
+    ]
+  ],
+  "parent": "CharacterRig",
+  "collection": "Clothing",
+  "material": "LongSleeveShirtMaterial",
+  "canonical_uv": {
+    "object": "LongSleeveShirt",
+    "garment_id": "preset_long_sleeve_shirt",
+    "layer": "CodexClothingUV",
+    "layout_version": 1,
+    "digest": "16B303174447DE62064C63446CEA0228EB54D79DF071B688FB594FD995B2E9BE",
+    "created": true,
+    "replaced": false,
+    "loops": 1280,
+    "zone_polygon_counts": {
+      "front": 86,
+      "back": 102,
+      "left": 12,
+      "right": 12,
+      "top": 66,
+      "bottom": 42
+    },
+    "zone_rects": {
+      "front": [
+        0.02,
+        0.66,
+        0.96,
+        0.32
+      ],
+      "back": [
+        0.02,
+        0.32,
+        0.96,
+        0.32
+      ],
+      "left": [
+        0.02,
+        0.02,
+        0.22,
+        0.28
+      ],
+      "right": [
+        0.26,
+        0.02,
+        0.22,
+        0.28
+      ],
+      "top": [
+        0.5,
+        0.16,
+        0.48,
+        0.14
+      ],
+      "bottom": [
+        0.5,
+        0.02,
+        0.48,
+        0.12
+      ]
+    },
+    "non_uv_invariants_before": {
+      "geometry": "09668AD24C65D284D976E7D65B88FEABBC0DD13117E54AD7A7BCA9CB8EEFC5A7",
+      "weights": "C69EA382F963B40338B9B5E320AD8D05DFE7F8A6B134159AA37CF9BDCAAC2352",
+      "modifiers": "9E099B4BDF6DA0310D95C4D331E96EA546CD6488A52CD2D3BD494AD0299451A1",
+      "noncanonical_mesh_data": "EB3F18245C3E21798FA6184DFC81AEB5A6C17ABC0CC8F996CE9CAC923825BB5A",
+      "drivers": "CFAEB147F32A255978BE514B630319C4554372F142D27141F9B843AD5CB649ED",
+      "visibility_and_ownership": "F1FEB97A6CA75895558CB4D2289CF9C9D370D539432EE16EF5979CBCF9A03B66",
+      "transform": "A49E4BD1F95CC6CA34ECDCC2247BF8905CFA414CA3C40B426C800E8E0ED52BF3"
+    },
+    "non_uv_invariants_after": {
+      "geometry": "09668AD24C65D284D976E7D65B88FEABBC0DD13117E54AD7A7BCA9CB8EEFC5A7",
+      "weights": "C69EA382F963B40338B9B5E320AD8D05DFE7F8A6B134159AA37CF9BDCAAC2352",
+      "modifiers": "9E099B4BDF6DA0310D95C4D331E96EA546CD6488A52CD2D3BD494AD0299451A1",
+      "noncanonical_mesh_data": "EB3F18245C3E21798FA6184DFC81AEB5A6C17ABC0CC8F996CE9CAC923825BB5A",
+      "drivers": "CFAEB147F32A255978BE514B630319C4554372F142D27141F9B843AD5CB649ED",
+      "visibility_and_ownership": "F1FEB97A6CA75895558CB4D2289CF9C9D370D539432EE16EF5979CBCF9A03B66",
+      "transform": "A49E4BD1F95CC6CA34ECDCC2247BF8905CFA414CA3C40B426C800E8E0ED52BF3"
+    },
+    "non_uv_invariants_preserved": true
+  },
+  "visibility_property": "CharacterRig[\"show_long_sleeve_shirt\"]",
+  "visibility_test": [
+    {
+      "show_long_sleeve_shirt": true,
+      "hide_viewport": false,
+      "hide_render": false
+    },
+    {
+      "show_long_sleeve_shirt": false,
+      "hide_viewport": true,
+      "hide_render": true
+    },
+    {
+      "show_long_sleeve_shirt": true,
+      "hide_viewport": false,
+      "hide_render": false
+    }
+  ],
+  "independence_test": [
+    {
+      "show_shirt": false,
+      "show_pants": true,
+      "shirt_hidden": true,
+      "pants_hidden": false
+    },
+    {
+      "show_shirt": true,
+      "show_pants": false,
+      "shirt_hidden": false,
+      "pants_hidden": true
+    },
+    {
+      "show_shirt": true,
+      "show_pants": true,
+      "shirt_hidden": false,
+      "pants_hidden": false
+    }
+  ]
+}

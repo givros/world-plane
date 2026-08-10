@@ -1,0 +1,240 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://planes3d.local/worldclaw/chunk_descriptor.schema.json",
+  "title": "Planes3D Compiled Chunk Descriptor",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "descriptorId",
+    "compilerContractVersion",
+    "dataRevision",
+    "runtimeRecordStatus",
+    "runtimeRecordIdentity",
+    "runtimeRecord",
+    "chunk",
+    "regionId",
+    "transformConvention",
+    "terrain",
+    "declaredAssetIds",
+    "prototypeBatches",
+    "capacities",
+    "originReservation",
+    "artifactPaths",
+    "fallback"
+  ],
+  "properties": {
+    "schemaVersion": { "$ref": "#/$defs/semver" },
+    "descriptorId": { "$ref": "#/$defs/stableId" },
+    "compilerContractVersion": { "$ref": "#/$defs/semver" },
+    "dataRevision": { "type": "string", "pattern": "^[0-9a-f]{7,64}$" },
+    "runtimeRecordStatus": {
+      "enum": ["identity-only-height-export-deferred", "ready"]
+    },
+    "runtimeRecordIdentity": { "$ref": "#/$defs/authoredWorldChunkIdentity" },
+    "runtimeRecord": {
+      "anyOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/authoredWorldChunkRecord" }
+      ]
+    },
+    "chunk": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "coordinates", "center", "boundsXZ", "sizeMeters"],
+      "properties": {
+        "id": { "$ref": "#/$defs/chunkId" },
+        "coordinates": { "$ref": "#/$defs/ivec2" },
+        "center": { "$ref": "#/$defs/vec3" },
+        "boundsXZ": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["minimum", "maximum"],
+          "properties": {
+            "minimum": { "$ref": "#/$defs/vec2" },
+            "maximum": { "$ref": "#/$defs/vec2" }
+          }
+        },
+        "sizeMeters": { "const": 1280 }
+      }
+    },
+    "regionId": { "$ref": "#/$defs/stableId" },
+    "transformConvention": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["space", "translationOrder", "rotation", "scale", "upAxis", "forwardAxis"],
+      "properties": {
+        "space": { "const": "chunk-local" },
+        "translationOrder": { "const": ["x", "y", "z"] },
+        "rotation": { "const": "quaternion-xyzw" },
+        "scale": { "const": "positive-xyz" },
+        "upAxis": { "const": "+Y" },
+        "forwardAxis": { "const": "+Z" }
+      }
+    },
+    "terrain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "segmentsPerSide", "samplesPerSide", "sampleCount", "heightPayload", "sharedEdges"],
+      "properties": {
+        "mode": { "enum": ["procedural-identity", "authored-float32-grid"] },
+        "segmentsPerSide": { "const": 40 },
+        "samplesPerSide": { "const": 41 },
+        "sampleCount": { "const": 1681 },
+        "heightPayload": {
+          "anyOf": [
+            { "type": "null" },
+            {
+              "type": "object",
+              "required": ["encoding", "path", "sha256"],
+              "properties": {
+                "encoding": { "const": "float32-little-endian" },
+                "path": { "$ref": "#/$defs/repositoryPath" },
+                "sha256": { "$ref": "#/$defs/sha256" }
+              }
+            }
+          ]
+        },
+        "sharedEdges": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": { "$ref": "#/$defs/sharedEdge" }
+        }
+      }
+    },
+    "declaredAssetIds": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/stableId" } },
+    "prototypeBatches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["assetId", "transforms"],
+        "properties": {
+          "assetId": { "$ref": "#/$defs/stableId" },
+          "transforms": { "type": "array", "items": { "$ref": "#/$defs/transform" } }
+        }
+      }
+    },
+    "capacities": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["assetId", "maximumActiveInstances"],
+        "properties": {
+          "assetId": { "$ref": "#/$defs/stableId" },
+          "maximumActiveInstances": { "type": "integer", "minimum": 1 }
+        }
+      }
+    },
+    "originReservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enforced", "halfExtentMeters", "rule"],
+      "properties": {
+        "enforced": { "const": true },
+        "halfExtentMeters": { "const": 430 },
+        "rule": { "const": "reject-placement-when-max-absolute-world-xz-is-less-than-half-extent" }
+      }
+    },
+    "artifactPaths": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["descriptor", "manifest", "runtimeResolution"],
+      "properties": {
+        "descriptor": { "$ref": "#/$defs/repositoryPath" },
+        "manifest": { "$ref": "#/$defs/repositoryPath" },
+        "runtimeResolution": { "const": "import.meta.env.BASE_URL" }
+      }
+    },
+    "fallback": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["required", "source"],
+      "properties": {
+        "required": { "const": true },
+        "source": { "const": "current-procedural-descriptor" }
+      }
+    }
+  },
+  "$defs": {
+    "semver": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "stableId": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+    "chunkId": { "type": "string", "pattern": "^chunk:-?[0-9]+:-?[0-9]+$" },
+    "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "repositoryPath": { "type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$" },
+    "vec2": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "number" } },
+    "ivec2": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "integer" } },
+    "vec3": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" } },
+    "quat": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "type": "number" } },
+    "positiveVec3": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number", "exclusiveMinimum": 0 } },
+    "transform": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["translation", "rotation", "scale", "colorLinearRgb"],
+      "properties": {
+        "translation": { "$ref": "#/$defs/vec3" },
+        "rotation": { "$ref": "#/$defs/quat" },
+        "scale": { "$ref": "#/$defs/positiveVec3" },
+        "colorLinearRgb": { "$ref": "#/$defs/unitVec3" }
+      }
+    },
+    "unitVec3": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "type": "number", "minimum": 0, "maximum": 1 }
+    },
+    "sharedEdge": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["edge", "neighborChunkId", "neighborEdge", "sampleCount", "validation", "payloadHash"],
+      "properties": {
+        "edge": { "enum": ["north", "east", "south", "west"] },
+        "neighborChunkId": { "$ref": "#/$defs/chunkId" },
+        "neighborEdge": { "enum": ["north", "east", "south", "west"] },
+        "sampleCount": { "const": 41 },
+        "validation": { "const": "float32-bit-identical" },
+        "payloadHash": { "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/sha256" }] }
+      }
+    },
+    "authoredWorldChunkIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "generatorVersion", "dataRevision", "worldSeed", "chunkX", "chunkZ", "biomeId"],
+      "properties": {
+        "schemaVersion": { "$ref": "#/$defs/semver" },
+        "generatorVersion": { "type": "string", "minLength": 1 },
+        "dataRevision": { "type": "string", "minLength": 1 },
+        "worldSeed": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+        "chunkX": { "type": "integer" },
+        "chunkZ": { "type": "integer" },
+        "biomeId": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" }
+      }
+    },
+    "authoredWorldChunkRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schemaVersion", "generatorVersion", "dataRevision", "worldSeed", "chunkX", "chunkZ", "biomeId", "heightSamples", "heightHash", "contentHash"],
+      "properties": {
+        "schemaVersion": { "$ref": "#/$defs/semver" },
+        "generatorVersion": { "type": "string", "minLength": 1 },
+        "dataRevision": { "type": "string", "minLength": 1 },
+        "worldSeed": { "type": "integer", "minimum": 0, "maximum": 4294967295 },
+        "chunkX": { "type": "integer" },
+        "chunkZ": { "type": "integer" },
+        "biomeId": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+        "heightSamples": {
+          "type": "array",
+          "minItems": 1681,
+          "maxItems": 1681,
+          "items": { "type": "number" }
+        },
+        "heightHash": { "$ref": "#/$defs/runtimeHash" },
+        "contentHash": { "$ref": "#/$defs/runtimeHash" }
+      }
+    },
+    "runtimeHash": { "type": "string", "pattern": "^fnv1a32:[0-9a-f]{8}$" }
+  }
+}

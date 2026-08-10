@@ -4,6 +4,7 @@ import {
   DEFAULT_AIRCRAFT_PAINT_COLOR,
   type AirplaneModel,
 } from '../assets/AirplaneModel';
+import { PlayableCharacter, type CharacterId } from '../entities/PlayableCharacter';
 import { Loop } from '../core/Loop';
 import { createRenderer, resizeRenderer } from '../core/Renderer';
 import { AudioSystem } from '../systems/AudioSystem';
@@ -18,6 +19,11 @@ import {
 import { FlightVfx } from '../systems/FlightVfx';
 import { InspectionCamera, type InspectionView } from '../systems/InspectionCamera';
 import { ManualFlightController } from '../systems/ManualFlightController';
+import { CharacterInput } from '../systems/CharacterInput';
+import {
+  GroundCharacterController,
+  type GroundCharacterSnapshot,
+} from '../systems/GroundCharacterController';
 import { PilotCamera } from '../systems/PilotCamera';
 import { PilotInput } from '../systems/PilotInput';
 import { QualityDiagnostics } from '../systems/QualityDiagnostics';
@@ -47,6 +53,13 @@ const CINEMATIC_PREWARM_SECONDS = [
 const PREWARM_RENDER_WIDTH = 160;
 const PREWARM_RENDER_HEIGHT = 100;
 const AIRCRAFT_PAINT_STORAGE_KEY = 'cropper-seven-aircraft-paint';
+const CHARACTER_STORAGE_KEY = 'cropper-seven-character';
+const CHARACTER_SPAWN = new THREE.Vector3(-6, 0, -112.4);
+const CHARACTER_SPAWN_YAW = Math.PI / 2;
+const AIRCRAFT_ENTRY_LOCAL = new THREE.Vector3(-1.95, 0, -0.5);
+const AIRCRAFT_ENTRY_RADIUS = 2.8;
+
+type GameplayControlMode = 'inspection' | 'on-foot' | 'piloting' | 'autopilot';
 
 function readStoredAircraftPaintColor(): string {
   try {
@@ -67,6 +80,15 @@ function storeAircraftPaintColor(value: string): void {
   }
 }
 
+function readStoredCharacter(): CharacterId {
+  try {
+    const value = window.localStorage.getItem(CHARACTER_STORAGE_KEY);
+    return value === 'field' || value === 'racer' ? value : 'pilot';
+  } catch {
+    return 'pilot';
+  }
+}
+
 export class Game {
   private readonly renderer: THREE.WebGLRenderer;
   private readonly scene = new THREE.Scene();
@@ -77,9 +99,14 @@ export class Game {
   private readonly flight: FlightSequence;
   private readonly manualFlight: ManualFlightController;
   private readonly pilotInput = new PilotInput();
+  private readonly characterInput = new CharacterInput();
+  private readonly character: PlayableCharacter;
+  private readonly characterController: GroundCharacterController;
+  private readonly characterCameraTarget = new THREE.Object3D();
   private readonly inspectionCamera: InspectionCamera;
   private readonly cinematicCamera: CinematicCamera;
   private readonly pilotCamera: PilotCamera;
+  private readonly characterCamera: PilotCamera;
   private readonly audio = new AudioSystem();
   private readonly vfx: FlightVfx;
   private readonly hud: FlightHud;
@@ -91,16 +118,25 @@ export class Game {
   private readonly leftPupilOrigin: THREE.Vector3;
   private readonly rightPupilOrigin: THREE.Vector3;
   private readonly reviewStudioFloor: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshStandardMaterial>;
+  private readonly cameraForward = new THREE.Vector3();
+  private readonly aircraftEntryWorld = new THREE.Vector3();
 
   private frame = 0;
   private worldElapsed = 0;
   private timeScale = 1;
-  private previousPhase = 'parked';
   private activeMode: Exclude<FlightMode, 'inspection'> = 'manual';
+  private controlMode: GameplayControlMode = 'inspection';
+  private characterEntryDistance = Number.POSITIVE_INFINITY;
+  private characterCanEnterAircraft = false;
   private disposed = false;
   private reviewMode = false;
   private normalBackground: THREE.Scene['background'] = null;
   private normalFog: THREE.Fog | THREE.FogExp2 | null = null;
+
+  private get canExit(): boolean {
+    const state = this.manualFlight.state;
+    return this.controlMode === 'piloting' && state.onGround && state.speed <= 0.05;
+  }
 
   constructor(private readonly canvas: HTMLCanvasElement) {
     this.renderer = createRenderer(canvas);
@@ -115,6 +151,17 @@ export class Game {
     this.airplane.paint.setColor(readStoredAircraftPaintColor());
     const initialPaintColor = this.airplane.paint.getColor();
     this.scene.add(this.airplane.root);
+    const initialCharacter = readStoredCharacter();
+    this.character = new PlayableCharacter(initialCharacter);
+    this.scene.add(this.character.root);
+    void this.character.ready.then(() => this.quality.invalidateSceneMetrics());
+    this.characterController = new GroundCharacterController(this.character.root, {
+      surfaceHeightAt: (worldX, worldZ) => this.landingSurfaceHeightAt(worldX, worldZ),
+      spawnPosition: CHARACTER_SPAWN,
+      spawnYaw: CHARACTER_SPAWN_YAW,
+    });
+    this.characterCameraTarget.position.copy(this.character.root.position);
+    this.characterCameraTarget.rotation.y = CHARACTER_SPAWN_YAW;
     this.reviewStudioFloor = new THREE.Mesh(
       new THREE.PlaneGeometry(80, 80),
       new THREE.MeshStandardMaterial({ color: '#c7c8c9', roughness: 0.94, metalness: 0 }),
@@ -182,18 +229,38 @@ export class Game {
       fov: 30,
     });
     this.cinematicCamera = new CinematicCamera(this.camera, this.airplane.root);
-    this.pilotCamera = new PilotCamera(this.camera, this.airplane.root);
+    this.pilotCamera = new PilotCamera(this.camera, this.airplane.root, canvas);
+    this.characterCamera = new PilotCamera(this.camera, this.characterCameraTarget, canvas, {
+      minDistance: 3.5,
+      maxDistance: 16,
+      focusHeight: 1.2,
+      followDistance: [5.4, 6.8],
+      followHeight: [2.8, 2.8],
+      sideOffset: [0, 0],
+      lookAhead: [1.5, 2.8],
+      targetHeight: 1.05,
+      speedForMaximumFraming: 5.25,
+      fov: [44, 48],
+      allowAirborneUnderside: false,
+    });
     this.vfx = new FlightVfx(this.scene);
     this.leftPupilOrigin = this.airplane.face.leftPupil.position.clone();
     this.rightPupilOrigin = this.airplane.face.rightPupil.position.clone();
 
     this.hud = new FlightHud({
-      onStartManual: () => this.startManualFlight(),
+      onStartManual: () => this.startOnFoot(),
       onStartAutopilot: () => this.startAutopilotFlight(),
       onReset: () => this.resetFlight(),
       onMuteChange: (muted) => this.audio.setMuted(muted),
       initialPaintColor,
       onPaintColorChange: (hexColor) => this.setAircraftPaintColor(hexColor),
+      initialCharacter,
+      onCharacterChange: (characterId) => {
+        this.character.setCharacter(characterId);
+        try {
+          window.localStorage.setItem(CHARACTER_STORAGE_KEY, characterId);
+        } catch {}
+      },
     });
 
     this.canvas.tabIndex = 0;
@@ -217,10 +284,14 @@ export class Game {
     window.removeEventListener('keydown', this.onKeyDown);
     this.hud.dispose();
     this.pilotInput.dispose();
+    this.characterInput.dispose();
     this.inspectionCamera.dispose();
+    this.pilotCamera.dispose();
+    this.characterCamera.dispose();
     this.cinematicCamera.dispose();
     this.vfx.dispose();
     this.audio.dispose();
+    this.character.dispose();
     this.airplane.dispose();
     this.biomeWorld.dispose();
     this.world.dispose();
@@ -243,9 +314,31 @@ export class Game {
     resizeRenderer(this.renderer, this.camera, MAX_DPR);
     this.quality.tick(Math.min(1, rawDeltaSeconds));
 
-    const snapshot = this.activeMode === 'manual'
-      ? this.manualFlight.update(simulationDelta, this.pilotInput.intent)
-      : this.flight.update(simulationDelta * this.timeScale);
+    let vehicleSnapshot: Readonly<FlightSnapshot>;
+    let snapshot: Readonly<FlightSnapshot>;
+    if (this.controlMode === 'autopilot') {
+      vehicleSnapshot = this.flight.update(simulationDelta * this.timeScale);
+      snapshot = vehicleSnapshot;
+    } else if (this.controlMode === 'piloting') {
+      vehicleSnapshot = this.manualFlight.update(simulationDelta, this.pilotInput.intent);
+      snapshot = vehicleSnapshot;
+    } else if (this.controlMode === 'on-foot') {
+      vehicleSnapshot = this.manualFlight.update(simulationDelta, this.pilotInput.intent);
+      this.camera.getWorldDirection(this.cameraForward);
+      const characterState = this.characterController.update(
+        simulationDelta,
+        this.characterInput.intent,
+        this.cameraForward,
+      );
+      this.character.setAnimation(characterState.animation);
+      this.characterCameraTarget.position.copy(characterState.position);
+      this.updateAircraftEntryInteraction(characterState);
+      snapshot = this.createOnFootSnapshot(characterState);
+    } else {
+      vehicleSnapshot = this.manualFlight.state;
+      snapshot = vehicleSnapshot;
+    }
+    if (this.character.root.visible) this.character.update(delta);
     const worldChanged = this.biomeWorld.update(snapshot.position);
     if (worldChanged) {
       this.quality.invalidateSceneMetrics();
@@ -259,40 +352,59 @@ export class Game {
       this.renderer.shadowMap.autoUpdate = needsRealtimeShadows;
       this.renderer.shadowMap.needsUpdate = true;
     }
-    if (snapshot.inspectionAllowed) {
+    if (
+      this.controlMode === 'inspection'
+      || (this.controlMode === 'autopilot' && snapshot.inspectionAllowed)
+    ) {
+      this.characterCamera.setEnabled(false);
+      this.pilotCamera.setEnabled(false);
       this.inspectionCamera.setEnabled(true);
       this.inspectionCamera.update(delta, snapshot);
-    } else if (this.activeMode === 'manual') {
+    } else if (this.controlMode === 'on-foot') {
       this.inspectionCamera.setEnabled(false);
+      this.pilotCamera.setEnabled(false);
+      this.characterCamera.setEnabled(true);
+      this.characterCamera.update(delta, snapshot);
+    } else if (this.controlMode === 'piloting') {
+      this.characterCamera.setEnabled(false);
+      this.inspectionCamera.setEnabled(false);
+      this.pilotCamera.setEnabled(true);
       this.pilotCamera.update(delta, snapshot);
     } else {
+      this.characterCamera.setEnabled(false);
       this.inspectionCamera.setEnabled(false);
+      this.pilotCamera.setEnabled(false);
       this.cinematicCamera.update(delta, snapshot);
     }
 
-    this.updatePresentation(delta, snapshot);
+    this.updatePresentation(delta, vehicleSnapshot);
     this.vfx.update(delta, this.airplane.root, {
-      phase: snapshot.phase,
-      speed: snapshot.speed,
-      altitude: snapshot.altitude,
-      propellerRpm: snapshot.propellerRpm,
-      wheelContact: snapshot.wheelContact.main,
+      phase: vehicleSnapshot.phase,
+      speed: vehicleSnapshot.speed,
+      altitude: vehicleSnapshot.altitude,
+      propellerRpm: vehicleSnapshot.propellerRpm,
+      wheelContact: vehicleSnapshot.wheelContact.main,
     });
     this.audio.update({
-      phase: snapshot.phase,
-      speed: snapshot.speed,
-      altitude: snapshot.altitude,
-      propellerRpm: snapshot.propellerRpm,
-      wheelContact: snapshot.wheelContact.all,
+      phase: vehicleSnapshot.phase,
+      speed: vehicleSnapshot.speed,
+      altitude: vehicleSnapshot.altitude,
+      propellerRpm: vehicleSnapshot.propellerRpm,
+      wheelContact: vehicleSnapshot.wheelContact.all,
     });
     this.hud.update({
       ...snapshot,
       totalDuration: FLIGHT_SEQUENCE_SECONDS,
+      controlMode: this.controlMode,
+      hubVisible: !this.reviewMode && (
+        this.controlMode === 'inspection'
+        || (this.controlMode === 'autopilot' && snapshot.inspectionAllowed)
+      ),
+      interactionPrompt: this.characterCanEnterAircraft
+        ? 'Enter aircraft'
+        : this.canExit ? 'Exit aircraft' : undefined,
     });
 
-    if (snapshot.phase !== this.previousPhase) {
-      this.previousPhase = snapshot.phase;
-    }
     if (this.frame % 8 === 0) this.publishLegacyDiagnostics();
   }
 
@@ -335,6 +447,12 @@ export class Game {
       this.quality.invalidateSceneMetrics();
       this.cinematicCamera.reset();
       this.pilotCamera.reset();
+      this.characterCamera.reset();
+      this.characterCamera.setEnabled(false);
+      this.characterController.setEnabled(false);
+      this.characterController.reset();
+      this.characterInput.setEnabled(false);
+      this.character.setVisible(true);
       this.renderer.setRenderTarget(previousRenderTarget);
       this.renderer.shadowMap.autoUpdate = previousShadowAutoUpdate;
       this.renderer.shadowMap.needsUpdate = true;
@@ -350,7 +468,13 @@ export class Game {
     if (this.activeMode === 'autopilot' && this.flight.state.running) return;
     void this.audio.unlock();
     this.activeMode = 'autopilot';
+    this.controlMode = 'autopilot';
     this.pilotInput.setEnabled(false);
+    this.characterInput.setEnabled(false);
+    this.characterController.setEnabled(false);
+    this.character.setVisible(false);
+    this.characterCanEnterAircraft = false;
+    this.characterEntryDistance = Number.POSITIVE_INFINITY;
     this.manualFlight.reset();
     const wasComplete = this.flight.state.completed;
     if (wasComplete) {
@@ -361,48 +485,140 @@ export class Game {
     }
     this.recenterWorldAtAirport();
     this.inspectionCamera.setEnabled(false);
+    this.pilotCamera.setEnabled(false);
+    this.characterCamera.setEnabled(false);
     this.cinematicCamera.reset();
     this.pilotCamera.reset();
+    this.characterCamera.reset();
     this.audio.confirm();
   }
 
-  private startManualFlight(): void {
-    if (this.activeMode === 'manual' && this.manualFlight.state.running) {
+  private startOnFoot(): void {
+    if (this.controlMode === 'on-foot') {
       this.canvas.focus({ preventScroll: true });
       return;
     }
     void this.audio.unlock();
     this.activeMode = 'manual';
+    this.controlMode = 'on-foot';
+    this.flight.reset();
+    this.manualFlight.reset();
+    this.recenterWorldAtAirport();
+    this.pilotInput.setEnabled(false);
+    this.characterInput.setEnabled(true);
+    this.characterController.reset();
+    this.characterController.setEnabled(true);
+    this.characterCameraTarget.position.copy(this.character.root.position);
+    this.characterCameraTarget.rotation.set(0, CHARACTER_SPAWN_YAW, 0);
+    this.character.setVisible(true);
+    this.character.setAnimation('idle', 0);
+    this.inspectionCamera.setEnabled(false);
+    this.pilotCamera.setEnabled(false);
+    this.characterCamera.reset();
+    this.characterCamera.setEnabled(true);
+    this.cinematicCamera.reset();
+    this.pilotCamera.reset();
+    this.vfx.reset();
+    this.updateAircraftEntryInteraction(this.characterController.state);
+    this.audio.confirm();
+    this.canvas.focus({ preventScroll: true });
+  }
+
+  private startManualFlight(): void {
+    if (this.controlMode === 'piloting' && this.manualFlight.state.running) {
+      this.canvas.focus({ preventScroll: true });
+      return;
+    }
+    void this.audio.unlock();
+    this.activeMode = 'manual';
+    this.controlMode = 'piloting';
     this.flight.reset();
     this.manualFlight.reset();
     this.manualFlight.start();
     this.recenterWorldAtAirport();
+    this.characterInput.setEnabled(false);
+    this.characterController.setEnabled(false);
+    this.character.setVisible(false);
+    this.characterCanEnterAircraft = false;
+    this.characterEntryDistance = Number.POSITIVE_INFINITY;
     this.pilotInput.setEnabled(true);
     this.inspectionCamera.setEnabled(false);
+    this.characterCamera.setEnabled(false);
     this.cinematicCamera.reset();
+    this.characterCamera.reset();
     this.pilotCamera.reset();
+    this.pilotCamera.setEnabled(true);
     this.vfx.reset();
     this.audio.confirm();
     this.canvas.focus({ preventScroll: true });
   }
 
+  private enterAircraft(): void {
+    if (this.controlMode !== 'on-foot' || !this.characterCanEnterAircraft) return;
+    this.characterInput.setEnabled(false);
+    this.characterController.setEnabled(false);
+    this.character.setVisible(false);
+    this.characterCanEnterAircraft = false;
+    this.characterEntryDistance = Number.POSITIVE_INFINITY;
+    this.controlMode = 'piloting';
+    this.manualFlight.start();
+    this.pilotInput.setEnabled(true);
+    this.characterCamera.setEnabled(false);
+    this.characterCamera.reset();
+    this.pilotCamera.reset();
+    this.pilotCamera.setEnabled(true);
+    this.audio.confirm();
+    this.canvas.focus({ preventScroll: true });
+  }
+
+  private exitAircraft(): void {
+    if (this.controlMode !== 'piloting' || !this.canExit) return;
+    const aircraftState = this.manualFlight.state;
+    this.pilotInput.setEnabled(false);
+    this.aircraftEntryWorld.copy(AIRCRAFT_ENTRY_LOCAL);
+    this.airplane.root.localToWorld(this.aircraftEntryWorld);
+    this.characterController.reset(this.aircraftEntryWorld, aircraftState.yaw);
+    this.characterController.setEnabled(true);
+    this.characterInput.setEnabled(true);
+    this.character.setVisible(true);
+    this.characterCameraTarget.position.copy(this.character.root.position);
+    this.characterCameraTarget.rotation.y = aircraftState.yaw;
+    this.controlMode = 'on-foot';
+    this.characterCamera.reset();
+    this.updateAircraftEntryInteraction(this.characterController.state);
+    this.audio.confirm();
+  }
+
   private resetFlight(): void {
     this.activeMode = 'manual';
+    this.controlMode = 'inspection';
     this.pilotInput.setEnabled(false);
+    this.characterInput.setEnabled(false);
+    this.characterController.setEnabled(false);
+    this.characterController.reset();
+    this.characterCameraTarget.position.copy(this.character.root.position);
+    this.characterCameraTarget.rotation.set(0, CHARACTER_SPAWN_YAW, 0);
+    this.character.setVisible(!this.reviewMode);
+    this.characterCanEnterAircraft = false;
+    this.characterEntryDistance = Number.POSITIVE_INFINITY;
     this.flight.reset();
     this.manualFlight.reset();
     this.recenterWorldAtAirport();
     this.vfx.reset();
     this.cinematicCamera.reset();
     this.pilotCamera.reset();
+    this.pilotCamera.setEnabled(false);
+    this.characterCamera.reset();
+    this.characterCamera.setEnabled(false);
     this.inspectionCamera.setEnabled(true);
     this.inspectionCamera.reset('front');
     this.audio.reset();
-    this.previousPhase = 'parked';
     this.updatePresentation(0, this.manualFlight.state);
     this.hud.update({
       ...this.manualFlight.state,
       totalDuration: FLIGHT_SEQUENCE_SECONDS,
+      controlMode: this.controlMode,
+      hubVisible: !this.reviewMode,
     });
   }
 
@@ -425,6 +641,62 @@ export class Game {
       : this.biomeWorld.getTerrainHeight(worldX, worldZ);
   }
 
+  private updateAircraftEntryInteraction(
+    characterState: Readonly<GroundCharacterSnapshot>,
+  ): void {
+    this.aircraftEntryWorld.copy(AIRCRAFT_ENTRY_LOCAL);
+    this.airplane.root.localToWorld(this.aircraftEntryWorld);
+    this.characterEntryDistance = Math.hypot(
+      characterState.position.x - this.aircraftEntryWorld.x,
+      characterState.position.z - this.aircraftEntryWorld.z,
+    );
+    this.characterCanEnterAircraft = this.controlMode === 'on-foot'
+      && this.characterEntryDistance <= AIRCRAFT_ENTRY_RADIUS;
+  }
+
+  private createOnFootSnapshot(
+    characterState: Readonly<GroundCharacterSnapshot>,
+  ): FlightSnapshot {
+    const base = this.manualFlight.state;
+    const altitude = Math.max(
+      0,
+      characterState.position.y - characterState.terrainHeight,
+    );
+    return {
+      ...base,
+      mode: 'manual',
+      phase: 'manual-ready',
+      phaseProgress: 0,
+      normalizedProgress: 0,
+      elapsed: characterState.elapsed,
+      airborneSeconds: characterState.grounded ? 0 : characterState.elapsed,
+      airborneProgress: 0,
+      speed: characterState.speed,
+      altitude,
+      verticalSpeed: characterState.verticalSpeed,
+      throttle: 0,
+      stall: false,
+      crashed: false,
+      onGround: characterState.grounded,
+      propellerRpm: 0,
+      propellerAngle: 0,
+      wheelRotation: 0,
+      wheelContact: {
+        main: characterState.grounded,
+        auxiliary: characterState.grounded,
+        all: characterState.grounded,
+      },
+      pitch: 0,
+      bank: 0,
+      yaw: characterState.yaw,
+      cameraShot: 'aerial-chase',
+      completed: false,
+      running: true,
+      inspectionAllowed: false,
+      position: characterState.position,
+    };
+  }
+
   private updatePresentation(delta: number, snapshot: Readonly<FlightSnapshot>): void {
     const rpm01 = THREE.MathUtils.clamp(snapshot.propellerRpm / 2400, 0, 1);
     const blurMaterial = this.airplane.propellerBlur.material as THREE.MeshBasicMaterial;
@@ -432,7 +704,7 @@ export class Game {
     blurMaterial.opacity = THREE.MathUtils.smoothstep(rpm01, 0.12, 1) * 0.16;
     this.airplane.propellerBlur.scale.setScalar(0.96 + rpm01 * 0.05);
 
-    const manualControlsActive = this.activeMode === 'manual' && snapshot.running;
+    const manualControlsActive = this.controlMode === 'piloting' && snapshot.running;
     const aileronTarget = manualControlsActive
       ? this.pilotInput.intent.roll * 0.24
       : THREE.MathUtils.clamp(snapshot.bank * 0.72, -0.24, 0.24);
@@ -485,7 +757,7 @@ export class Game {
   private installExperienceApi(): void {
     const owner = this;
     window.__AIRPLANE_EXPERIENCE__ = {
-      start: () => owner.startAutopilotFlight(),
+      start: () => owner.startOnFoot(),
       startAutopilot: () => owner.startAutopilotFlight(),
       startManual: () => owner.startManualFlight(),
       reset: () => owner.resetFlight(),
@@ -532,6 +804,29 @@ export class Game {
       mode: this.activeMode,
       flight: snapshot,
       input: { ...this.pilotInput.intent },
+      gameplay: {
+        controlMode: this.controlMode,
+        hub: this.hud.getDiagnostics(),
+        character: {
+          ...this.character.diagnostics,
+          controller: this.characterController.diagnostics,
+        },
+        interaction: {
+          kind: this.controlMode === 'on-foot'
+            ? 'enter-aircraft'
+            : this.controlMode === 'piloting' ? 'exit-aircraft' : null,
+          available: this.characterCanEnterAircraft || this.canExit,
+          distance: this.characterEntryDistance,
+          radius: AIRCRAFT_ENTRY_RADIUS,
+          promptVisible: this.characterCanEnterAircraft || this.canExit,
+          worldPosition: {
+            x: this.aircraftEntryWorld.x,
+            y: this.aircraftEntryWorld.y,
+            z: this.aircraftEntryWorld.z,
+          },
+        },
+        input: this.characterInput.diagnostics,
+      },
       manual: {
         throttle: this.manualFlight.state.throttle,
         verticalSpeed: this.manualFlight.state.verticalSpeed,
@@ -540,12 +835,23 @@ export class Game {
         crashed: this.manualFlight.state.crashed,
       },
       camera: {
+        controller: this.controlMode === 'autopilot' && snapshot.inspectionAllowed
+          ? 'inspection'
+          : this.controlMode === 'on-foot'
+          ? 'character'
+          : this.controlMode === 'piloting'
+            ? 'pilot'
+            : this.controlMode === 'autopilot'
+              ? 'cinematic'
+              : 'inspection',
         position: {
           x: this.camera.position.x,
           y: this.camera.position.y,
           z: this.camera.position.z,
         },
         fov: this.camera.fov,
+        pilot: { ...this.pilotCamera.diagnostics },
+        character: { ...this.characterCamera.diagnostics },
       },
       renderer: {
         calls: performance.drawCalls,
@@ -574,20 +880,41 @@ export class Game {
   }
 
   private currentSnapshot(): Readonly<FlightSnapshot> {
-    return this.activeMode === 'manual' ? this.manualFlight.state : this.flight.state;
+    if (this.controlMode === 'autopilot') return this.flight.state;
+    if (this.controlMode === 'on-foot') {
+      return this.createOnFootSnapshot(this.characterController.state);
+    }
+    return this.manualFlight.state;
   }
 
   private readonly onKeyDown = (event: KeyboardEvent): void => {
-    const target = event.target as HTMLElement | null;
-    if (target?.matches('button, input, textarea, select')) return;
+    const target = event.target instanceof HTMLElement ? event.target : null;
+    if (target?.matches('button, input, textarea, select') || target?.isContentEditable) return;
     if (event.code === 'KeyR') {
       event.preventDefault();
       this.resetFlight();
       return;
     }
-    if (event.code === 'Enter') {
+    if (event.code === 'KeyE' && !event.repeat) {
+      if (this.controlMode === 'on-foot') this.enterAircraft();
+      else if (this.controlMode === 'piloting') this.exitAircraft();
       event.preventDefault();
-      if (!this.currentSnapshot().running) this.startManualFlight();
+      return;
+    }
+    if (event.code === 'KeyC' && this.controlMode === 'on-foot') {
+      event.preventDefault();
+      this.characterCameraTarget.quaternion.copy(this.character.root.quaternion);
+      this.characterCamera.recenter();
+      return;
+    }
+    if (event.code === 'KeyC' && this.controlMode === 'piloting') {
+      event.preventDefault();
+      this.pilotCamera.recenter();
+      return;
+    }
+    if (event.code === 'KeyC' && this.currentSnapshot().inspectionAllowed) {
+      event.preventDefault();
+      this.inspectionCamera.reset('front');
       return;
     }
     const views: Partial<Record<string, InspectionView>> = {

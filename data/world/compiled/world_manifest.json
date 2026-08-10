@@ -1,0 +1,445 @@
+{
+  "biomeCoverage": [
+    {
+      "biomeId": "alpine-peaks",
+      "readyCount": 1,
+      "representativeCount": 1
+    },
+    {
+      "biomeId": "arctic-tundra",
+      "readyCount": 3,
+      "representativeCount": 3
+    },
+    {
+      "biomeId": "autumn-forest",
+      "readyCount": 1,
+      "representativeCount": 1
+    },
+    {
+      "biomeId": "azure-harbor",
+      "readyCount": 1,
+      "representativeCount": 1
+    },
+    {
+      "biomeId": "crystal-salt-flats",
+      "readyCount": 1,
+      "representativeCount": 1
+    },
+    {
+      "biomeId": "emerald-marsh",
+      "readyCount": 1,
+      "representativeCount": 1
+    },
+    {
+      "biomeId": "ironworks-district",
+      "readyCount": 1,
+      "representativeCount": 1
+    },
+    {
+      "biomeId": "metropolitan-core",
+      "readyCount": 1,
+      "representativeCount": 1
+    },
+    {
+      "biomeId": "red-rock-canyon",
+      "readyCount": 1,
+      "representativeCount": 1
+    },
+    {
+      "biomeId": "sahara-dunes",
+      "readyCount": 1,
+      "representativeCount": 1
+    },
+    {
+      "biomeId": "sunlit-meadow",
+      "readyCount": 1,
+      "representativeCount": 1
+    },
+    {
+      "biomeId": "sunstone-citadel",
+      "readyCount": 1,
+      "representativeCount": 1
+    },
+    {
+      "biomeId": "tropical-lagoon",
+      "readyCount": 1,
+      "representativeCount": 1
+    },
+    {
+      "biomeId": "volcanic-wastes",
+      "readyCount": 2,
+      "representativeCount": 2
+    }
+  ],
+  "chunkDescriptors": [
+    {
+      "biomeId": "arctic-tundra",
+      "chunkCoordinates": [
+        0,
+        1
+      ],
+      "id": "pilot-chunk-near-airport-arctic-tundra",
+      "path": "data/world/pilots/chunk_0_1.json",
+      "ready": true,
+      "runtimeRecordStatus": "ready",
+      "sha256": "8d8a43d724b9f76ffb456b614bc9ee011c22ae48e4288b7ca79e355039a1a003"
+    },
+    {
+      "biomeId": "alpine-peaks",
+      "chunkCoordinates": [
+        -17,
+        -5
+      ],
+      "id": "worldclaw-alpine-peaks-chunk-minus-17-minus-5",
+      "path": "data/world/regions/alpine-peaks/chunk_-17_-5.json",
+      "ready": true,
+      "runtimeRecordStatus": "ready",
+      "sha256": "cf30442b88cdea7ebcdd3936cb62f6d7a6148cb0e85df0ecac3a8b26ae8a587c"
+    },
+    {
+      "biomeId": "arctic-tundra",
+      "chunkCoordinates": [
+        1,
+        0
+      ],
+      "id": "worldclaw-arctic-tundra-chunk-plus-1-zero",
+      "path": "data/world/regions/arctic-tundra/chunk_1_0.json",
+      "ready": true,
+      "runtimeRecordStatus": "ready",
+      "sha256": "c7a183990b50182c365c1af0f5f167668dd69080d1fbd8899f62cb23fc569b6a"
+    },
+    {
+      "biomeId": "arctic-tundra",
+      "chunkCoordinates": [
+        1,
+        1
+      ],
+      "id": "worldclaw-arctic-tundra-chunk-plus-1-plus-1",
+      "path": "data/world/regions/arctic-tundra/chunk_1_1.json",
+      "ready": true,
+      "runtimeRecordStatus": "ready",
+      "sha256": "9ec8948d79d217eb2456e497dbbc35d26a26010a5bd91d9ffbf49cd2091a29d5"
+    },
+    {
+      "biomeId": "autumn-forest",
+      "chunkCoordinates": [
+        -8,
+        -9
+      ],
+      "id": "worldclaw-autumn-forest-chunk-minus-8-minus-9",
+      "path": "data/world/regions/autumn-forest/chunk_-8_-9.json",
+      "ready": true,
+      "runtimeRecordStatus": "ready",
+      "sha256": "9f581f9f46bcbbd910c864215ea80177f3cdd7c1143e1c2a25ea36ab28f4b8eb"
+    },
+    {
+      "biomeId": "azure-harbor",
+      "chunkCoordinates": [
+        -11,
+        -5
+      ],
+      "id": "worldclaw-azure-harbor-chunk-minus-11-minus-5",
+      "path": "data/world/regions/azure-harbor/chunk_-11_-5.json",
+      "ready": true,
+      "runtimeRecordStatus": "ready",
+      "sha256": "f734bc8b35778d608ae37ff31ebdffaff31205230460bc21f549d2b56c3cd8b3"
+    },
+    {
+      "biomeId": "crystal-salt-flats",
+      "chunkCoordinates": [
+        -11,
+        0
+      ],
+      "id": "worldclaw-crystal-salt-flats-chunk-minus-11-zero",
+      "path": "data/world/regions/crystal-salt-flats/chunk_-11_0.json",
+      "ready": true,
+      "runtimeRecordStatus": "ready",
+      "sha256": "35398a22dc0053f13564d36bb35fbaa03971450394afa6c557cc03b4d778a0d8"
+    },
+    {
+      "biomeId": "emerald-marsh",
+      "chunkCoordinates": [
+        -8,
+        -5
+      ],
+      "id": "worldclaw-emerald-marsh-chunk-minus-8-minus-5",
+      "path": "data/world/regions/emerald-marsh/chunk_-8_-5.json",
+      "ready": true,
+      "runtimeRecordStatus": "ready",
+      "sha256": "8eec708dea44f3bef362a14304f804af89ed2395161b04f3f0c35cdd442e0ac1"
+    },
+    {
+      "biomeId": "ironworks-district",
+      "chunkCoordinates": [
+        1,
+        -1
+      ],
+      "id": "worldclaw-ironworks-district-chunk-plus-1-minus-1",
+      "path": "data/world/regions/ironworks-district/chunk_1_-1.json",
+      "ready": true,
+      "runtimeRecordStatus": "ready",
+      "sha256": "77980eade995449103dd628949a852a4ce23d0dda5f6ddaae7a47f68611b4d86"
+    },
+    {
+      "biomeId": "metropolitan-core",
+      "chunkCoordinates": [
+        -21,
+        -5
+      ],
+      "id": "worldclaw-metropolitan-core-chunk-minus-21-minus-5",
+      "path": "data/world/regions/metropolitan-core/chunk_-21_-5.json",
+      "ready": true,
+      "runtimeRecordStatus": "ready",
+      "sha256": "ae7897aea74a350d2169de7caf79af45f8a67cfa3db8fa6891d30878799c69f2"
+    },
+    {
+      "biomeId": "red-rock-canyon",
+      "chunkCoordinates": [
+        -1,
+        -1
+      ],
+      "id": "worldclaw-red-rock-canyon-chunk-minus-1-minus-1",
+      "path": "data/world/regions/red-rock-canyon/chunk_-1_-1.json",
+      "ready": true,
+      "runtimeRecordStatus": "ready",
+      "sha256": "8a886d722fd0c1eabf951ff2b23df50b9cfb2d5b6b5f0cf37939043c7a0b79d6"
+    },
+    {
+      "biomeId": "sahara-dunes",
+      "chunkCoordinates": [
+        -13,
+        -12
+      ],
+      "id": "worldclaw-sahara-dunes-chunk-minus-13-minus-12",
+      "path": "data/world/regions/sahara-dunes/chunk_-13_-12.json",
+      "ready": true,
+      "runtimeRecordStatus": "ready",
+      "sha256": "1c8dda6aa23b1b14e0960c7306ec455039a892d2eb9aeb600fe4c3a7cab8e722"
+    },
+    {
+      "biomeId": "sunlit-meadow",
+      "chunkCoordinates": [
+        -13,
+        -5
+      ],
+      "id": "worldclaw-sunlit-meadow-chunk-minus-13-minus-5",
+      "path": "data/world/regions/sunlit-meadow/chunk_-13_-5.json",
+      "ready": true,
+      "runtimeRecordStatus": "ready",
+      "sha256": "3c3aae373e5de06c642b7cb10522c0a126128b075e5d0ecf93df2fc05a1142d2"
+    },
+    {
+      "biomeId": "sunstone-citadel",
+      "chunkCoordinates": [
+        -12,
+        -4
+      ],
+      "id": "worldclaw-sunstone-citadel-chunk-minus-12-minus-4",
+      "path": "data/world/regions/sunstone-citadel/chunk_-12_-4.json",
+      "ready": true,
+      "runtimeRecordStatus": "ready",
+      "sha256": "8f0cd0893dbe5cd81490c79e9c8f8a001dc0ba38985b91f3cc0f6c52f2bb3f8d"
+    },
+    {
+      "biomeId": "tropical-lagoon",
+      "chunkCoordinates": [
+        -24,
+        -7
+      ],
+      "id": "worldclaw-tropical-lagoon-chunk-minus-24-minus-7",
+      "path": "data/world/regions/tropical-lagoon/chunk_-24_-7.json",
+      "ready": true,
+      "runtimeRecordStatus": "ready",
+      "sha256": "0eead13915129389215a1415b4e9ee392c739007242d8c5a8be6bf54028f57f6"
+    },
+    {
+      "biomeId": "volcanic-wastes",
+      "chunkCoordinates": [
+        -1,
+        0
+      ],
+      "id": "worldclaw-volcanic-wastes-chunk-minus-1-zero",
+      "path": "data/world/regions/volcanic-wastes/chunk_-1_0.json",
+      "ready": true,
+      "runtimeRecordStatus": "ready",
+      "sha256": "01fd47ef477af311a3d4f06d2ddda1c8e8cf4dcab6547af0477c6de1aa51d030"
+    },
+    {
+      "biomeId": "volcanic-wastes",
+      "chunkCoordinates": [
+        -1,
+        1
+      ],
+      "id": "worldclaw-volcanic-wastes-chunk-minus-1-plus-1",
+      "path": "data/world/regions/volcanic-wastes/chunk_-1_1.json",
+      "ready": true,
+      "runtimeRecordStatus": "ready",
+      "sha256": "e251cca048930d92e59cfb799cb38ba055501af619ecbc7587e2bb43746b0b48"
+    }
+  ],
+  "compiler": {
+    "canonicalization": "recursive-key-sort-json-v1",
+    "deterministic": true,
+    "hashAlgorithm": "sha256",
+    "id": "planes3d-worldclaw-offline",
+    "version": "1.1.0"
+  },
+  "dataRevision": "917550d",
+  "inventory": {
+    "assetCount": 44,
+    "criticalRouteCount": 5,
+    "descriptorCount": 17,
+    "landmarkCount": 12,
+    "materialSetCount": 3,
+    "readyDescriptorCount": 17,
+    "regionCount": 15,
+    "representedBiomeCount": 14,
+    "zoneCount": 9
+  },
+  "manifestHash": "af5e0267029a03485c051a4ab8159032653e0e00f694bed4e465ec777cbf27ff",
+  "pilot": {
+    "boundsXZ": {
+      "maximum": [
+        640,
+        1920
+      ],
+      "minimum": [
+        -640,
+        640
+      ]
+    },
+    "center": [
+      0,
+      0,
+      1280
+    ],
+    "chunkCoordinates": [
+      0,
+      1
+    ],
+    "chunkId": "chunk:0:1",
+    "id": "pilot-chunk-near-airport-arctic-tundra",
+    "proceduralFallbackRequired": true,
+    "regionId": "region-biome-arctic-tundra",
+    "runtimeRecordAvailable": true,
+    "runtimeRecordContract": {
+      "fields": [
+        "schemaVersion",
+        "generatorVersion",
+        "dataRevision",
+        "worldSeed",
+        "chunkX",
+        "chunkZ",
+        "biomeId",
+        "heightSamples",
+        "heightHash",
+        "contentHash"
+      ],
+      "heightSampleCount": 1681,
+      "runtimeHash": "fnv1a32"
+    },
+    "runtimeRecordIdentity": {
+      "biomeId": "arctic-tundra",
+      "chunkX": 0,
+      "chunkZ": 1,
+      "dataRevision": "917550d",
+      "generatorVersion": "worldclaw-offline-v1",
+      "schemaVersion": "1.0.0",
+      "worldSeed": 119278167
+    },
+    "runtimeRecordStatus": "ready",
+    "sharedEdgeHooks": [
+      {
+        "edge": "north",
+        "neighborChunkId": "chunk:0:0",
+        "neighborEdge": "south",
+        "validation": "float32-bit-identical"
+      },
+      {
+        "edge": "east",
+        "neighborChunkId": "chunk:1:1",
+        "neighborEdge": "west",
+        "validation": "float32-bit-identical"
+      },
+      {
+        "edge": "south",
+        "neighborChunkId": "chunk:0:2",
+        "neighborEdge": "north",
+        "validation": "float32-bit-identical"
+      },
+      {
+        "edge": "west",
+        "neighborChunkId": "chunk:-1:1",
+        "neighborEdge": "east",
+        "validation": "float32-bit-identical"
+      }
+    ],
+    "terrainMode": "authored-float32-grid"
+  },
+  "runtimePaths": {
+    "resolution": "import.meta.env.BASE_URL",
+    "supportedBases": [
+      {
+        "baseUrl": "/",
+        "manifestUrl": "/data/world/compiled/world_manifest.json",
+        "pilotDescriptorUrl": "/data/world/pilots/chunk_0_1.json"
+      },
+      {
+        "baseUrl": "/world-plane/",
+        "manifestUrl": "/world-plane/data/world/compiled/world_manifest.json",
+        "pilotDescriptorUrl": "/world-plane/data/world/pilots/chunk_0_1.json"
+      }
+    ]
+  },
+  "schemaVersion": "1.0.0",
+  "schemas": [
+    {
+      "id": "worldSpec",
+      "path": "data/world/schemas/world_spec.schema.json",
+      "sha256": "809c0e634dfee202d19859b0382f024b6ed09c54c9c177238be83c83ede87c51"
+    },
+    {
+      "id": "regionGraph",
+      "path": "data/world/schemas/region_graph.schema.json",
+      "sha256": "1cdf5f926fc579f0712570581c806cda1154fb0857ca67586b63b72b7263c58e"
+    },
+    {
+      "id": "assetRegistry",
+      "path": "data/world/schemas/asset_registry.schema.json",
+      "sha256": "43b4046689f899c197ce284693ad9daead4b7537a30843a9a2b45009671c29dd"
+    },
+    {
+      "id": "gameplayRoutes",
+      "path": "data/world/schemas/gameplay_routes.schema.json",
+      "sha256": "fbab608b275e1823f119df01ba2e5e0d5793dc3031c14c251b40d74c4ea6b460"
+    },
+    {
+      "id": "chunkDescriptor",
+      "path": "data/world/schemas/chunk_descriptor.schema.json",
+      "sha256": "5677a50afc06101fd0485ad90b97b1ebac57b3ffaf28ad93ed3754b3acc1b553"
+    }
+  ],
+  "sourceSetHash": "fad9b16faea78182923b72f870cec418d1625408ada3a6c7068be3ca0d4a70b4",
+  "sources": [
+    {
+      "id": "worldSpec",
+      "path": "data/world/world_spec.json",
+      "sha256": "45d38a9381a13fed56f88bb96b42965b1d98f0cce0aa350d5109beec1900f7b3"
+    },
+    {
+      "id": "regionGraph",
+      "path": "data/world/region_graph.json",
+      "sha256": "b4c967a8580ddabbec95db8dbd47acb772904b8b50ba0dd7873ef92f68db7a5b"
+    },
+    {
+      "id": "assetRegistry",
+      "path": "data/world/asset_registry.json",
+      "sha256": "b29cb567dfd34dcabfbeeb839087c1b0b17e81665593adbd035213d5db837dcf"
+    },
+    {
+      "id": "gameplayRoutes",
+      "path": "data/world/gameplay_routes.json",
+      "sha256": "7c653dc17e66cb6d5e08fe15bb2237b59f6464f1eddeea3d06e28a78106be10f"
+    }
+  ]
+}

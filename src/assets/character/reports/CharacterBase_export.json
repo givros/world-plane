@@ -1,0 +1,606 @@
+{
+  "passed": true,
+  "source_blend": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase.blend",
+  "source_blend_sha256_before": "4530ebe1e8c642df5e47db9ad875c74fe995100561d385ef34a8efc38bd19572",
+  "blender_version": "5.1.2",
+  "targets": "all",
+  "output_dir": "E:\\Dev\\planes3d-sol\\src\\assets\\character",
+  "character": "CharacterBase",
+  "rig": "CharacterRig",
+  "bone_count": 49,
+  "bone_names": [
+    "IKPole.L",
+    "IKPole.R",
+    "IkTarget.L",
+    "IkTarget.R",
+    "f_index.01.L",
+    "f_index.01.R",
+    "f_index.02.L",
+    "f_index.02.R",
+    "f_index.03.L",
+    "f_index.03.R",
+    "f_pinky.01.L",
+    "f_pinky.01.R",
+    "f_pinky.02.L",
+    "f_pinky.02.R",
+    "f_pinky.03.L",
+    "f_pinky.03.R",
+    "foot.L",
+    "foot.R",
+    "forearm.L",
+    "forearm.R",
+    "hand.L",
+    "hand.R",
+    "head",
+    "palm.01.L",
+    "palm.01.R",
+    "palm.04.L",
+    "palm.04.R",
+    "pelvis",
+    "shin.L",
+    "shin.R",
+    "shoulder.L",
+    "shoulder.R",
+    "spine1",
+    "spine2",
+    "spine3",
+    "spine4",
+    "spine5",
+    "thigh.L",
+    "thigh.R",
+    "thumb.01.L",
+    "thumb.01.R",
+    "thumb.02.L",
+    "thumb.02.R",
+    "thumb.03.L",
+    "thumb.03.R",
+    "toe.L",
+    "toe.R",
+    "upper_arm.L",
+    "upper_arm.R"
+  ],
+  "garments": [
+    "LongSleeveShirt",
+    "Pants"
+  ],
+  "mesh_objects": [
+    "CharacterBase",
+    "LongSleeveShirt",
+    "Pants"
+  ],
+  "materials": {
+    "CharacterBase": [
+      "CharacterMaterial"
+    ],
+    "LongSleeveShirt": [
+      "LongSleeveShirtMaterial"
+    ],
+    "Pants": [
+      "PantsMaterial"
+    ]
+  },
+  "fps": 30.0,
+  "files": {
+    "tpose_fbx": {
+      "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase.fbx",
+      "sha256": "4ebdac91e189c714d7cbcf8d21e3e6e89c24dd517258fa974065266d29bda78e",
+      "bytes": 453420,
+      "options": {
+        "check_existing": false,
+        "use_selection": true,
+        "global_scale": 1.0,
+        "apply_unit_scale": true,
+        "apply_scale_options": "FBX_SCALE_UNITS",
+        "use_space_transform": true,
+        "bake_space_transform": false,
+        "axis_forward": "-Z",
+        "axis_up": "Y",
+        "primary_bone_axis": "Y",
+        "secondary_bone_axis": "X",
+        "armature_nodetype": "NULL",
+        "use_armature_deform_only": false,
+        "add_leaf_bones": false,
+        "use_custom_props": true,
+        "use_metadata": false,
+        "filepath": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase.fbx",
+        "object_types": [
+          "ARMATURE",
+          "MESH"
+        ],
+        "use_mesh_modifiers": true,
+        "use_mesh_modifiers_render": true,
+        "mesh_smooth_type": "FACE",
+        "use_subsurf": false,
+        "use_mesh_edges": false,
+        "use_tspace": false,
+        "use_triangles": true,
+        "colors_type": "SRGB",
+        "prioritize_active_color": true,
+        "bake_anim": false,
+        "path_mode": "COPY",
+        "embed_textures": true
+      },
+      "texture_staging": []
+    },
+    "tpose_glb": {
+      "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase.glb",
+      "sha256": "72bb854443e58ccb2bf4efd4f8a6f4f4b413ad441136f94d859cfdbab746a526",
+      "bytes": 145528,
+      "draco": true,
+      "options": {
+        "filepath": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase.glb",
+        "check_existing": false,
+        "export_format": "GLB",
+        "use_selection": true,
+        "export_yup": true,
+        "export_animations": false,
+        "export_skins": true,
+        "export_all_influences": false,
+        "export_influence_nb": 4,
+        "export_apply": true,
+        "export_extras": true,
+        "export_cameras": false,
+        "export_lights": false,
+        "export_materials": "EXPORT",
+        "export_texcoords": true,
+        "export_normals": true,
+        "export_tangents": false,
+        "export_morph": false,
+        "export_rest_position_armature": true,
+        "export_current_frame": false,
+        "export_armature_object_remove": false,
+        "export_def_bones": false,
+        "export_leaf_bone": false,
+        "export_draco_mesh_compression_enable": true,
+        "export_draco_mesh_compression_level": 6,
+        "export_draco_position_quantization": 14,
+        "export_draco_normal_quantization": 10,
+        "export_draco_texcoord_quantization": 12,
+        "export_draco_color_quantization": 10,
+        "export_draco_generic_quantization": 12
+      }
+    }
+  },
+  "actions": [
+    {
+      "name": "Idle",
+      "slug": "idle",
+      "managed_kind": "basic",
+      "frame_start": 1,
+      "frame_end": 251,
+      "fps": 30.0,
+      "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\anim\\idle.fbx",
+      "sha256": "e3df72000f43d5f522ff9e016fa7c8d0e33186f9fe2386437ac8046009a58199",
+      "bytes": 1059676,
+      "payload": "skeleton_only",
+      "options": {
+        "check_existing": false,
+        "use_selection": true,
+        "global_scale": 1.0,
+        "apply_unit_scale": true,
+        "apply_scale_options": "FBX_SCALE_UNITS",
+        "use_space_transform": true,
+        "bake_space_transform": false,
+        "axis_forward": "-Z",
+        "axis_up": "Y",
+        "primary_bone_axis": "Y",
+        "secondary_bone_axis": "X",
+        "armature_nodetype": "NULL",
+        "use_armature_deform_only": false,
+        "add_leaf_bones": false,
+        "use_custom_props": true,
+        "use_metadata": false,
+        "filepath": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\anim\\idle.fbx",
+        "object_types": [
+          "ARMATURE"
+        ],
+        "use_mesh_modifiers": false,
+        "bake_anim": true,
+        "bake_anim_use_all_bones": true,
+        "bake_anim_use_nla_strips": false,
+        "bake_anim_use_all_actions": false,
+        "bake_anim_force_startend_keying": true,
+        "bake_anim_step": 1.0,
+        "bake_anim_simplify_factor": 0.0,
+        "path_mode": "STRIP",
+        "embed_textures": false
+      }
+    },
+    {
+      "name": "Jump",
+      "slug": "jump",
+      "managed_kind": "basic",
+      "frame_start": 1,
+      "frame_end": 58,
+      "fps": 30.0,
+      "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\anim\\jump.fbx",
+      "sha256": "014a853bae4fcb8ff49a5f122c2d9e7a52c54405c10840ef316e694669c340e8",
+      "bytes": 512764,
+      "payload": "skeleton_only",
+      "options": {
+        "check_existing": false,
+        "use_selection": true,
+        "global_scale": 1.0,
+        "apply_unit_scale": true,
+        "apply_scale_options": "FBX_SCALE_UNITS",
+        "use_space_transform": true,
+        "bake_space_transform": false,
+        "axis_forward": "-Z",
+        "axis_up": "Y",
+        "primary_bone_axis": "Y",
+        "secondary_bone_axis": "X",
+        "armature_nodetype": "NULL",
+        "use_armature_deform_only": false,
+        "add_leaf_bones": false,
+        "use_custom_props": true,
+        "use_metadata": false,
+        "filepath": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\anim\\jump.fbx",
+        "object_types": [
+          "ARMATURE"
+        ],
+        "use_mesh_modifiers": false,
+        "bake_anim": true,
+        "bake_anim_use_all_bones": true,
+        "bake_anim_use_nla_strips": false,
+        "bake_anim_use_all_actions": false,
+        "bake_anim_force_startend_keying": true,
+        "bake_anim_step": 1.0,
+        "bake_anim_simplify_factor": 0.0,
+        "path_mode": "STRIP",
+        "embed_textures": false
+      }
+    },
+    {
+      "name": "Run",
+      "slug": "run",
+      "managed_kind": "basic",
+      "frame_start": 1,
+      "frame_end": 20,
+      "fps": 30.0,
+      "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\anim\\run.fbx",
+      "sha256": "de7ba2c9ecabf84d04d8857d003ac3d781c254e1d8b6e2121aa56f69c218ab45",
+      "bytes": 392684,
+      "payload": "skeleton_only",
+      "options": {
+        "check_existing": false,
+        "use_selection": true,
+        "global_scale": 1.0,
+        "apply_unit_scale": true,
+        "apply_scale_options": "FBX_SCALE_UNITS",
+        "use_space_transform": true,
+        "bake_space_transform": false,
+        "axis_forward": "-Z",
+        "axis_up": "Y",
+        "primary_bone_axis": "Y",
+        "secondary_bone_axis": "X",
+        "armature_nodetype": "NULL",
+        "use_armature_deform_only": false,
+        "add_leaf_bones": false,
+        "use_custom_props": true,
+        "use_metadata": false,
+        "filepath": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\anim\\run.fbx",
+        "object_types": [
+          "ARMATURE"
+        ],
+        "use_mesh_modifiers": false,
+        "bake_anim": true,
+        "bake_anim_use_all_bones": true,
+        "bake_anim_use_nla_strips": false,
+        "bake_anim_use_all_actions": false,
+        "bake_anim_force_startend_keying": true,
+        "bake_anim_step": 1.0,
+        "bake_anim_simplify_factor": 0.0,
+        "path_mode": "STRIP",
+        "embed_textures": false
+      }
+    },
+    {
+      "name": "Walk",
+      "slug": "walk",
+      "managed_kind": "basic",
+      "frame_start": 1,
+      "frame_end": 32,
+      "fps": 30.0,
+      "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\anim\\walk.fbx",
+      "sha256": "cae19de9a84eb3c28f6d32636c8aad7332976ab8deb6a14363f4a32401d97c86",
+      "bytes": 447596,
+      "payload": "skeleton_only",
+      "options": {
+        "check_existing": false,
+        "use_selection": true,
+        "global_scale": 1.0,
+        "apply_unit_scale": true,
+        "apply_scale_options": "FBX_SCALE_UNITS",
+        "use_space_transform": true,
+        "bake_space_transform": false,
+        "axis_forward": "-Z",
+        "axis_up": "Y",
+        "primary_bone_axis": "Y",
+        "secondary_bone_axis": "X",
+        "armature_nodetype": "NULL",
+        "use_armature_deform_only": false,
+        "add_leaf_bones": false,
+        "use_custom_props": true,
+        "use_metadata": false,
+        "filepath": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\anim\\walk.fbx",
+        "object_types": [
+          "ARMATURE"
+        ],
+        "use_mesh_modifiers": false,
+        "bake_anim": true,
+        "bake_anim_use_all_bones": true,
+        "bake_anim_use_nla_strips": false,
+        "bake_anim_use_all_actions": false,
+        "bake_anim_force_startend_keying": true,
+        "bake_anim_step": 1.0,
+        "bake_anim_simplify_factor": 0.0,
+        "path_mode": "STRIP",
+        "embed_textures": false
+      }
+    }
+  ],
+  "source_saved": false,
+  "texture_contract": {
+    "materials": {
+      "CharacterMaterial": {
+        "uses_textures": false,
+        "roles": {
+          "base_color": [],
+          "metallic_roughness": [],
+          "normal": [],
+          "occlusion": [],
+          "emission": [],
+          "alpha": []
+        },
+        "images": {},
+        "errors": []
+      },
+      "LongSleeveShirtMaterial": {
+        "uses_textures": false,
+        "roles": {
+          "base_color": [],
+          "metallic_roughness": [],
+          "normal": [],
+          "occlusion": [],
+          "emission": [],
+          "alpha": []
+        },
+        "images": {},
+        "errors": []
+      },
+      "PantsMaterial": {
+        "uses_textures": false,
+        "roles": {
+          "base_color": [],
+          "metallic_roughness": [],
+          "normal": [],
+          "occlusion": [],
+          "emission": [],
+          "alpha": []
+        },
+        "images": {},
+        "errors": []
+      }
+    },
+    "meshes": {
+      "CharacterBase": {
+        "required": false,
+        "layers": [
+          "UVMap"
+        ],
+        "active": "UVMap",
+        "active_render": "UVMap",
+        "textured_polygons": 0,
+        "textured_triangles": 0,
+        "finite": true,
+        "inside_unit_square": true,
+        "bounds": null,
+        "degenerate_textured_triangles": [],
+        "generated_rim_degenerate_allowed": false,
+        "errors": []
+      },
+      "LongSleeveShirt": {
+        "required": false,
+        "layers": [
+          "CodexClothingUV"
+        ],
+        "active": "CodexClothingUV",
+        "active_render": "CodexClothingUV",
+        "textured_polygons": 0,
+        "textured_triangles": 0,
+        "finite": true,
+        "inside_unit_square": true,
+        "bounds": null,
+        "degenerate_textured_triangles": [],
+        "generated_rim_degenerate_allowed": false,
+        "errors": []
+      },
+      "Pants": {
+        "required": false,
+        "layers": [
+          "CodexClothingUV"
+        ],
+        "active": "CodexClothingUV",
+        "active_render": "CodexClothingUV",
+        "textured_polygons": 0,
+        "textured_triangles": 0,
+        "finite": true,
+        "inside_unit_square": true,
+        "bounds": null,
+        "degenerate_textured_triangles": [],
+        "generated_rim_degenerate_allowed": false,
+        "errors": []
+      }
+    },
+    "used_images": [],
+    "errors": {},
+    "passed": true
+  },
+  "missing_images_using_fallback": [],
+  "weight_normalization": {
+    "CharacterBase": {
+      "vertices": 1596,
+      "maximum_influences_before": 7,
+      "vertices_over_four_before": 90,
+      "non_normalized_before": 1363,
+      "maximum_influences_after": 4,
+      "non_normalized_after": 0,
+      "maximum_dropped_raw_weight_sum": 0.15715602040290833
+    },
+    "LongSleeveShirt": {
+      "vertices": 358,
+      "maximum_influences_before": 6,
+      "vertices_over_four_before": 45,
+      "non_normalized_before": 348,
+      "maximum_influences_after": 4,
+      "non_normalized_after": 0,
+      "maximum_dropped_raw_weight_sum": 0.13943448290228844
+    },
+    "Pants": {
+      "vertices": 261,
+      "maximum_influences_before": 5,
+      "vertices_over_four_before": 24,
+      "non_normalized_before": 249,
+      "maximum_influences_after": 4,
+      "non_normalized_after": 0,
+      "maximum_dropped_raw_weight_sum": 0.023528244346380234
+    }
+  },
+  "tpose_evaluated_meshes": {
+    "CharacterBase": {
+      "vertices": 1596,
+      "polygons": 1588,
+      "triangles": 3134,
+      "materials": [
+        "CharacterMaterial"
+      ],
+      "material_base_colors": {
+        "CharacterMaterial": [
+          0.800000011920929,
+          0.800000011920929,
+          0.800000011920929,
+          1.0
+        ]
+      },
+      "uv_contract": {
+        "required": false,
+        "layers": [
+          "UVMap"
+        ],
+        "active": "UVMap",
+        "active_render": "UVMap",
+        "textured_polygons": 0,
+        "textured_triangles": 0,
+        "finite": true,
+        "inside_unit_square": true,
+        "bounds": null,
+        "degenerate_textured_triangles": [],
+        "generated_rim_degenerate_allowed": false,
+        "errors": []
+      },
+      "material_triangle_counts": {
+        "CharacterMaterial": 3134
+      },
+      "invalid_material_triangles": {
+        "total": 0,
+        "by_reason": {},
+        "by_material_index": {},
+        "samples": []
+      }
+    },
+    "LongSleeveShirt": {
+      "vertices": 716,
+      "polygons": 720,
+      "triangles": 1440,
+      "materials": [
+        "LongSleeveShirtMaterial"
+      ],
+      "material_base_colors": {
+        "LongSleeveShirtMaterial": [
+          0.9046611785888672,
+          0.8962693810462952,
+          0.8468732237815857,
+          1.0
+        ]
+      },
+      "uv_contract": {
+        "required": false,
+        "layers": [
+          "CodexClothingUV"
+        ],
+        "active": "CodexClothingUV",
+        "active_render": "CodexClothingUV",
+        "textured_polygons": 0,
+        "textured_triangles": 0,
+        "finite": true,
+        "inside_unit_square": true,
+        "bounds": null,
+        "degenerate_textured_triangles": [],
+        "generated_rim_degenerate_allowed": true,
+        "errors": []
+      },
+      "material_triangle_counts": {
+        "LongSleeveShirtMaterial": 1440
+      },
+      "invalid_material_triangles": {
+        "total": 0,
+        "by_reason": {},
+        "by_material_index": {},
+        "samples": []
+      }
+    },
+    "Pants": {
+      "vertices": 522,
+      "polygons": 524,
+      "triangles": 1048,
+      "materials": [
+        "PantsMaterial"
+      ],
+      "material_base_colors": {
+        "PantsMaterial": [
+          0.3967552185058594,
+          0.19120168685913086,
+          0.09084171056747437,
+          1.0
+        ]
+      },
+      "uv_contract": {
+        "required": false,
+        "layers": [
+          "CodexClothingUV"
+        ],
+        "active": "CodexClothingUV",
+        "active_render": "CodexClothingUV",
+        "textured_polygons": 0,
+        "textured_triangles": 0,
+        "finite": true,
+        "inside_unit_square": true,
+        "bounds": null,
+        "degenerate_textured_triangles": [],
+        "generated_rim_degenerate_allowed": true,
+        "errors": []
+      },
+      "material_triangle_counts": {
+        "PantsMaterial": 1048
+      },
+      "invalid_material_triangles": {
+        "total": 0,
+        "by_reason": {},
+        "by_material_index": {},
+        "samples": []
+      }
+    }
+  },
+  "evaluated_uv_validation": {
+    "passed": true,
+    "invalid_meshes": {}
+  },
+  "material_assignment_validation": {
+    "passed": true,
+    "invalid_meshes": {}
+  },
+  "state_restored": true,
+  "source_blend_sha256_after": "4530ebe1e8c642df5e47db9ad875c74fe995100561d385ef34a8efc38bd19572",
+  "source_blend_unchanged": true,
+  "report_path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\reports\\CharacterBase_export.json"
+}

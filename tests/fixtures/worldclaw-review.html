@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" href="data:," />
+    <title>WorldClaw offline visual review</title>
+    <style>
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: #10171b;
+      }
+    </style>
+  </head>
+  <body>
+    <script type="module">
+      import { mountWorldReview } from '/src/world/WorldReviewHarness.ts';
+
+      const query = new URLSearchParams(location.search);
+      const source = query.get('source') === 'procedural' ? 'procedural' : 'compiled';
+      const view = query.get('view') ?? 'top';
+      const chunkX = Number(query.get('chunkX') ?? -12);
+      const chunkZ = Number(query.get('chunkZ') ?? -5);
+      const harness = mountWorldReview({
+        source,
+        view,
+        chunkX,
+        chunkZ,
+        width: 960,
+        height: 600,
+      });
+      window.__WORLDCLAW_MOUNT__ = mountWorldReview;
+      window.__WORLDCLAW_REVIEW__ = harness;
+      document.documentElement.dataset.ready = 'true';
+    </script>
+  </body>
+</html>

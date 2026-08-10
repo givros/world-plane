@@ -66,6 +66,13 @@ export class PilotInput {
     if (!this.enabled || !CONTROL_CODES.has(event.code)) return;
     const target = event.target as HTMLElement | null;
     if (target?.matches('button, input, textarea, select')) return;
+    // A movement key can still be physically held while the player enters the
+    // aircraft. Ignore its repeat events until it is released and pressed
+    // again, so walking forward never turns into accidental throttle.
+    if (event.repeat && !this.pressed.has(event.code)) {
+      event.preventDefault();
+      return;
+    }
     this.pressed.add(event.code);
     this.updateIntent();
     event.preventDefault();

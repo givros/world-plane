@@ -1,0 +1,78 @@
+{
+  "after_blend_sha256": "4530EBE1E8C642DF5E47DB9AD875C74FE995100561D385EF34A8EFC38BD19572",
+  "after_manifest": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_animation_components_after.json",
+  "after_semantic_digest": "02CA84569F340C15925B3639CB43F9AA63C318C0FF38076D867CF6A7C9A51DC9",
+  "allowed_scopes": [
+    "animations"
+  ],
+  "before_blend_sha256": "50A67F4C03439ECDE46AB302E7FC9EA528FB05D488F0113D26A40E45E437DE90",
+  "before_manifest": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_animation_components_before.json",
+  "before_semantic_digest": "065CE8F12072ACA0AA6961AF76F1C87C55462D5DFBF2B714CB65A72BA21FF12F",
+  "changed_scopes": [
+    "animations"
+  ],
+  "changes": [
+    {
+      "after": "4F47DBBB04B06CFDC6C60F20C3F4F6BCBC64AED6F5C706FB387BF14C0BC33DAA",
+      "allowed": true,
+      "before": "8EFF8985B06AD907F5642C6F83FC16F454A30415A95E1D6631BD130F43391B21",
+      "change": "modified",
+      "members": [
+        {
+          "after": "ED25FCDD94889C7E6B98BB8013CF018D95F48E871B126BC5EBCBA193504FFA2C",
+          "before": null,
+          "change": "added",
+          "member": "action:Idle"
+        },
+        {
+          "after": "80D84702FAFC214A6E99169CAB3C09C5E701CAC5030D6D6632673044161288D4",
+          "before": null,
+          "change": "added",
+          "member": "action:Jump"
+        },
+        {
+          "after": "60AD9CC31D700CB781EFDD45A3F1DC14F3D5AB1B30CDDCC8858A1D1646750B17",
+          "before": null,
+          "change": "added",
+          "member": "action:Run"
+        },
+        {
+          "after": "4D69D46D81D238CA506300E0D0B99B2E4F890BCB35C48AC8BD60AEB59E919745",
+          "before": null,
+          "change": "added",
+          "member": "action:Walk"
+        },
+        {
+          "after": "0C1E3FEEFC2FD69E701AF779E24FF0B5F9E15F0D86C7B788298652B1B88307AF",
+          "before": "44136FA355B3678A1146AD16F7E8649E94FB4FC21FE77E8310C060F61CAAFF8A",
+          "change": "modified",
+          "member": "library_metadata"
+        },
+        {
+          "after": "C8391FB5A0B2CFC5BF7B2E0543A75FC12127005B53C0243B6BB82B1045D18FDC",
+          "before": "611AB5FBEB675F325C0625252832711592B1D0019AD09E6275AC1799B6247631",
+          "change": "modified",
+          "member": "rig_animation_behavior"
+        },
+        {
+          "after": "5475CE8B329464F5FD7A90780BDE3318A4F4933890E9C41ED42C63576AF87121",
+          "before": "EBC3CDA377B2BEB598021731898CA07E42797E8449D0D69907F14D91BA8B4DE4",
+          "change": "modified",
+          "member": "scene_timing"
+        }
+      ],
+      "scope": "animations"
+    }
+  ],
+  "passed": true,
+  "schema": "codex.blender.component-comparison/v1",
+  "unchanged_scopes": [
+    "body_geometry",
+    "garment:preset_long_sleeve_shirt",
+    "garment:preset_pants",
+    "other_objects",
+    "rig_rest",
+    "skin_material"
+  ],
+  "violations": []
+}

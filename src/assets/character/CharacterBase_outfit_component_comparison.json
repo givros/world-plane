@@ -1,0 +1,178 @@
+{
+  "after_blend_sha256": "50A67F4C03439ECDE46AB302E7FC9EA528FB05D488F0113D26A40E45E437DE90",
+  "after_manifest": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_outfit_components_after.json",
+  "after_semantic_digest": "065CE8F12072ACA0AA6961AF76F1C87C55462D5DFBF2B714CB65A72BA21FF12F",
+  "allowed_scopes": [
+    "garment:preset_long_sleeve_shirt",
+    "garment:preset_pants"
+  ],
+  "before_blend_sha256": "CB35008D924D35BD4C3C2ACDAFDEE6551B0C738C1B0FF137FF067B617E050477",
+  "before_manifest": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase_outfit_components_before.json",
+  "before_semantic_digest": "58297EBCB739C8805699DC8DFD7082FEC6BBFA290B474FA6AFC184443B5C2FDC",
+  "changed_scopes": [
+    "garment:preset_long_sleeve_shirt",
+    "garment:preset_pants"
+  ],
+  "changes": [
+    {
+      "after": "9C98C38C624D062E132DCA3D10CC8B1ECC6E501D504A63528E60923A21E55DA6",
+      "allowed": true,
+      "before": null,
+      "change": "added",
+      "members": [
+        {
+          "after": "C22A1F2AF2AE725C83653C211D9D7D344E392D8AAF6C75035552D442EAFB4607",
+          "before": null,
+          "change": "added",
+          "member": "object:LongSleeveShirt:drivers"
+        },
+        {
+          "after": "45E141B630D3F6DC6BFCACF9FAF9B67CF56492386AEC6003B34010BDB4483A3A",
+          "before": null,
+          "change": "added",
+          "member": "object:LongSleeveShirt:geometry"
+        },
+        {
+          "after": "2DE4E3FDC313A57E3E3A73E8694F16B2A5FD6DD10A609A74F165508A4E612EE3",
+          "before": null,
+          "change": "added",
+          "member": "object:LongSleeveShirt:material_slots"
+        },
+        {
+          "after": "1E1948E022E69D828B21A7C375EF3FAA1DB5B408FE49562ED2D8BF7947457B78",
+          "before": null,
+          "change": "added",
+          "member": "object:LongSleeveShirt:materials"
+        },
+        {
+          "after": "F887FC731882A28E69755A841F86A0DAA0400D69F419488F9B01E5E02EB90D63",
+          "before": null,
+          "change": "added",
+          "member": "object:LongSleeveShirt:metadata"
+        },
+        {
+          "after": "A921D015B42F7C6C432BB70EC427AE9041FFACB692CEB157709F224D2E30E996",
+          "before": null,
+          "change": "added",
+          "member": "object:LongSleeveShirt:modifiers"
+        },
+        {
+          "after": "74234E98AFE7498FB5DAF1F36AC2D78ACC339464F950703B8C019892F982B90B",
+          "before": null,
+          "change": "added",
+          "member": "object:LongSleeveShirt:shape_keys"
+        },
+        {
+          "after": "CA5B6320B854501225D502074CF1ABF24B36901E8CF466EB9EF0BBC81B508F94",
+          "before": null,
+          "change": "added",
+          "member": "object:LongSleeveShirt:transform_and_parent"
+        },
+        {
+          "after": "480BD4D69A551FDE98FEEDDAE03B4367E9EBE49AB5FFFB39BCDE6CFD8893D989",
+          "before": null,
+          "change": "added",
+          "member": "object:LongSleeveShirt:uv_and_attributes"
+        },
+        {
+          "after": "B01CE1467A0B733B0929915193D5AC741CA64CB0AC83720E021AB4CD8A2A391B",
+          "before": null,
+          "change": "added",
+          "member": "object:LongSleeveShirt:weights"
+        },
+        {
+          "after": "09C76029C6EA8003B541444B46BB0854EFB70652D064F0E5DADED79DD6695109",
+          "before": null,
+          "change": "added",
+          "member": "rig_visibility_controls"
+        }
+      ],
+      "scope": "garment:preset_long_sleeve_shirt"
+    },
+    {
+      "after": "C89C31564BFB5270BC006A1495821A7BEB17B0DF32E99593756B03A8B3F1315D",
+      "allowed": true,
+      "before": null,
+      "change": "added",
+      "members": [
+        {
+          "after": "64A23E37190002E4F47241AB47F3A8E478211A7078D272A9FFDE07109BF433DE",
+          "before": null,
+          "change": "added",
+          "member": "object:Pants:drivers"
+        },
+        {
+          "after": "444F2A6E0390A9627E3649D95969B37751A426DBA1F2693269FA1F5BDBDF3CEF",
+          "before": null,
+          "change": "added",
+          "member": "object:Pants:geometry"
+        },
+        {
+          "after": "1B88581302A49B890B3CB609EABBC3041EB31EDD1D559F9FF8600ED44AEAF169",
+          "before": null,
+          "change": "added",
+          "member": "object:Pants:material_slots"
+        },
+        {
+          "after": "04434338F46ED1F31D030169CE44FE79DCF12B98F9D83D0EFFBD6BF211FC0383",
+          "before": null,
+          "change": "added",
+          "member": "object:Pants:materials"
+        },
+        {
+          "after": "E4C9507893D9949A7017670602CF53CC645FEBE549490A3EA0DD1FAD0EA4C4BF",
+          "before": null,
+          "change": "added",
+          "member": "object:Pants:metadata"
+        },
+        {
+          "after": "6D8BC57935B778A340C721C80B34AB346CC3C895D11EA64C0C3A3CBBE1B878B9",
+          "before": null,
+          "change": "added",
+          "member": "object:Pants:modifiers"
+        },
+        {
+          "after": "74234E98AFE7498FB5DAF1F36AC2D78ACC339464F950703B8C019892F982B90B",
+          "before": null,
+          "change": "added",
+          "member": "object:Pants:shape_keys"
+        },
+        {
+          "after": "49DF0F6578EEFE705A9D7BB675CE1EC74D72EE73D1984DF6F183CFBD923D18F4",
+          "before": null,
+          "change": "added",
+          "member": "object:Pants:transform_and_parent"
+        },
+        {
+          "after": "CD84C0FA6056115C4DA96C18A268009A8664AD933885F9A0B87102322281F4A5",
+          "before": null,
+          "change": "added",
+          "member": "object:Pants:uv_and_attributes"
+        },
+        {
+          "after": "20B8719469533BA072383F72388FC4C0ACC3108D8D6317AD131FDDF259AD5516",
+          "before": null,
+          "change": "added",
+          "member": "object:Pants:weights"
+        },
+        {
+          "after": "DB4E9D76F6F786BBA1AFD8DD1E7537D87CD907C9A34B079C440148B92A22EDA7",
+          "before": null,
+          "change": "added",
+          "member": "rig_visibility_controls"
+        }
+      ],
+      "scope": "garment:preset_pants"
+    }
+  ],
+  "passed": true,
+  "schema": "codex.blender.component-comparison/v1",
+  "unchanged_scopes": [
+    "animations",
+    "body_geometry",
+    "other_objects",
+    "rig_rest",
+    "skin_material"
+  ],
+  "violations": []
+}

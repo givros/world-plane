@@ -7,7 +7,7 @@
     <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%23f28a12' d='M4 33 58 9 43 31l15 13L4 36l18-3Z'/%3E%3C/svg%3E" />
     <meta
       name="description"
-      content="An interactive cinematic flight experience featuring a stylized orange crop duster."
+      content="A free-form flying and ground exploration experience featuring a stylized crop duster."
     />
     <title>Cropper Seven — Flight Experience</title>
   </head>
@@ -61,6 +61,10 @@
 
       <section id="manual-flight-hud" class="manual-only" aria-label="Manual flight instruments" hidden>
         <div id="pilot-alert" role="status" aria-live="polite" aria-atomic="true" hidden></div>
+        <div id="interaction-prompt" role="status" aria-live="polite" aria-atomic="true" hidden>
+          <kbd>E</kbd>
+          <span>Enter aircraft</span>
+        </div>
 
         <div id="attitude-indicator" aria-hidden="true">
           <span class="attitude-ring"></span>
@@ -87,74 +91,100 @@
         </div>
       </section>
 
-      <section id="inspection-hint" class="visible" aria-label="Inspection controls">
+      <section id="inspection-hint" class="visible" aria-label="Camera controls">
         <span class="mouse-icon" aria-hidden="true"><i></i></span>
         <div>
-          <strong>Inspect aircraft</strong>
+          <strong>Move camera &middot; C recenters</strong>
           <span>Drag to orbit · Scroll to zoom</span>
         </div>
       </section>
 
-      <section id="action-dock" aria-label="Flight controls">
-        <button id="flight-button" class="primary-action" type="button">
-          <span class="button-kicker">Manual flight</span>
-          <strong>Take controls</strong>
-          <i aria-hidden="true">→</i>
-        </button>
-        <button id="cinematic-button" class="secondary-action" type="button">
-          <span class="button-kicker">Autopilot showcase</span>
-          <strong>Watch cinematic</strong>
-        </button>
-        <div id="paint-control">
-          <button
-            id="paint-button"
-            class="icon-action"
-            type="button"
-            title="Change aircraft paint"
-            aria-label="Change aircraft paint"
-            aria-haspopup="dialog"
-            aria-controls="paint-panel"
-            aria-expanded="false"
-          >
-            <svg viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M12 3s6 6.4 6 11a6 6 0 0 1-12 0c0-4.6 6-11 6-11Z" />
-              <path d="M9 15.5c.5 1.3 1.5 2 3 2" />
-            </svg>
-            <span class="paint-button-color" aria-hidden="true"></span>
-          </button>
+      <section id="welcome-hub" aria-labelledby="hub-title">
+        <div class="hub-rail" aria-hidden="true"><span>07</span><i></i><small>Field operations</small></div>
+        <div class="hub-shell">
+          <header class="hub-heading">
+            <p>Ready room <span>Runway 36</span></p>
+            <h2 id="hub-title">Choose your setup</h2>
+            <span>Your aircraft is waiting outside.</span>
+          </header>
 
-          <div id="paint-panel" role="dialog" aria-labelledby="paint-panel-title" hidden>
-            <div class="paint-panel-heading">
-              <div>
-                <span>Hangar finish</span>
-                <strong id="paint-panel-title">Aircraft paint</strong>
+          <div class="hub-loadout">
+            <fieldset id="character-selector">
+              <legend><b>01</b><span>Select pilot</span></legend>
+              <div class="character-options">
+                <button class="character-choice" type="button" data-character="pilot" aria-pressed="true" style="--suit: #e9d7b0">
+                  <i class="pilot-portrait" aria-hidden="true"></i><span><strong>Avery</strong><small>Field pilot</small></span>
+                </button>
+                <button class="character-choice" type="button" data-character="field" aria-pressed="false" style="--suit: #657a52">
+                  <i class="pilot-portrait" aria-hidden="true"></i><span><strong>Robin</strong><small>Trail crew</small></span>
+                </button>
+                <button class="character-choice" type="button" data-character="racer" aria-pressed="false" style="--suit: #9a3329">
+                  <i class="pilot-portrait" aria-hidden="true"></i><span><strong>Morgan</strong><small>Air racer</small></span>
+                </button>
               </div>
-              <button id="paint-close-button" type="button" aria-label="Close aircraft paint">×</button>
-            </div>
+            </fieldset>
 
-            <div id="paint-presets" aria-label="Aircraft paint presets">
-              <button class="paint-swatch" type="button" data-color="#ed870c" aria-label="Crop orange" aria-pressed="true" style="--swatch: #ed870c"></button>
-              <button class="paint-swatch" type="button" data-color="#c84732" aria-label="Racing red" aria-pressed="false" style="--swatch: #c84732"></button>
-              <button class="paint-swatch" type="button" data-color="#3479a8" aria-label="Aero blue" aria-pressed="false" style="--swatch: #3479a8"></button>
-              <button class="paint-swatch" type="button" data-color="#4c7650" aria-label="Forest green" aria-pressed="false" style="--swatch: #4c7650"></button>
-              <button class="paint-swatch" type="button" data-color="#c7952e" aria-label="Desert gold" aria-pressed="false" style="--swatch: #c7952e"></button>
-              <button class="paint-swatch" type="button" data-color="#3a4146" aria-label="Graphite" aria-pressed="false" style="--swatch: #3a4146"></button>
-            </div>
-
-            <label class="paint-custom-control" for="paint-color-input">
-              <span>
-                <small>Custom</small>
-                <output id="paint-color-value" for="paint-color-input">#ED870C</output>
-              </span>
-              <input id="paint-color-input" type="color" value="#ed870c" aria-label="Custom aircraft paint color" />
-            </label>
+            <section class="aircraft-selector" aria-labelledby="aircraft-selector-title">
+              <h3 id="aircraft-selector-title"><b>02</b><span>Select aircraft colour</span></h3>
+              <div id="paint-control">
+                <div class="aircraft-card">
+                  <span class="aircraft-silhouette" aria-hidden="true"><i></i></span>
+                  <span class="aircraft-name"><small>Crop duster</small><strong>Cropper 07</strong></span>
+                  <span class="paint-button-color" aria-hidden="true"></span>
+                </div>
+                <div id="paint-presets" aria-label="Aircraft colour presets">
+                  <button class="paint-swatch" type="button" data-color="#ed870c" aria-label="Crop orange" aria-pressed="true" style="--swatch: #ed870c"></button>
+                  <button class="paint-swatch" type="button" data-color="#c84732" aria-label="Racing red" aria-pressed="false" style="--swatch: #c84732"></button>
+                  <button class="paint-swatch" type="button" data-color="#3479a8" aria-label="Aero blue" aria-pressed="false" style="--swatch: #3479a8"></button>
+                  <button class="paint-swatch" type="button" data-color="#4c7650" aria-label="Forest green" aria-pressed="false" style="--swatch: #4c7650"></button>
+                  <button class="paint-swatch" type="button" data-color="#c7952e" aria-label="Desert gold" aria-pressed="false" style="--swatch: #c7952e"></button>
+                  <button class="paint-swatch" type="button" data-color="#3a4146" aria-label="Graphite" aria-pressed="false" style="--swatch: #3a4146"></button>
+                </div>
+                <label class="paint-custom-control" for="paint-color-input">
+                  <span><small>Custom</small><output id="paint-color-value" for="paint-color-input">#ED870C</output></span>
+                  <input id="paint-color-input" type="color" value="#ed870c" aria-label="Custom aircraft colour" />
+                </label>
+              </div>
+            </section>
           </div>
+
+          <nav class="hub-menu" aria-label="Main menu">
+            <button id="flight-button" class="primary-action" type="button">
+              <span class="button-kicker">Open world</span><strong>Play</strong><i aria-hidden="true">&rarr;</i>
+            </button>
+            <button id="settings-button" class="secondary-action" type="button" aria-haspopup="dialog" aria-controls="settings-panel">
+              <span class="button-kicker">Game options</span><strong>Settings</strong>
+            </button>
+          </nav>
+          <button id="cinematic-button" class="hub-cinematic" type="button">Watch the flight showcase <span aria-hidden="true">&rarr;</span></button>
         </div>
+      </section>
+
+      <dialog id="settings-panel" aria-labelledby="settings-title">
+        <form method="dialog" class="settings-card">
+          <header>
+            <div><span>Game options</span><h2 id="settings-title">Settings</h2></div>
+            <button id="settings-close-button" value="close" aria-label="Close settings">&times;</button>
+          </header>
+          <label class="settings-toggle">
+            <span><strong>Sound</strong><small>Engine, ambience and interface audio</small></span>
+            <input id="settings-sound-input" type="checkbox" checked /><i aria-hidden="true"></i>
+          </label>
+          <div class="settings-reference">
+            <span>Quick controls</span>
+            <p><kbd>WASD</kbd> Move <kbd>Shift</kbd> Run <kbd>E</kbd> Enter / exit</p>
+            <p><kbd>C</kbd> Recenter camera <kbd>F</kbd> Full screen</p>
+          </div>
+          <button class="settings-done" value="close">Done</button>
+        </form>
+      </dialog>
+
+      <section id="action-dock" aria-label="Flight controls">
         <button id="reset-button" class="icon-action" type="button" title="Reset aircraft" aria-label="Reset aircraft">
-          ↻
+          &#8635;
         </button>
         <button id="sound-button" class="icon-action" type="button" title="Mute sound" aria-label="Mute sound" aria-pressed="false">
-          <span class="sound-on">♪</span><span class="sound-off">×</span>
+          <span class="sound-on">&#9834;</span><span class="sound-off">&times;</span>
         </button>
         <button
           id="fullscreen-button"

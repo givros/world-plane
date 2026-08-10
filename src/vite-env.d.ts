@@ -1,7 +1,10 @@
 /// <reference types="vite/client" />
 
 import type { AirplaneModelDiagnostics } from './assets/AirplaneModel';
+import type { PlayableCharacterDiagnostics } from './entities/PlayableCharacter';
+import type { CharacterInputDiagnostics } from './systems/CharacterInput';
 import type { FlightSnapshot } from './systems/FlightSequence';
+import type { GroundCharacterDiagnostics } from './systems/GroundCharacterController';
 import type { PilotIntent } from './systems/PilotInput';
 import type { SceneDiagnostics } from './systems/QualityDiagnostics';
 import type { InfiniteBiomeWorldDiagnostics } from './world/InfiniteBiomeWorld';
@@ -13,6 +16,27 @@ declare global {
     mode: 'manual' | 'autopilot';
     flight: Readonly<FlightSnapshot>;
     input: Readonly<PilotIntent>;
+    gameplay: {
+      controlMode: 'inspection' | 'on-foot' | 'piloting' | 'autopilot';
+      character: PlayableCharacterDiagnostics & {
+        controller: GroundCharacterDiagnostics;
+      };
+      interaction: {
+        kind: 'enter-aircraft' | 'exit-aircraft' | null;
+        available: boolean;
+        distance: number;
+        radius: number;
+        promptVisible: boolean;
+        worldPosition: { x: number; y: number; z: number };
+      };
+      hub: {
+        visible: boolean;
+        settingsOpen: boolean;
+        selectedCharacter: 'pilot' | 'field' | 'racer';
+        aircraftPaint: string;
+      };
+      input: CharacterInputDiagnostics;
+    };
     manual: {
       throttle: number;
       verticalSpeed: number;
@@ -21,8 +45,25 @@ declare global {
       crashed: boolean;
     };
     camera: {
+      controller: 'inspection' | 'character' | 'pilot' | 'cinematic';
       position: { x: number; y: number; z: number };
       fov: number;
+      pilot: {
+        enabled: boolean;
+        dragging: boolean;
+        yawOffset: number;
+        pitchOffset: number;
+        zoom: number;
+        distance: number;
+      };
+      character: {
+        enabled: boolean;
+        dragging: boolean;
+        yawOffset: number;
+        pitchOffset: number;
+        zoom: number;
+        distance: number;
+      };
     };
     renderer: {
       calls: number;

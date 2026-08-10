@@ -1,0 +1,48 @@
+{
+  "glb": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase.glb",
+  "glb_sha256": "4BA178412E62001F808463DFBAD5F1E91EA77E4CC5319EF568B199AD7454431F",
+  "runtime_meshes": {
+    "CharacterBase": {
+      "vertices": 6284,
+      "faces": 3134,
+      "triangles": 3134,
+      "materials": [
+        "CharacterMaterial"
+      ],
+      "vertex_groups": 49,
+      "coordinates_finite": true,
+      "armature_target": "CharacterRig"
+    },
+    "LongSleeveShirt": {
+      "vertices": 2880,
+      "faces": 1440,
+      "triangles": 1440,
+      "materials": [
+        "LongSleeveShirtMaterial"
+      ],
+      "vertex_groups": 49,
+      "coordinates_finite": true,
+      "armature_target": "CharacterRig"
+    },
+    "Pants": {
+      "vertices": 2040,
+      "faces": 1048,
+      "triangles": 1048,
+      "materials": [
+        "PantsMaterial"
+      ],
+      "vertex_groups": 49,
+      "coordinates_finite": true,
+      "armature_target": "CharacterRig"
+    }
+  },
+  "rig": {
+    "present": true,
+    "bones": 49
+  },
+  "blender_import_helpers": [
+    "Icosphere"
+  ],
+  "failures": {},
+  "passed": true
+}

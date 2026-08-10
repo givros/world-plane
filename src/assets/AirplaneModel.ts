@@ -2,18 +2,9 @@ import * as THREE from 'three';
 import { mergeVertices } from 'three/addons/utils/BufferGeometryUtils.js';
 
 export type AirplaneModelDiagnostics = {
-  meshes: number;
-  geometries: number;
-  materials: number;
-  approximateTriangles: number;
-  namedNodes: number;
   paint: {
     selectedColor: string;
-    primaryColor: string;
-    accentColor: string;
     revision: number;
-    primaryMaterialUuid: string;
-    accentMaterialUuid: string;
   };
   dimensions: {
     overallLength: number;
@@ -48,9 +39,7 @@ export type AirplaneModel = {
     exhaust: THREE.Object3D;
     leftWingtip: THREE.Object3D;
     rightWingtip: THREE.Object3D;
-    cameraFocus: THREE.Object3D;
   };
-  collisionProxy: THREE.Group;
   shadowProxy: THREE.Mesh;
   groundOffset: number;
   diagnostics: AirplaneModelDiagnostics;
@@ -1357,39 +1346,11 @@ function createSideLivery(materials: PlaneMaterials): THREE.Group {
   return group;
 }
 
-function collectDiagnostics(
-  root: THREE.Object3D,
-  planeMaterials: PlaneMaterials,
-): AirplaneModelDiagnostics {
-  const geometries = new Set<THREE.BufferGeometry>();
-  const materials = new Set<THREE.Material>();
-  let meshes = 0;
-  let triangles = 0;
-  let namedNodes = 0;
-  root.traverse((object) => {
-    if (object.name) namedNodes += 1;
-    if (!(object instanceof THREE.Mesh)) return;
-    meshes += 1;
-    geometries.add(object.geometry);
-    const indexCount = object.geometry.index?.count ?? 0;
-    const vertexCount = object.geometry.getAttribute('position')?.count ?? 0;
-    triangles += indexCount > 0 ? indexCount / 3 : vertexCount / 3;
-    const objectMaterials = Array.isArray(object.material) ? object.material : [object.material];
-    for (const material of objectMaterials) materials.add(material);
-  });
+function collectDiagnostics(): AirplaneModelDiagnostics {
   return {
-    meshes,
-    geometries: geometries.size,
-    materials: materials.size,
-    approximateTriangles: Math.round(triangles),
-    namedNodes,
     paint: {
       selectedColor: DEFAULT_AIRCRAFT_PAINT_COLOR,
-      primaryColor: DEFAULT_AIRCRAFT_PAINT_COLOR,
-      accentColor: ORANGE_LIGHT,
       revision: 0,
-      primaryMaterialUuid: planeMaterials.orange.uuid,
-      accentMaterialUuid: planeMaterials.orangeLight.uuid,
     },
     dimensions: {
       overallLength: AIRCRAFT_LENGTH,
@@ -1769,28 +1730,6 @@ export function createAirplaneModel(): AirplaneModel {
     }
   }
 
-  const cameraFocus = new THREE.Object3D();
-  cameraFocus.name = 'camera-focus-socket';
-  cameraFocus.position.set(0, 2.36, 0.0);
-  root.add(cameraFocus);
-
-  const collisionProxy = new THREE.Group();
-  collisionProxy.name = 'aircraft-collision-proxies';
-  collisionProxy.visible = false;
-  const bodyProxy = new THREE.Mesh(
-    new THREE.CapsuleGeometry(0.96, 6.75, 6, 12),
-    new THREE.MeshBasicMaterial({ wireframe: true }),
-  );
-  bodyProxy.rotation.x = Math.PI / 2;
-  bodyProxy.position.set(0, 2.14, -0.02);
-  const wingProxy = new THREE.Mesh(
-    new THREE.BoxGeometry(AIRCRAFT_WINGSPAN, 0.45, 2.2),
-    new THREE.MeshBasicMaterial({ wireframe: true }),
-  );
-  wingProxy.position.set(0, 2.23, 0.1);
-  collisionProxy.add(bodyProxy, wingProxy);
-  root.add(collisionProxy);
-
   const shadowProxy = makeMesh(
     new THREE.CircleGeometry(3.1, 48),
     materials.shadow,
@@ -1810,35 +1749,7 @@ export function createAirplaneModel(): AirplaneModel {
     if (object instanceof THREE.Mesh) object.castShadow = castsHeroShadow(object.name);
   });
 
-  root.userData.sculptRuntime = {
-    nodes: {
-      root,
-      propeller: propeller.pivot,
-      leftMainWheel,
-      rightMainWheel,
-      tailWheel,
-      ...controlSurfaces,
-    },
-    sockets: {
-      exhaust: exhaustSocket,
-      leftWingtip,
-      rightWingtip,
-      cameraFocus,
-    },
-    colliders: {
-      body: { type: 'capsule', radius: 0.96, length: 6.75, offset: [0, 2.14, -0.02] },
-      wing: { type: 'box', size: [AIRCRAFT_WINGSPAN, 0.45, 2.2], offset: [0, 2.23, 0.1] },
-    },
-    clearance: {
-      runwayY: 0,
-      propellerHubY: PROPELLER_HUB_HEIGHT,
-      propellerVisibleRadius: PROPELLER_RADIUS,
-      propellerSafetyRadius: PROPELLER_SAFETY_RADIUS,
-      guaranteedNeutralClearance: PROPELLER_GROUND_CLEARANCE,
-    },
-  };
-
-  const diagnostics = collectDiagnostics(root, materials);
+  const diagnostics = collectDiagnostics();
   const paintHighlight = new THREE.Color();
   const paintSheen = new THREE.Color();
   const paintWhite = new THREE.Color('#ffffff');
@@ -1862,8 +1773,6 @@ export function createAirplaneModel(): AirplaneModel {
     }
 
     diagnostics.paint.selectedColor = normalized;
-    diagnostics.paint.primaryColor = `#${materials.orange.color.getHexString()}`;
-    diagnostics.paint.accentColor = `#${materials.orangeLight.color.getHexString()}`;
     diagnostics.paint.revision += 1;
     return true;
   };
@@ -1881,9 +1790,7 @@ export function createAirplaneModel(): AirplaneModel {
       exhaust: exhaustSocket,
       leftWingtip,
       rightWingtip,
-      cameraFocus,
     },
-    collisionProxy,
     shadowProxy,
     groundOffset: 0,
     diagnostics,

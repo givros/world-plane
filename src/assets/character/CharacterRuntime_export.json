@@ -1,0 +1,201 @@
+{
+  "blender_version": "5.1.2",
+  "export_options": {
+    "check_existing": false,
+    "export_action_filter": false,
+    "export_all_influences": false,
+    "export_anim_scene_split_object": false,
+    "export_anim_single_armature": true,
+    "export_anim_slide_to_zero": true,
+    "export_animation_mode": "ACTIONS",
+    "export_animations": true,
+    "export_apply": true,
+    "export_armature_object_remove": false,
+    "export_bake_animation": false,
+    "export_cameras": false,
+    "export_def_bones": false,
+    "export_draco_mesh_compression_enable": false,
+    "export_extras": true,
+    "export_force_sampling": true,
+    "export_format": "GLB",
+    "export_frame_step": 1,
+    "export_influence_nb": 4,
+    "export_leaf_bone": false,
+    "export_lights": false,
+    "export_materials": "EXPORT",
+    "export_merge_animation": "ACTION",
+    "export_morph": false,
+    "export_morph_animation": false,
+    "export_nla_strips": false,
+    "export_normals": true,
+    "export_optimize_animation_size": false,
+    "export_reset_pose_bones": true,
+    "export_rest_position_armature": true,
+    "export_skins": true,
+    "export_tangents": false,
+    "export_texcoords": true,
+    "export_use_gltfpack": false,
+    "export_vertex_color": "MATERIAL",
+    "export_yup": true,
+    "use_selection": true
+  },
+  "glb": {
+    "animation_names": [
+      "Idle",
+      "Jump",
+      "Run",
+      "Walk"
+    ],
+    "animations": {
+      "Idle": {
+        "channel_count": 150,
+        "duration_seconds": 8.333333333333334,
+        "sampler_count": 150,
+        "start_seconds": 0.0
+      },
+      "Jump": {
+        "channel_count": 150,
+        "duration_seconds": 1.9,
+        "sampler_count": 150,
+        "start_seconds": 0.0
+      },
+      "Run": {
+        "channel_count": 150,
+        "duration_seconds": 0.6333333333333333,
+        "sampler_count": 150,
+        "start_seconds": 0.0
+      },
+      "Walk": {
+        "channel_count": 150,
+        "duration_seconds": 1.0333333333333334,
+        "sampler_count": 150,
+        "start_seconds": 0.0
+      }
+    },
+    "draco": false,
+    "extensions_required": [],
+    "extensions_used": [],
+    "material_count": 3,
+    "mesh_count": 3,
+    "node_count": 53,
+    "required_nodes": [
+      "CharacterBase",
+      "CharacterRig",
+      "LongSleeveShirt",
+      "Pants"
+    ],
+    "skin_count": 1,
+    "skin_joint_counts": [
+      49
+    ]
+  },
+  "passed": true,
+  "runtime_glb": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterRuntime.glb",
+  "runtime_glb_bytes": 1464176,
+  "runtime_glb_sha256": "5d74aa97cab80c208a58e44300d8eda9633e5522b71293881c70b1aca686b88b",
+  "source": {
+    "actions": {
+      "Idle": {
+        "expected_duration_seconds": 8.333333333333334,
+        "frame_range": [
+          1,
+          251
+        ],
+        "slot": "OBCharacterRig"
+      },
+      "Jump": {
+        "expected_duration_seconds": 1.9,
+        "frame_range": [
+          1,
+          58
+        ],
+        "slot": "OBCharacterRig"
+      },
+      "Run": {
+        "expected_duration_seconds": 0.6333333333333333,
+        "frame_range": [
+          1,
+          20
+        ],
+        "slot": "OBCharacterRig"
+      },
+      "Walk": {
+        "expected_duration_seconds": 1.0333333333333334,
+        "frame_range": [
+          1,
+          32
+        ],
+        "slot": "OBCharacterRig"
+      }
+    },
+    "bone_count": 49,
+    "bone_names": [
+      "IKPole.L",
+      "IKPole.R",
+      "IkTarget.L",
+      "IkTarget.R",
+      "f_index.01.L",
+      "f_index.01.R",
+      "f_index.02.L",
+      "f_index.02.R",
+      "f_index.03.L",
+      "f_index.03.R",
+      "f_pinky.01.L",
+      "f_pinky.01.R",
+      "f_pinky.02.L",
+      "f_pinky.02.R",
+      "f_pinky.03.L",
+      "f_pinky.03.R",
+      "foot.L",
+      "foot.R",
+      "forearm.L",
+      "forearm.R",
+      "hand.L",
+      "hand.R",
+      "head",
+      "palm.01.L",
+      "palm.01.R",
+      "palm.04.L",
+      "palm.04.R",
+      "pelvis",
+      "shin.L",
+      "shin.R",
+      "shoulder.L",
+      "shoulder.R",
+      "spine1",
+      "spine2",
+      "spine3",
+      "spine4",
+      "spine5",
+      "thigh.L",
+      "thigh.R",
+      "thumb.01.L",
+      "thumb.01.R",
+      "thumb.02.L",
+      "thumb.02.R",
+      "thumb.03.L",
+      "thumb.03.R",
+      "toe.L",
+      "toe.R",
+      "upper_arm.L",
+      "upper_arm.R"
+    ],
+    "fps": 30.0,
+    "mesh_objects": [
+      "CharacterBase",
+      "LongSleeveShirt",
+      "Pants"
+    ]
+  },
+  "source_blend": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase.blend",
+  "source_blends_after": [
+    "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase.blend"
+  ],
+  "source_blends_before": [
+    "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase.blend"
+  ],
+  "source_saved": false,
+  "source_sha256_after": "4530ebe1e8c642df5e47db9ad875c74fe995100561d385ef34a8efc38bd19572",
+  "source_sha256_before": "4530ebe1e8c642df5e47db9ad875c74fe995100561d385ef34a8efc38bd19572",
+  "source_unchanged": true
+}

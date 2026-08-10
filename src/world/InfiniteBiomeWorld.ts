@@ -2,36 +2,57 @@ import * as THREE from 'three';
 import {
   BIOME_CATALOG,
   hashChunkCoordinates,
-  selectBiomeForChunk,
   type BiomeDefinition,
   type BiomeId,
 } from './BiomeCatalog';
 import {
+  BIOME_PROP_ASSET_ID_BY_FAMILY,
   BIOME_PROP_FAMILIES,
+  BIOME_PROP_FAMILY_BY_ASSET_ID,
   createBiomeHorizonSystem,
   createBiomePropResources,
   type BiomePropAccumulators,
   type BiomePropFamily,
 } from './BiomeWorldArt';
 import {
+  URBAN_BOX_ASSET_ID,
+  URBAN_ROOF_ASSET_ID,
   createUrbanBiomeResources,
+  populateAuthoredUrbanPrototypeBatches,
   populateUrbanChunk,
   type UrbanChunkSlot,
+  type UrbanPopulationContext,
 } from './UrbanBiomeArt';
+import {
+  WORLD_CHUNK_CELL_SIZE,
+  WORLD_CHUNK_SEGMENTS,
+  WORLD_CHUNK_SIZE,
+  createDefaultWorldChunkSource,
+  createProceduralWorldChunkSource,
+  worldChunkCoordinate,
+  worldChunkKey,
+  type WorldChunkDescriptor,
+  type WorldChunkPrototypeBatch,
+  type WorldChunkResolution,
+  type WorldChunkSource,
+} from './WorldChunkSource';
+import {
+  COMPILED_WORLD_DESCRIPTOR_SUMMARIES,
+  COMPILED_WORLD_MANIFEST_HASH,
+} from './generated/CompiledWorldManifest.generated';
 
-export const BIOME_CHUNK_SIZE = 1280;
+export const BIOME_CHUNK_SIZE = WORLD_CHUNK_SIZE;
 export const BIOME_GRID_SIZE = 3;
 export const BIOME_FOG_NEAR = 580;
 export const BIOME_FOG_FAR = 1040;
 
 const GRID_RADIUS = 1;
 const SLOT_COUNT = BIOME_GRID_SIZE * BIOME_GRID_SIZE;
-const TERRAIN_SEGMENTS = 40;
+const TERRAIN_SEGMENTS = WORLD_CHUNK_SEGMENTS;
 const TERRAIN_TRANSITION_WIDTH = 300;
-const AIRPORT_RESERVE_HALF_EXTENT = 430;
 const MAX_INSTANCES_PER_FAMILY = 2304;
 const DEFAULT_WORLD_SEED = 0x71c0a57;
-const TERRAIN_CELL_SIZE = BIOME_CHUNK_SIZE / TERRAIN_SEGMENTS;
+const TERRAIN_CELL_SIZE = WORLD_CHUNK_CELL_SIZE;
 
 type ChunkCoordinate = Readonly<{ x: number; z: number }>;
 
@@ -55,6 +76,10 @@ export type LoadedBiomeChunk = Readonly<{
   z: number;
   biomeId: BiomeId;
   biomeLabel: string;
+  resolution: WorldChunkResolution;
+  contentHash: string;
+  compositionHash: string;
+  fallbackReason?: string;
 }>;
 
 export type InfiniteBiomeWorldDiagnostics = {
@@ -82,6 +107,13 @@ export type InfiniteBiomeWorldDiagnostics = {
   uniqueGeometries: number;
   uniqueMaterials: number;
   fog: { near: number; far: number };
+  worldSource: {
+    manifestHash: string;
+    sourceHash: string;
+    compiledDescriptorCount: number;
+    activeAuthoredChunkKeys: string[];
+    activeFallbackChunkKeys: string[];
+  };
   urban: {
     activeChunkCount: number;
     boxInstances: number;
@@ -116,6 +148,10 @@ type ChunkSlot = {
   chunkX: number;
   chunkZ: number;
   biome: BiomeDefinition;
+  resolution: WorldChunkResolution;
+  contentHash: string;
+  compositionHash: string;
+  fallbackReason?: string;
   terrain: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshStandardMaterial>;
   propBatches: PropInstanceBatches;
   urban: UrbanChunkSlot;
@@ -150,11 +186,11 @@ function smoothstep01(value: number): number {
 }
 
 function chunkCoordinate(value: number): number {
-  return Math.floor((value + BIOME_CHUNK_SIZE * 0.5) / BIOME_CHUNK_SIZE);
+  return worldChunkCoordinate(value);
 }
 
 function chunkKey(chunkX: number, chunkZ: number): string {
-  return String(chunkX) + ':' + String(chunkZ);
+  return worldChunkKey(chunkX, chunkZ);
 }
 
 function createRandom(seed: number): () => number {
@@ -168,151 +204,11 @@ function createRandom(seed: number): () => number {
   };
 }
 
-function valueNoise2D(
+function sampledTerrainHeight(
   worldX: number,
   worldZ: number,
-  scale: number,
-  seed: number,
+  source: WorldChunkSource,
 ): number {
-  const x = worldX / scale;
-  const z = worldZ / scale;
-  const x0 = Math.floor(x);
-  const z0 = Math.floor(z);
-  const tx = smoothstep01(x - x0);
-  const tz = smoothstep01(z - z0);
-  const sample = (sampleX: number, sampleZ: number): number =>
-    hashChunkCoordinates(sampleX, sampleZ, seed) / 0xffffffff * 2 - 1;
-  const north = THREE.MathUtils.lerp(sample(x0, z0), sample(x0 + 1, z0), tx);
-  const south = THREE.MathUtils.lerp(sample(x0, z0 + 1), sample(x0 + 1, z0 + 1), tx);
-  return THREE.MathUtils.lerp(north, south, tz);
-}
-
-function fractalNoise2D(
-  worldX: number,
-  worldZ: number,
-  scale: number,
-  seed: number,
-  octaves = 4,
-): number {
-  let amplitude = 0.56;
-  let frequency = 1;
-  let total = 0;
-  let normalization = 0;
-  for (let octave = 0; octave < octaves; octave += 1) {
-    total += valueNoise2D(
-      worldX,
-      worldZ,
-      scale / frequency,
-      seed + octave * 0x1f123bb5,
-    ) * amplitude;
-    normalization += amplitude;
-    amplitude *= 0.52;
-    frequency *= 2.03;
-  }
-  return total / normalization;
-}
-
-function biomeNaturalHeight(
-  biome: BiomeDefinition,
-  worldX: number,
-  worldZ: number,
-  seed: number,
-): number {
-  const macro = fractalNoise2D(worldX, worldZ, 520, seed ^ 0x52b7d3f1, 4);
-  const detail = fractalNoise2D(worldX, worldZ, 145, seed ^ 0x1873a91d, 3);
-  const ridge = 1 - Math.abs(fractalNoise2D(
-    worldX,
-    worldZ,
-    390,
-    seed ^ 0x6a09e667,
-    4,
-  ));
-  const broad = (macro + 1) * 0.5;
-
-  switch (biome.id) {
-    case 'sunlit-meadow':
-      return -0.08 + broad * 5.8 + detail * 1.35;
-    case 'sahara-dunes': {
-      const duneWave = Math.abs(Math.sin(
-        worldX * 0.018 + worldZ * 0.0065 + macro * 1.7,
-      ));
-      return 0.35 + duneWave * (5.4 + broad * 4.1) + detail * 0.9;
-    }
-    case 'alpine-peaks':
-      return 2.2 + Math.pow(ridge, 2.35) * (33 + broad * 27) + detail * 4.2;
-    case 'arctic-tundra':
-      return 0.25 + Math.pow(ridge, 2.7) * 9.5 + broad * 2.4 + detail * 0.75;
-    case 'volcanic-wastes':
-      return 2.4 + Math.pow(ridge, 2.05) * (19 + broad * 13) + detail * 2.4;
-    case 'emerald-marsh':
-      return -0.42 + broad * 2.1 + detail * 0.52;
-    case 'red-rock-canyon': {
-      const terrace = Math.floor(clamp01(broad) * 5) / 4;
-      return 1.8 + terrace * 27 + Math.pow(ridge, 3.1) * 8 + detail * 1.7;
-    }
-    case 'autumn-forest':
-      return 0.8 + broad * 8.2 + detail * 1.35;
-    case 'tropical-lagoon': {
-      const island = smoothstep01((broad - 0.26) / 0.5);
-      return -0.34 + island * 7.7 + detail * 0.8;
-    }
-    case 'crystal-salt-flats':
-      return -0.28 + broad * 1.65 + detail * 0.22;
-    case 'metropolitan-core':
-      return 0.45 + broad * 0.9 + detail * 0.16;
-    case 'azure-harbor':
-      return -0.18 + broad * 0.52 + detail * 0.1;
-    case 'ironworks-district':
-      return 0.24 + broad * 1.15 + detail * 0.2;
-    case 'sunstone-citadel':
-      return 0.7 + broad * 1.8 + detail * 0.3;
-  }
-}
-
-function worldTerrainHeight(worldX: number, worldZ: number, seed: number): number {
-  writeAxisBiomeBlend(worldX, AXIS_BLEND_X);
-  writeAxisBiomeBlend(worldZ, AXIS_BLEND_Z);
-  const xNeighborWeight = AXIS_BLEND_X.neighborWeight;
-  const zNeighborWeight = AXIS_BLEND_Z.neighborWeight;
-  const xCenterWeight = 1 - xNeighborWeight;
-  const zCenterWeight = 1 - zNeighborWeight;
-  const weightedHeight = (
-    chunkX: number,
-    chunkZ: number,
-    weight: number,
-  ): number => biomeNaturalHeight(
-    getBiomeDefinition(chunkX, chunkZ, seed),
-    worldX,
-    worldZ,
-    seed,
-  ) * weight;
-  const naturalHeight =
-    weightedHeight(
-      AXIS_BLEND_X.center,
-      AXIS_BLEND_Z.center,
-      xCenterWeight * zCenterWeight,
-    )
-    + weightedHeight(
-      AXIS_BLEND_X.neighbor,
-      AXIS_BLEND_Z.center,
-      xNeighborWeight * zCenterWeight,
-    )
-    + weightedHeight(
-      AXIS_BLEND_X.center,
-      AXIS_BLEND_Z.neighbor,
-      xCenterWeight * zNeighborWeight,
-    )
-    + weightedHeight(
-      AXIS_BLEND_X.neighbor,
-      AXIS_BLEND_Z.neighbor,
-      xNeighborWeight * zNeighborWeight,
-    );
-  const airportDistance = Math.max(Math.abs(worldX), Math.abs(worldZ));
-  const airportBlend = smoothstep01((airportDistance - 390) / 170);
-  return THREE.MathUtils.lerp(-0.245, naturalHeight, airportBlend);
-}
-
-function sampledTerrainHeight(worldX: number, worldZ: number, seed: number): number {
   const chunkX = chunkCoordinate(worldX);
   const chunkZ = chunkCoordinate(worldZ);
   const cellSize = TERRAIN_CELL_SIZE;
@@ -332,10 +228,10 @@ function sampledTerrainHeight(worldX: number, worldZ: number, seed: number): num
   const vertexZ0 = chunkMinZ + localCellZ * cellSize;
   const fractionX = THREE.MathUtils.clamp((worldX - vertexX0) / cellSize, 0, 1);
   const fractionZ = THREE.MathUtils.clamp((worldZ - vertexZ0) / cellSize, 0, 1);
-  const height00 = Math.fround(worldTerrainHeight(vertexX0, vertexZ0, seed));
-  const height10 = Math.fround(worldTerrainHeight(vertexX0 + cellSize, vertexZ0, seed));
-  const height01 = Math.fround(worldTerrainHeight(vertexX0, vertexZ0 + cellSize, seed));
-  const height11 = Math.fround(worldTerrainHeight(vertexX0 + cellSize, vertexZ0 + cellSize, seed));
+  const height00 = Math.fround(source.sampleVertexHeight(vertexX0, vertexZ0));
+  const height10 = Math.fround(source.sampleVertexHeight(vertexX0 + cellSize, vertexZ0));
+  const height01 = Math.fround(source.sampleVertexHeight(vertexX0, vertexZ0 + cellSize));
+  const height11 = Math.fround(source.sampleVertexHeight(vertexX0 + cellSize, vertexZ0 + cellSize));
 
   // PlaneGeometry splits every cell along the b→d diagonal. Matching that
   // triangle interpolation keeps wheel contact exactly on the rendered mesh.
@@ -349,13 +245,20 @@ function sampledTerrainHeight(worldX: number, worldZ: number, seed: number): num
     + (height10 - height11) * (1 - fractionZ);
 }
 
-function isInsideAirportReserve(worldX: number, worldZ: number): boolean {
-  return Math.max(Math.abs(worldX), Math.abs(worldZ)) < AIRPORT_RESERVE_HALF_EXTENT;
+function isInsideAirportReserve(
+  source: WorldChunkSource,
+  worldX: number,
+  worldZ: number,
+): boolean {
+  return source.isReserved(worldX, worldZ);
 }
 
-function getBiomeDefinition(chunkX: number, chunkZ: number, seed: number): BiomeDefinition {
-  if (chunkX === 0 && chunkZ === 0) return BIOME_CATALOG[0];
-  return selectBiomeForChunk(chunkX, chunkZ, seed);
+function getBiomeDefinition(
+  source: WorldChunkSource,
+  chunkX: number,
+  chunkZ: number,
+): BiomeDefinition {
+  return source.getBiomeForChunk(chunkX, chunkZ);
 }
 
 function createTerrainMaterial(): THREE.MeshStandardMaterial {
@@ -662,6 +565,7 @@ function createChunkSlot(
   geometry.setAttribute('color', colors);
   const terrain = new THREE.Mesh(geometry, terrainMaterial);
   terrain.name = 'streamed-biome-terrain-slot-' + String(index);
+  terrain.userData.worldLayer = 'terrain';
   terrain.receiveShadow = true;
   terrain.castShadow = false;
   terrain.frustumCulled = true;
@@ -671,6 +575,9 @@ function createChunkSlot(
     chunkX: 0,
     chunkZ: 0,
     biome: BIOME_CATALOG[0],
+    resolution: 'procedural',
+    contentHash: '',
+    compositionHash: '',
     terrain,
     propBatches: createPropInstanceBatches(),
     urban,
@@ -730,7 +637,7 @@ function addBiomeRockColor(
 function writeTerrainGroundColor(
   worldX: number,
   worldZ: number,
-  seed: number,
+  source: WorldChunkSource,
   out: THREE.Color,
 ): void {
   writeAxisBiomeBlend(worldX, AXIS_BLEND_X);
@@ -742,22 +649,22 @@ function writeTerrainGroundColor(
   out.setRGB(0, 0, 0);
   addBiomeGroundColor(
     out,
-    getBiomeDefinition(AXIS_BLEND_X.center, AXIS_BLEND_Z.center, seed),
+    getBiomeDefinition(source, AXIS_BLEND_X.center, AXIS_BLEND_Z.center),
     xCenterWeight * zCenterWeight,
   );
   addBiomeGroundColor(
     out,
-    getBiomeDefinition(AXIS_BLEND_X.neighbor, AXIS_BLEND_Z.center, seed),
+    getBiomeDefinition(source, AXIS_BLEND_X.neighbor, AXIS_BLEND_Z.center),
     xNeighborWeight * zCenterWeight,
   );
   addBiomeGroundColor(
     out,
-    getBiomeDefinition(AXIS_BLEND_X.center, AXIS_BLEND_Z.neighbor, seed),
+    getBiomeDefinition(source, AXIS_BLEND_X.center, AXIS_BLEND_Z.neighbor),
     xCenterWeight * zNeighborWeight,
   );
   addBiomeGroundColor(
     out,
-    getBiomeDefinition(AXIS_BLEND_X.neighbor, AXIS_BLEND_Z.neighbor, seed),
+    getBiomeDefinition(source, AXIS_BLEND_X.neighbor, AXIS_BLEND_Z.neighbor),
     xNeighborWeight * zNeighborWeight,
   );
 }
@@ -765,7 +672,7 @@ function writeTerrainGroundColor(
 function writeTerrainRockColor(
   worldX: number,
   worldZ: number,
-  seed: number,
+  source: WorldChunkSource,
   out: THREE.Color,
 ): void {
   writeAxisBiomeBlend(worldX, AXIS_BLEND_X);
@@ -777,22 +684,22 @@ function writeTerrainRockColor(
   out.setRGB(0, 0, 0);
   addBiomeRockColor(
     out,
-    getBiomeDefinition(AXIS_BLEND_X.center, AXIS_BLEND_Z.center, seed),
+    getBiomeDefinition(source, AXIS_BLEND_X.center, AXIS_BLEND_Z.center),
     xCenterWeight * zCenterWeight,
   );
   addBiomeRockColor(
     out,
-    getBiomeDefinition(AXIS_BLEND_X.neighbor, AXIS_BLEND_Z.center, seed),
+    getBiomeDefinition(source, AXIS_BLEND_X.neighbor, AXIS_BLEND_Z.center),
     xNeighborWeight * zCenterWeight,
   );
   addBiomeRockColor(
     out,
-    getBiomeDefinition(AXIS_BLEND_X.center, AXIS_BLEND_Z.neighbor, seed),
+    getBiomeDefinition(source, AXIS_BLEND_X.center, AXIS_BLEND_Z.neighbor),
     xCenterWeight * zNeighborWeight,
   );
   addBiomeRockColor(
     out,
-    getBiomeDefinition(AXIS_BLEND_X.neighbor, AXIS_BLEND_Z.neighbor, seed),
+    getBiomeDefinition(source, AXIS_BLEND_X.neighbor, AXIS_BLEND_Z.neighbor),
     xNeighborWeight * zNeighborWeight,
   );
 }
@@ -800,28 +707,31 @@ function writeTerrainRockColor(
 function writeTerrainNormal(
   worldX: number,
   worldZ: number,
-  seed: number,
+  source: WorldChunkSource,
   out: THREE.Vector3,
 ): void {
   const step = TERRAIN_CELL_SIZE;
-  const left = worldTerrainHeight(worldX - step, worldZ, seed);
-  const right = worldTerrainHeight(worldX + step, worldZ, seed);
-  const back = worldTerrainHeight(worldX, worldZ - step, seed);
-  const front = worldTerrainHeight(worldX, worldZ + step, seed);
+  const left = source.sampleVertexHeight(worldX - step, worldZ);
+  const right = source.sampleVertexHeight(worldX + step, worldZ);
+  const back = source.sampleVertexHeight(worldX, worldZ - step);
+  const front = source.sampleVertexHeight(worldX, worldZ + step);
   out.set(left - right, step * 2, back - front).normalize();
 }
 
 function writeTerrainSlot(
   slot: ChunkSlot,
-  chunkX: number,
-  chunkZ: number,
-  biome: BiomeDefinition,
-  seed: number,
+  descriptor: WorldChunkDescriptor,
+  source: WorldChunkSource,
 ): void {
+  const { chunkX, chunkZ, biome } = descriptor;
   slot.key = chunkKey(chunkX, chunkZ);
   slot.chunkX = chunkX;
   slot.chunkZ = chunkZ;
   slot.biome = biome;
+  slot.resolution = descriptor.resolution;
+  slot.contentHash = descriptor.contentHash;
+  slot.compositionHash = descriptor.compositionHash;
+  slot.fallbackReason = descriptor.fallbackReason;
   slot.terrain.position.set(
     chunkX * BIOME_CHUNK_SIZE,
     0,
@@ -839,12 +749,12 @@ function writeTerrainSlot(
     const localZ = positions.getZ(index);
     const worldX = slot.terrain.position.x + localX;
     const worldZ = slot.terrain.position.z + localZ;
-    const height = Math.fround(worldTerrainHeight(worldX, worldZ, seed));
+    const height = descriptor.heightSamples[index];
     positions.setY(index, height);
-    writeTerrainNormal(worldX, worldZ, seed, NORMAL_SCRATCH);
+    writeTerrainNormal(worldX, worldZ, source, NORMAL_SCRATCH);
     normals.setXYZ(index, NORMAL_SCRATCH.x, NORMAL_SCRATCH.y, NORMAL_SCRATCH.z);
-    writeTerrainGroundColor(worldX, worldZ, seed, COLOR_SCRATCH_A);
-    writeTerrainRockColor(worldX, worldZ, seed, COLOR_SCRATCH_C);
+    writeTerrainGroundColor(worldX, worldZ, source, COLOR_SCRATCH_A);
+    writeTerrainRockColor(worldX, worldZ, source, COLOR_SCRATCH_C);
     const slopeBlend = smoothstep01((1 - NORMAL_SCRATCH.y - 0.035) / 0.34) * 0.72;
     const macroVariation = 0.91
       + Math.sin(worldX * 0.021 + worldZ * 0.013) * 0.045
@@ -901,15 +811,15 @@ function randomPlacement(
   random: () => number,
   chunkX: number,
   chunkZ: number,
-  seed: number,
+  source: WorldChunkSource,
   margin = 24,
 ): Placement | null {
   const usableSize = BIOME_CHUNK_SIZE - margin * 2;
   for (let attempt = 0; attempt < 8; attempt += 1) {
     const x = chunkX * BIOME_CHUNK_SIZE + (random() - 0.5) * usableSize;
     const z = chunkZ * BIOME_CHUNK_SIZE + (random() - 0.5) * usableSize;
-    if (isInsideAirportReserve(x, z)) continue;
-    return { x, z, groundY: sampledTerrainHeight(x, z, seed) };
+    if (isInsideAirportReserve(source, x, z)) continue;
+    return { x, z, groundY: sampledTerrainHeight(x, z, source) };
   }
   return null;
 }
@@ -1004,8 +914,9 @@ function addConifer(
 
 function populateBiomeProps(
   accumulators: PropInstanceBatches,
-  slot: ChunkSlot,
+  slot: Pick<ChunkSlot, 'chunkX' | 'chunkZ' | 'biome'>,
   seed: number,
+  source: WorldChunkSource,
 ): void {
   resetPropInstanceBatches(accumulators);
   const random = createRandom(
@@ -1017,15 +928,15 @@ function populateBiomeProps(
   const chunkCenterZ = slot.chunkZ * BIOME_CHUNK_SIZE;
   const signatureX = chunkCenterX + (random() - 0.5) * 170;
   const signatureZ = chunkCenterZ + (random() - 0.5) * 170;
-  if (!isInsideAirportReserve(signatureX, signatureZ)) {
+  if (!isInsideAirportReserve(source, signatureX, signatureZ)) {
     clusterCenters.push({
       x: signatureX,
       z: signatureZ,
-      groundY: sampledTerrainHeight(signatureX, signatureZ, seed),
+      groundY: sampledTerrainHeight(signatureX, signatureZ, source),
     });
   }
   for (let index = 0; index < 8; index += 1) {
-    const center = randomPlacement(random, slot.chunkX, slot.chunkZ, seed, 150);
+    const center = randomPlacement(random, slot.chunkX, slot.chunkZ, source, 150);
     if (center) clusterCenters.push(center);
   }
   const makePlacement = (margin = 24): Placement | null => {
@@ -1044,11 +955,11 @@ function populateBiomeProps(
         chunkCenterZ - half,
         chunkCenterZ + half,
       );
-      if (!isInsideAirportReserve(x, z)) {
-        return { x, z, groundY: sampledTerrainHeight(x, z, seed) };
+      if (!isInsideAirportReserve(source, x, z)) {
+        return { x, z, groundY: sampledTerrainHeight(x, z, source) };
       }
     }
-    return randomPlacement(random, slot.chunkX, slot.chunkZ, seed, margin);
+    return randomPlacement(random, slot.chunkX, slot.chunkZ, source, margin);
   };
   const addRepeated = (
     count: number,
@@ -1138,8 +1049,8 @@ function populateBiomeProps(
   const placementAtLocal = (localX: number, localZ: number): Placement | null => {
     const x = chunkCenterX + localX;
     const z = chunkCenterZ + localZ;
-    if (isInsideAirportReserve(x, z)) return null;
-    return { x, z, groundY: sampledTerrainHeight(x, z, seed) };
+    if (isInsideAirportReserve(source, x, z)) return null;
+    return { x, z, groundY: sampledTerrainHeight(x, z, source) };
   };
 
   switch (biome.id) {
@@ -1664,6 +1575,117 @@ function populateBiomeProps(
   }
 }
 
+function float32(value: number): number {
+  return Math.fround(value);
+}
+
+/**
+ * Exports the current procedural placement result without creating any render
+ * resource. The offline WorldClaw compiler uses this as its identity source of
+ * truth; runtime streaming never calls it.
+ */
+export function createProceduralNaturalPrototypeBatches(options: {
+  chunkX: number;
+  chunkZ: number;
+  seed?: number;
+  source?: WorldChunkSource;
+}): readonly WorldChunkPrototypeBatch[] {
+  const seed = options.seed ?? DEFAULT_WORLD_SEED;
+  const source = options.source ?? createProceduralWorldChunkSource({ seed });
+  const chunkX = Math.trunc(options.chunkX);
+  const chunkZ = Math.trunc(options.chunkZ);
+  const biome = source.getBiomeForChunk(chunkX, chunkZ);
+  const batches = createPropInstanceBatches();
+  populateBiomeProps(batches, { chunkX, chunkZ, biome }, seed, source);
+
+  const chunkCenterX = chunkX * BIOME_CHUNK_SIZE;
+  const chunkCenterZ = chunkZ * BIOME_CHUNK_SIZE;
+  const position = new THREE.Vector3();
+  const rotation = new THREE.Quaternion();
+  const scale = new THREE.Vector3();
+
+  return BIOME_PROP_FAMILIES.flatMap((family): WorldChunkPrototypeBatch[] => {
+    const batch = batches[family];
+    if (batch.count === 0) return [];
+    return [{
+      assetId: BIOME_PROP_ASSET_ID_BY_FAMILY[family],
+      transforms: batch.instances.slice(0, batch.count).map((instance) => {
+        instance.matrix.decompose(position, rotation, scale);
+        return {
+          translation: [
+            float32(position.x - chunkCenterX),
+            float32(position.y),
+            float32(position.z - chunkCenterZ),
+          ],
+          rotation: [
+            float32(rotation.x),
+            float32(rotation.y),
+            float32(rotation.z),
+            float32(rotation.w),
+          ],
+          scale: [float32(scale.x), float32(scale.y), float32(scale.z)],
+          colorLinearRgb: [
+            float32(instance.color.r),
+            float32(instance.color.g),
+            float32(instance.color.b),
+          ],
+        };
+      }),
+    }];
+  });
+}
+
+function populateAuthoredNaturalPrototypeBatches(
+  target: PropInstanceBatches,
+  descriptor: WorldChunkDescriptor,
+): void {
+  resetPropInstanceBatches(target);
+  const chunkCenterX = descriptor.chunkX * BIOME_CHUNK_SIZE;
+  const chunkCenterZ = descriptor.chunkZ * BIOME_CHUNK_SIZE;
+  descriptor.prototypeBatches.forEach((sourceBatch) => {
+    const family = BIOME_PROP_FAMILY_BY_ASSET_ID[
+      sourceBatch.assetId as keyof typeof BIOME_PROP_FAMILY_BY_ASSET_ID
+    ];
+    if (!family) return;
+    const targetBatch = target[family];
+    sourceBatch.transforms.forEach((transform) => {
+      if (targetBatch.count >= MAX_INSTANCES_PER_FAMILY) return;
+      let instance = targetBatch.instances[targetBatch.count];
+      if (!instance) {
+        instance = {
+          matrix: new THREE.Matrix4(),
+          color: new THREE.Color(),
+        };
+        targetBatch.instances.push(instance);
+      }
+      POSITION_SCRATCH.set(
+        chunkCenterX + transform.translation[0],
+        transform.translation[1],
+        chunkCenterZ + transform.translation[2],
+      );
+      QUATERNION_SCRATCH.set(
+        transform.rotation[0],
+        transform.rotation[1],
+        transform.rotation[2],
+        transform.rotation[3],
+      );
+      SCALE_SCRATCH.set(
+        transform.scale[0],
+        transform.scale[1],
+        transform.scale[2],
+      );
+      instance.matrix.compose(POSITION_SCRATCH, QUATERNION_SCRATCH, SCALE_SCRATCH);
+      instance.color.setRGB(
+        transform.colorLinearRgb[0],
+        transform.colorLinearRgb[1],
+        transform.colorLinearRgb[2],
+        THREE.LinearSRGBColorSpace,
+      );
+      targetBatch.count += 1;
+    });
+  });
+}
+
 function desiredChunkCoordinates(centerX: number, centerZ: number): ChunkCoordinate[] {
   const coordinates: ChunkCoordinate[] = [];
   for (let z = centerZ - GRID_RADIUS; z <= centerZ + GRID_RADIUS; z += 1) {
@@ -1674,8 +1696,11 @@ function desiredChunkCoordinates(centerX: number, centerZ: number): ChunkCoordin
   return coordinates;
 }
 
-export function createInfiniteBiomeWorld(options: { seed?: number } = {}): InfiniteBiomeWorld {
-  const seed = options.seed ?? DEFAULT_WORLD_SEED;
+function createInfiniteBiomeWorldFromSource(
+  seed: number,
+  chunkSource: WorldChunkSource,
+  compiledManifestActive: boolean,
+): InfiniteBiomeWorld {
   const group = new THREE.Group();
   group.name = 'infinite-streamed-biome-world';
   const terrainMaterial = createTerrainMaterial();
@@ -1738,6 +1763,15 @@ export function createInfiniteBiomeWorld(options: { seed?: number } = {}): Infin
       + urbanResources.materials.length
       + horizon.materials.length,
     fog: { near: BIOME_FOG_NEAR, far: BIOME_FOG_FAR },
+    worldSource: {
+      manifestHash: compiledManifestActive ? COMPILED_WORLD_MANIFEST_HASH : '',
+      sourceHash: chunkSource.sourceHash,
+      compiledDescriptorCount: compiledManifestActive
+        ? COMPILED_WORLD_DESCRIPTOR_SUMMARIES.length
+        : 0,
+      activeAuthoredChunkKeys: [],
+      activeFallbackChunkKeys: [],
+    },
     urban: {
       activeChunkCount: 0,
       boxInstances: 0,
@@ -1791,6 +1825,10 @@ export function createInfiniteBiomeWorld(options: { seed?: number } = {}): Infin
         z: slot.chunkZ,
         biomeId: slot.biome.id,
         biomeLabel: slot.biome.label,
+        resolution: slot.resolution,
+        contentHash: slot.contentHash,
+        compositionHash: slot.compositionHash,
+        ...(slot.fallbackReason ? { fallbackReason: slot.fallbackReason } : {}),
       }))
       .sort((first, second) => first.key.localeCompare(second.key));
     diagnostics.loadedChunks = loadedChunks;
@@ -1799,6 +1837,12 @@ export function createInfiniteBiomeWorld(options: { seed?: number } = {}): Infin
     diagnostics.activeBiomeIds = Array.from(
       new Set(loadedChunks.map((chunk) => chunk.biomeId)),
     );
+    diagnostics.worldSource.activeAuthoredChunkKeys = loadedChunks
+      .filter((chunk) => chunk.resolution === 'authored')
+      .map((chunk) => chunk.key);
+    diagnostics.worldSource.activeFallbackChunkKeys = loadedChunks
+      .filter((chunk) => chunk.resolution === 'procedural-fallback')
+      .map((chunk) => chunk.key);
     diagnostics.urban.chunks = Array.from(activeSlots.values())
       .filter((slot) => slot.urban.stats.districtCount > 0)
       .map((slot) => ({
@@ -1819,7 +1863,7 @@ export function createInfiniteBiomeWorld(options: { seed?: number } = {}): Infin
     if (disposed) return false;
     const centerX = chunkCoordinate(focusPosition.x);
     const centerZ = chunkCoordinate(focusPosition.z);
-    horizon.update(focusPosition, getBiomeDefinition(centerX, centerZ, seed));
+    horizon.update(focusPosition, getBiomeDefinition(chunkSource, centerX, centerZ));
     if (
       diagnostics.centerChunk.x === centerX
       && diagnostics.centerChunk.z === centerZ
@@ -1843,18 +1887,41 @@ export function createInfiniteBiomeWorld(options: { seed?: number } = {}): Infin
       if (activeSlots.has(key)) return;
       const slot = freeSlots.pop();
       if (!slot) throw new Error('Infinite biome slot pool exhausted.');
-      const biome = getBiomeDefinition(coordinate.x, coordinate.z, seed);
-      writeTerrainSlot(slot, coordinate.x, coordinate.z, biome, seed);
-      populateBiomeProps(slot.propBatches, slot, seed);
-      populateUrbanChunk(slot.urban, {
+      const descriptor = chunkSource.resolveChunk(coordinate.x, coordinate.z);
+      const biome = descriptor.biome;
+      writeTerrainSlot(slot, descriptor, chunkSource);
+      const hasAuthoredNaturalBatches = descriptor.resolution === 'authored'
+        && descriptor.prototypeBatches.some((batch) =>
+          Object.prototype.hasOwnProperty.call(
+            BIOME_PROP_FAMILY_BY_ASSET_ID,
+            batch.assetId,
+          ));
+      if (hasAuthoredNaturalBatches) {
+        populateAuthoredNaturalPrototypeBatches(slot.propBatches, descriptor);
+      } else {
+        populateBiomeProps(slot.propBatches, slot, seed, chunkSource);
+      }
+      const urbanContext: UrbanPopulationContext = {
         biome,
         chunkX: coordinate.x,
         chunkZ: coordinate.z,
         chunkSize: BIOME_CHUNK_SIZE,
         seed,
         terrainHeight: (worldX, worldZ) => sampleTerrainSlotHeight(slot, worldX, worldZ),
-        isReserved: isInsideAirportReserve,
-      });
+        isReserved: (worldX, worldZ) => chunkSource.isReserved(worldX, worldZ),
+      };
+      const hasAuthoredUrbanBatches = descriptor.resolution === 'authored'
+        && descriptor.prototypeBatches.some((batch) =>
+          batch.assetId === URBAN_BOX_ASSET_ID || batch.assetId === URBAN_ROOF_ASSET_ID);
+      if (hasAuthoredUrbanBatches) {
+        populateAuthoredUrbanPrototypeBatches(
+          slot.urban,
+          urbanContext,
+          descriptor.prototypeBatches,
+        );
+      } else {
+        populateUrbanChunk(slot.urban, urbanContext);
+      }
       activeSlots.set(key, slot);
       if (diagnostics.revision > 0) diagnostics.slotsReused += 1;
     });
@@ -1874,9 +1941,9 @@ export function createInfiniteBiomeWorld(options: { seed?: number } = {}): Infin
     setVisible: (visible) => {
       group.visible = visible;
     },
-    getTerrainHeight: (worldX, worldZ) => sampledTerrainHeight(worldX, worldZ, seed),
+    getTerrainHeight: (worldX, worldZ) => chunkSource.sampleHeight(worldX, worldZ),
     getBiomeForChunk: (chunkX, chunkZ) =>
-      getBiomeDefinition(chunkX, chunkZ, seed),
+      getBiomeDefinition(chunkSource, chunkX, chunkZ),
     get diagnostics() {
       return diagnostics;
     },
@@ -1901,6 +1968,8 @@ export function createInfiniteBiomeWorld(options: { seed?: number } = {}): Infin
       diagnostics.urban.roofInstances = 0;
       diagnostics.urban.droppedInstances = 0;
       diagnostics.urban.chunks = [];
+      diagnostics.worldSource.activeAuthoredChunkKeys = [];
+      diagnostics.worldSource.activeFallbackChunkKeys = [];
       diagnostics.poolSize = 0;
       activeSlots.clear();
       freeSlots.length = 0;
@@ -1908,4 +1977,29 @@ export function createInfiniteBiomeWorld(options: { seed?: number } = {}): Infin
   };
 
   return api;
+}
+
+export function createInfiniteBiomeWorld(options: { seed?: number } = {}): InfiniteBiomeWorld {
+  const seed = options.seed ?? DEFAULT_WORLD_SEED;
+  return createInfiniteBiomeWorldFromSource(
+    seed,
+    createDefaultWorldChunkSource({ seed }),
+    seed === DEFAULT_WORLD_SEED,
+  );
+}
+
+/** Diagnostics-only seam used by the offline visual review harness. */
+export function createInfiniteBiomeWorldForReview(options: {
+  seed?: number;
+  source: 'compiled' | 'procedural';
+}): InfiniteBiomeWorld {
+  const seed = options.seed ?? DEFAULT_WORLD_SEED;
+  const source = options.source === 'compiled'
+    ? createDefaultWorldChunkSource({ seed })
+    : createProceduralWorldChunkSource({ seed });
+  return createInfiniteBiomeWorldFromSource(
+    seed,
+    source,
+    options.source === 'compiled' && seed === DEFAULT_WORLD_SEED,
+  );
 }

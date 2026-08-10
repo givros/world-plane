@@ -1,0 +1,241 @@
+{
+  "passed": true,
+  "kind": "tpose-glb",
+  "source_blend": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase.blend",
+  "source_blend_sha256": "4530ebe1e8c642df5e47db9ad875c74fe995100561d385ef34a8efc38bd19572",
+  "asset": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase.glb",
+  "asset_sha256": "72bb854443e58ccb2bf4efd4f8a6f4f4b413ad441136f94d859cfdbab746a526",
+  "export_report": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\reports\\CharacterBase_export.json",
+  "export_report_sha256": "5e6e519e829b20d0d461685f747892445b3075eb3dd8fa2e9e19473a62c64789",
+  "action_name": null,
+  "blender_version": "5.1.2",
+  "details": {
+    "objects": [
+      [
+        "CharacterBase",
+        "MESH"
+      ],
+      [
+        "CharacterRig",
+        "ARMATURE"
+      ],
+      [
+        "LongSleeveShirt",
+        "MESH"
+      ],
+      [
+        "Pants",
+        "MESH"
+      ]
+    ],
+    "meshes": {
+      "CharacterBase": {
+        "vertices": 6284,
+        "polygons": 3134,
+        "triangles": 3134,
+        "materials": [
+          "CharacterMaterial"
+        ],
+        "material_base_colors": {
+          "CharacterMaterial": [
+            0.800000011920929,
+            0.800000011920929,
+            0.800000011920929,
+            1.0
+          ]
+        },
+        "material_texture_contracts": {
+          "CharacterMaterial": {
+            "uses_textures": false,
+            "roles": {
+              "base_color": [],
+              "metallic_roughness": [],
+              "normal": [],
+              "occlusion": [],
+              "emission": [],
+              "alpha": []
+            },
+            "images": {},
+            "errors": []
+          }
+        },
+        "uv_contract": {
+          "required": false,
+          "layers": [
+            "UVMap"
+          ],
+          "active": "UVMap",
+          "active_render": "UVMap",
+          "textured_polygons": 0,
+          "textured_triangles": 0,
+          "finite": true,
+          "inside_unit_square": true,
+          "bounds": null,
+          "degenerate_textured_triangles": [],
+          "generated_rim_degenerate_allowed": false,
+          "errors": []
+        },
+        "material_triangle_counts": {
+          "CharacterMaterial": 3134
+        },
+        "invalid_material_triangles": {
+          "total": 0,
+          "by_reason": {},
+          "by_material_index": {},
+          "samples": []
+        },
+        "maximum_influences": 4,
+        "maximum_weight_sum_delta": 0.00016631931066513062,
+        "non_normalized_vertices": [],
+        "unweighted_vertices": [],
+        "degenerate_faces": [],
+        "coordinates_finite": true,
+        "armature_target": "CharacterRig"
+      },
+      "LongSleeveShirt": {
+        "vertices": 2880,
+        "polygons": 1440,
+        "triangles": 1440,
+        "materials": [
+          "LongSleeveShirtMaterial"
+        ],
+        "material_base_colors": {
+          "LongSleeveShirtMaterial": [
+            0.9046611785888672,
+            0.8962693810462952,
+            0.8468732237815857,
+            1.0
+          ]
+        },
+        "material_texture_contracts": {
+          "LongSleeveShirtMaterial": {
+            "uses_textures": false,
+            "roles": {
+              "base_color": [],
+              "metallic_roughness": [],
+              "normal": [],
+              "occlusion": [],
+              "emission": [],
+              "alpha": []
+            },
+            "images": {},
+            "errors": []
+          }
+        },
+        "uv_contract": {
+          "required": false,
+          "layers": [
+            "UVMap"
+          ],
+          "active": "UVMap",
+          "active_render": "UVMap",
+          "textured_polygons": 0,
+          "textured_triangles": 0,
+          "finite": true,
+          "inside_unit_square": true,
+          "bounds": null,
+          "degenerate_textured_triangles": [],
+          "generated_rim_degenerate_allowed": true,
+          "errors": []
+        },
+        "material_triangle_counts": {
+          "LongSleeveShirtMaterial": 1440
+        },
+        "invalid_material_triangles": {
+          "total": 0,
+          "by_reason": {},
+          "by_material_index": {},
+          "samples": []
+        },
+        "maximum_influences": 4,
+        "maximum_weight_sum_delta": 0.00016392720863223076,
+        "non_normalized_vertices": [],
+        "unweighted_vertices": [],
+        "degenerate_faces": [],
+        "coordinates_finite": true,
+        "armature_target": "CharacterRig"
+      },
+      "Pants": {
+        "vertices": 2040,
+        "polygons": 1048,
+        "triangles": 1048,
+        "materials": [
+          "PantsMaterial"
+        ],
+        "material_base_colors": {
+          "PantsMaterial": [
+            0.3967552185058594,
+            0.19120168685913086,
+            0.09084171056747437,
+            1.0
+          ]
+        },
+        "material_texture_contracts": {
+          "PantsMaterial": {
+            "uses_textures": false,
+            "roles": {
+              "base_color": [],
+              "metallic_roughness": [],
+              "normal": [],
+              "occlusion": [],
+              "emission": [],
+              "alpha": []
+            },
+            "images": {},
+            "errors": []
+          }
+        },
+        "uv_contract": {
+          "required": false,
+          "layers": [
+            "UVMap"
+          ],
+          "active": "UVMap",
+          "active_render": "UVMap",
+          "textured_polygons": 0,
+          "textured_triangles": 0,
+          "finite": true,
+          "inside_unit_square": true,
+          "bounds": null,
+          "degenerate_textured_triangles": [],
+          "generated_rim_degenerate_allowed": true,
+          "errors": []
+        },
+        "material_triangle_counts": {
+          "PantsMaterial": 1048
+        },
+        "invalid_material_triangles": {
+          "total": 0,
+          "by_reason": {},
+          "by_material_index": {},
+          "samples": []
+        },
+        "maximum_influences": 4,
+        "maximum_weight_sum_delta": 0.00013718008995056152,
+        "non_normalized_vertices": [],
+        "unweighted_vertices": [],
+        "degenerate_faces": [],
+        "coordinates_finite": true,
+        "armature_target": "CharacterRig"
+      }
+    },
+    "bone_count": 49,
+    "rest_head_max_delta": 4.172325134277344e-07,
+    "rest_tail_max_delta": 0.2404766082763672,
+    "bone_deform_flag_mismatches": [
+      "IkTarget.L",
+      "IkTarget.R"
+    ],
+    "raw_texture_contract": {
+      "materials": {},
+      "meshes": {},
+      "embedded_image_count": 0,
+      "image_count": 0,
+      "texture_count": 0,
+      "extensions_used": [
+        "KHR_draco_mesh_compression"
+      ]
+    }
+  },
+  "failures": {}
+}

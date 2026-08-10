@@ -1,0 +1,79 @@
+{
+  "passed": true,
+  "source_blend": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase.blend",
+  "source_blend_sha256_before": "4530ebe1e8c642df5e47db9ad875c74fe995100561d385ef34a8efc38bd19572",
+  "source_blend_sha256_after": "4530ebe1e8c642df5e47db9ad875c74fe995100561d385ef34a8efc38bd19572",
+  "source_blend_unchanged": true,
+  "source_blend_saved": false,
+  "canonical_blend_in_output_directory": true,
+  "additional_blend_files_created": [],
+  "blender": "C:\\Program Files\\Blender Foundation\\Blender 5.1\\blender.exe",
+  "targets": "all",
+  "actions_requested": "auto",
+  "output_dir": "E:\\Dev\\planes3d-sol\\src\\assets\\character",
+  "outputs": [
+    {
+      "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase.fbx",
+      "sha256": "4ebdac91e189c714d7cbcf8d21e3e6e89c24dd517258fa974065266d29bda78e",
+      "bytes": 453420
+    },
+    {
+      "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase.glb",
+      "sha256": "72bb854443e58ccb2bf4efd4f8a6f4f4b413ad441136f94d859cfdbab746a526",
+      "bytes": 145528
+    },
+    {
+      "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\anim\\idle.fbx",
+      "sha256": "e3df72000f43d5f522ff9e016fa7c8d0e33186f9fe2386437ac8046009a58199",
+      "bytes": 1059676
+    },
+    {
+      "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\anim\\jump.fbx",
+      "sha256": "014a853bae4fcb8ff49a5f122c2d9e7a52c54405c10840ef316e694669c340e8",
+      "bytes": 512764
+    },
+    {
+      "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\anim\\run.fbx",
+      "sha256": "de7ba2c9ecabf84d04d8857d003ac3d781c254e1d8b6e2121aa56f69c218ab45",
+      "bytes": 392684
+    },
+    {
+      "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\anim\\walk.fbx",
+      "sha256": "cae19de9a84eb3c28f6d32636c8aad7332976ab8deb6a14363f4a32401d97c86",
+      "bytes": 447596
+    }
+  ],
+  "export_report": {
+    "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\reports\\CharacterBase_export.json",
+    "sha256": "5e6e519e829b20d0d461685f747892445b3075eb3dd8fa2e9e19473a62c64789"
+  },
+  "validation_reports": [
+    {
+      "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\reports\\CharacterBase_fbx_validation.json",
+      "sha256": "0f525985b7ae353c465e93cf85890e7f892ebe8ecf5ce0dff102f9b78b4cf546"
+    },
+    {
+      "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\reports\\CharacterBase_glb_validation.json",
+      "sha256": "8e77e3691e5219c18a60eacd2afe54f7d8b3b7e2661af11e5e003d59e78de6b5"
+    },
+    {
+      "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\reports\\anim\\idle_fbx_validation.json",
+      "sha256": "98268e0a3693c6717ffda4d441479966449c172355a315626bf6de8ff809df81"
+    },
+    {
+      "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\reports\\anim\\jump_fbx_validation.json",
+      "sha256": "590748b3b0cece4e720e257c3654bf5018d9754897479212c77510673517bd7d"
+    },
+    {
+      "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\reports\\anim\\run_fbx_validation.json",
+      "sha256": "4e189fbe12285375aeedb6dba0f74223a0b19cf880d18623035082ed1c10dae8"
+    },
+    {
+      "path": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\reports\\anim\\walk_fbx_validation.json",
+      "sha256": "066609476d1315f7475cc807497165f13d1161d503edec0f773cb74e2958b0b9"
+    }
+  ],
+  "all_reimports_passed": true,
+  "glb_draco": true,
+  "animation_payload": "skeleton_only"
+}

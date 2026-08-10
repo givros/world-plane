@@ -21,6 +21,34 @@ export const BIOME_PROP_FAMILIES = [
 
 export type BiomePropFamily = (typeof BIOME_PROP_FAMILIES)[number];
 
+export const BIOME_PROP_FAMILY_BY_ASSET_ID = {
+  'proto-biome-trunk': 'trunk',
+  'proto-biome-canopy': 'canopy',
+  'proto-biome-conifer': 'conifer',
+  'proto-biome-frond': 'frond',
+  'proto-biome-ground-cover': 'groundCover',
+  'proto-biome-reed': 'reed',
+  'proto-biome-cactus': 'cactus',
+  'proto-biome-deadwood': 'deadwood',
+  'proto-biome-rock': 'rock',
+  'proto-biome-mesa': 'mesa',
+  'proto-biome-crystal': 'crystal',
+  'proto-biome-snow': 'snow',
+  'proto-biome-water': 'water',
+  'proto-biome-glow': 'glow',
+} as const satisfies Record<string, BiomePropFamily>;
+
+export type BiomePropAssetId = keyof typeof BIOME_PROP_FAMILY_BY_ASSET_ID;
+
+export const BIOME_PROP_ASSET_ID_BY_FAMILY = Object.freeze(
+  Object.fromEntries(
+    Object.entries(BIOME_PROP_FAMILY_BY_ASSET_ID).map(([assetId, family]) => [
+      family,
+      assetId,
+    ]),
+  ) as Record<BiomePropFamily, BiomePropAssetId>,
+);
+
 export type BiomePropAccumulator = {
   mesh: THREE.InstancedMesh<THREE.BufferGeometry, THREE.MeshBasicMaterial>;
   count: number;

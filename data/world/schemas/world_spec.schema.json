@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://planes3d.local/worldclaw/world_spec.schema.json",
+  "title": "Planes3D World Specification",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "specificationId",
+    "status",
+    "capturedAt",
+    "sourceRevision",
+    "sourceAuthority",
+    "engine",
+    "coordinateSystem",
+    "visualDirection",
+    "worldScale",
+    "worldLayers",
+    "terrain",
+    "materials",
+    "regionalPresentation",
+    "access",
+    "systemStatus",
+    "performanceBudgets",
+    "artifactRequirements",
+    "linkedSpecifications",
+    "pilot",
+    "stage0BaselineRepairs"
+  ],
+  "properties": {
+    "schemaVersion": { "$ref": "#/$defs/semver" },
+    "specificationId": { "$ref": "#/$defs/stableId" },
+    "status": { "type": "string", "minLength": 1 },
+    "capturedAt": { "type": "string", "format": "date" },
+    "sourceRevision": { "type": "string", "pattern": "^[0-9a-f]{7,64}$" },
+    "sourceAuthority": { "type": "object" },
+    "engine": { "type": "object" },
+    "coordinateSystem": {
+      "type": "object",
+      "required": ["units", "metersPerWorldUnit", "handedness", "upAxis", "runwayForwardAxis", "worldOrigin", "serializedPlacementSpace"],
+      "properties": {
+        "metersPerWorldUnit": { "const": 1 },
+        "handedness": { "const": "right" },
+        "upAxis": { "const": "+Y" },
+        "runwayForwardAxis": { "const": "+Z" },
+        "worldOrigin": { "$ref": "#/$defs/vec3" },
+        "serializedPlacementSpace": { "const": "chunk-local" }
+      }
+    },
+    "visualDirection": { "type": "object" },
+    "worldScale": {
+      "type": "object",
+      "required": ["topology", "chunk", "streaming", "fogMetersAtGround", "biomeGenerator"],
+      "properties": {
+        "chunk": {
+          "type": "object",
+          "required": ["sizeMeters", "centered", "segmentsPerSide", "samplesPerSide", "cellSizeMeters", "sharedEdgeRule"],
+          "properties": {
+            "sizeMeters": { "const": 1280 },
+            "centered": { "const": true },
+            "segmentsPerSide": { "const": 40 },
+            "samplesPerSide": { "const": 41 },
+            "cellSizeMeters": { "const": 32 },
+            "sharedEdgeRule": { "const": "bit-identical-float32-samples" }
+          }
+        },
+        "streaming": {
+          "type": "object",
+          "required": ["activeGrid", "activeChunkCount", "slotPolicy", "authoredCoveragePolicy"],
+          "properties": {
+            "activeGrid": { "const": [3, 3] },
+            "activeChunkCount": { "const": 9 },
+            "slotPolicy": { "const": "fixed-recycled-pool" }
+          }
+        }
+      }
+    },
+    "worldLayers": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["id", "priority", "owner"],
+        "properties": {
+          "id": { "$ref": "#/$defs/stableId" },
+          "priority": { "type": "integer" },
+          "owner": { "type": "string", "minLength": 1 },
+          "regionIds": { "type": "array", "uniqueItems": true, "items": { "$ref": "#/$defs/stableId" } }
+        }
+      }
+    },
+    "terrain": {
+      "type": "object",
+      "required": ["currentHeightSource", "heightQuery", "airportFlattening", "authoredArtifactPolicy"],
+      "properties": {
+        "airportFlattening": {
+          "type": "object",
+          "required": ["innerSquareHalfExtentMeters", "blendDistanceMeters", "flatTerrainElevationMeters", "propAndUrbanReserveHalfExtentMeters"],
+          "properties": {
+            "propAndUrbanReserveHalfExtentMeters": { "const": 430 }
+          }
+        },
+        "authoredArtifactPolicy": {
+          "type": "object",
+          "required": ["requiredSamples", "finiteValuesOnly", "sharedEdgeHashRequired", "fallbackOnInvalid"],
+          "properties": {
+            "requiredSamples": { "const": [41, 41] },
+            "finiteValuesOnly": { "const": true },
+            "sharedEdgeHashRequired": { "const": true }
+          }
+        }
+      }
+    },
+    "materials": { "type": "object" },
+    "regionalPresentation": { "type": "object" },
+    "access": { "type": "object" },
+    "systemStatus": { "type": "object" },
+    "performanceBudgets": {
+      "type": "object",
+      "required": ["drawCallsMax", "trianglesMax", "geometriesMax", "texturesMax", "streaming"],
+      "properties": {
+        "drawCallsMax": { "type": "integer", "minimum": 1 },
+        "trianglesMax": { "type": "integer", "minimum": 1 },
+        "geometriesMax": { "type": "integer", "minimum": 1 },
+        "texturesMax": { "type": "integer", "minimum": 0 },
+        "streaming": {
+          "type": "object",
+          "required": ["terrainSlots", "naturalInstancesPerFamilyMax", "urbanBoxesPerSlotMax", "urbanRoofsPerSlotMax", "droppedInstancesMax", "resourceGrowthAcrossCycles"],
+          "properties": {
+            "terrainSlots": { "const": 9 },
+            "naturalInstancesPerFamilyMax": { "type": "integer", "minimum": 1 },
+            "urbanBoxesPerSlotMax": { "type": "integer", "minimum": 1 },
+            "urbanRoofsPerSlotMax": { "type": "integer", "minimum": 1 },
+            "droppedInstancesMax": { "const": 0 },
+            "resourceGrowthAcrossCycles": { "const": 0 }
+          }
+        }
+      }
+    },
+    "artifactRequirements": {
+      "type": "object",
+      "required": ["runtimeNetworkCalls", "runtimeAiCalls", "schemaValidation", "contentHashes", "deterministicCompilerOutput", "chunkLocalTransforms", "knownAssetIdsOnly", "capacityValidation", "originReservationValidation", "proceduralFallbackRequired", "viteBaseSafePaths"],
+      "properties": {
+        "runtimeNetworkCalls": { "const": false },
+        "runtimeAiCalls": { "const": false },
+        "schemaValidation": { "const": true },
+        "contentHashes": { "const": true },
+        "deterministicCompilerOutput": { "const": true },
+        "chunkLocalTransforms": { "const": true },
+        "knownAssetIdsOnly": { "const": true },
+        "capacityValidation": { "const": true },
+        "originReservationValidation": { "const": true },
+        "proceduralFallbackRequired": { "const": true },
+        "viteBaseSafePaths": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": { "type": "string", "pattern": "^/(?:[A-Za-z0-9._-]+/)*$" }
+        }
+      }
+    },
+    "linkedSpecifications": {
+      "type": "object",
+      "required": ["regionGraph", "assetRegistry", "gameplayRoutes", "audit", "pilotPlan", "integrationPlan"],
+      "additionalProperties": { "$ref": "#/$defs/repositoryPath" }
+    },
+    "pilot": {
+      "type": "object",
+      "required": ["id", "chunkId", "chunkCoordinates", "chunkCenter", "chunkBoundsXZ", "regionId", "changesTerrainInFirstSlice", "generatesAssetsInFirstSlice"],
+      "properties": {
+        "id": { "$ref": "#/$defs/stableId" },
+        "chunkId": { "$ref": "#/$defs/chunkId" },
+        "chunkCoordinates": { "$ref": "#/$defs/ivec2" },
+        "chunkCenter": { "$ref": "#/$defs/vec3" },
+        "chunkBoundsXZ": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "type": "number" } },
+        "regionId": { "$ref": "#/$defs/stableId" },
+        "changesTerrainInFirstSlice": { "type": "boolean" },
+        "generatesAssetsInFirstSlice": { "type": "boolean" }
+      }
+    },
+    "stage0BaselineRepairs": { "type": "array", "items": { "type": "object" } }
+  },
+  "$defs": {
+    "semver": { "type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$" },
+    "stableId": { "type": "string", "pattern": "^[a-z][a-z0-9]*(?:-[a-z0-9]+)*$" },
+    "chunkId": { "type": "string", "pattern": "^chunk:-?[0-9]+:-?[0-9]+$" },
+    "vec3": { "type": "array", "minItems": 3, "maxItems": 3, "items": { "type": "number" } },
+    "ivec2": { "type": "array", "minItems": 2, "maxItems": 2, "items": { "type": "integer" } },
+    "repositoryPath": { "type": "string", "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))[A-Za-z0-9._/-]+$" }
+  }
+}

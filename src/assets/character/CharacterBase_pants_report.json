@@ -1,0 +1,138 @@
+{
+  "source_file": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase.blend",
+  "source_file_sha256": "CB35008D924D35BD4C3C2ACDAFDEE6551B0C738C1B0FF137FF067B617E050477",
+  "output_file": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase.blend",
+  "working_blend": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase.blend",
+  "revision_before_sha256": "CB35008D924D35BD4C3C2ACDAFDEE6551B0C738C1B0FF137FF067B617E050477",
+  "revision_after_sha256": "2F01F0CC2F018D3A14DE3245657966B2CD3D2F42A12474837CAD0770470529BD",
+  "updated_in_place": true,
+  "replaced_existing": false,
+  "garment_id": "preset_pants",
+  "garment_revision_before": 0,
+  "garment_revision_after": 1,
+  "visibility_before": true,
+  "visibility_after": true,
+  "character_mesh_signature_before": "E9BA39BFE5446C997403367F3A31B46F8D63332FF6868FAD5C2DD76E858B22C1",
+  "character_mesh_signature_after": "E9BA39BFE5446C997403367F3A31B46F8D63332FF6868FAD5C2DD76E858B22C1",
+  "source_faces_used": 204,
+  "source_vertices_used": 221,
+  "pants_vertices": 261,
+  "pants_faces": 224,
+  "pants_flat_faces": 224,
+  "pants_unweighted_vertices": [],
+  "pants_max_influences": 5,
+  "pants_coordinates_finite": true,
+  "boundary_loops": [
+    8,
+    8,
+    20
+  ],
+  "waistband_vertices": 40,
+  "vertex_groups": 47,
+  "modifiers": [
+    [
+      "Garment Thickness",
+      "SOLIDIFY"
+    ],
+    [
+      "Armature",
+      "ARMATURE"
+    ]
+  ],
+  "parent": "CharacterRig",
+  "collection": "Clothing",
+  "material": "PantsMaterial",
+  "canonical_uv": {
+    "object": "Pants",
+    "garment_id": "preset_pants",
+    "layer": "CodexClothingUV",
+    "layout_version": 1,
+    "digest": "447B1916DC26A6BB41205A1B232B29E35787573B54F6FB9C87BCCB58C865A2D4",
+    "created": true,
+    "replaced": false,
+    "loops": 896,
+    "zone_polygon_counts": {
+      "front": 68,
+      "back": 52,
+      "left": 48,
+      "right": 48,
+      "top": 0,
+      "bottom": 8
+    },
+    "zone_rects": {
+      "front": [
+        0.02,
+        0.22,
+        0.28,
+        0.76
+      ],
+      "back": [
+        0.32,
+        0.22,
+        0.28,
+        0.76
+      ],
+      "left": [
+        0.63,
+        0.22,
+        0.13,
+        0.76
+      ],
+      "right": [
+        0.79,
+        0.22,
+        0.13,
+        0.76
+      ],
+      "top": [
+        0.63,
+        0.04,
+        0.13,
+        0.14
+      ],
+      "bottom": [
+        0.79,
+        0.04,
+        0.13,
+        0.14
+      ]
+    },
+    "non_uv_invariants_before": {
+      "geometry": "529AB38A07F82DFF159E46A233B48346D655C528492929F966686FBBDEB7578A",
+      "weights": "AA784F635C1893C37159451CF5BC120EA40D15426548BF7B458D9DCE802F2C7A",
+      "modifiers": "332C7C93B122EC50B1D97A77518AE7A3DA230D4EAE712AE311C2AC00F5CC1941",
+      "noncanonical_mesh_data": "D312A304488B3662D00866EBD8766E29B650F6F8EBFAC567B051911D152A5E2A",
+      "drivers": "50D312C5C015083C8F3F99EE8C21FEEBD8991F1DFE7BB029A9FDBF9E83FA80F4",
+      "visibility_and_ownership": "1AD2094E7207553B482C5BA0FC2CABAE162BB77B59E43D3C3740BC2413A449B8",
+      "transform": "A49E4BD1F95CC6CA34ECDCC2247BF8905CFA414CA3C40B426C800E8E0ED52BF3"
+    },
+    "non_uv_invariants_after": {
+      "geometry": "529AB38A07F82DFF159E46A233B48346D655C528492929F966686FBBDEB7578A",
+      "weights": "AA784F635C1893C37159451CF5BC120EA40D15426548BF7B458D9DCE802F2C7A",
+      "modifiers": "332C7C93B122EC50B1D97A77518AE7A3DA230D4EAE712AE311C2AC00F5CC1941",
+      "noncanonical_mesh_data": "D312A304488B3662D00866EBD8766E29B650F6F8EBFAC567B051911D152A5E2A",
+      "drivers": "50D312C5C015083C8F3F99EE8C21FEEBD8991F1DFE7BB029A9FDBF9E83FA80F4",
+      "visibility_and_ownership": "1AD2094E7207553B482C5BA0FC2CABAE162BB77B59E43D3C3740BC2413A449B8",
+      "transform": "A49E4BD1F95CC6CA34ECDCC2247BF8905CFA414CA3C40B426C800E8E0ED52BF3"
+    },
+    "non_uv_invariants_preserved": true
+  },
+  "visibility_property": "CharacterRig[\"show_pants\"]",
+  "visibility_test": [
+    {
+      "show_pants": true,
+      "hide_viewport": false,
+      "hide_render": false
+    },
+    {
+      "show_pants": false,
+      "hide_viewport": true,
+      "hide_render": true
+    },
+    {
+      "show_pants": true,
+      "hide_viewport": false,
+      "hide_render": false
+    }
+  ]
+}

@@ -1,0 +1,183 @@
+{
+  "file": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase.blend",
+  "file_sha256": "50A67F4C03439ECDE46AB302E7FC9EA528FB05D488F0113D26A40E45E437DE90",
+  "character_mesh_signature": "E9BA39BFE5446C997403367F3A31B46F8D63332FF6868FAD5C2DD76E858B22C1",
+  "pants_mesh_signature": "C4B656089C50A0D29AC4DEFAADA500D7E1409239B529F8100E4A4B444CF299BB",
+  "character_vertices": 1596,
+  "character_faces": 1588,
+  "pants_vertices": 261,
+  "pants_faces": 224,
+  "shirt_vertices": 358,
+  "shirt_edges": 680,
+  "shirt_faces": 320,
+  "shirt_flat_faces": 320,
+  "shirt_materials": [
+    "LongSleeveShirtMaterial"
+  ],
+  "shirt_parent": "CharacterRig",
+  "shirt_collections": [
+    "Clothing"
+  ],
+  "shirt_modifiers": [
+    [
+      "Garment Thickness",
+      "SOLIDIFY",
+      null
+    ],
+    [
+      "Armature",
+      "ARMATURE",
+      "CharacterRig"
+    ]
+  ],
+  "shirt_vertex_groups": 47,
+  "shirt_unweighted_vertices": [],
+  "shirt_max_influences": 6,
+  "shirt_dimensions": [
+    0.8401792049407959,
+    0.1601581871509552,
+    0.3101326823234558
+  ],
+  "shirt_custom_properties": {
+    "garment_type": "long_sleeve_shirt",
+    "garment_slot": "torso_and_arms",
+    "concept_color": "#F4F3ED",
+    "layering": "over_pants"
+  },
+  "source_faces_matched": 304,
+  "source_vertices_matched": 326,
+  "main_surface_normal_dot_min": 0.9425268182530999,
+  "main_surface_normal_dot_max": 1.0000001140870154,
+  "main_vertex_signed_offset_min": 0.004499974112938787,
+  "main_vertex_signed_offset_max": 0.022527786375576418,
+  "non_hem_vertex_signed_offset_min": 0.004499974112938787,
+  "main_vertex_absolute_offset_min": 0.004499973942194444,
+  "main_vertex_absolute_offset_max": 0.03214985947383768,
+  "hem_source_vertices": 20,
+  "hem_output_z_min": 0.5820000171661377,
+  "hem_output_z_max": 0.5820000171661377,
+  "source_coordinates_finite": true,
+  "evaluated_coordinates_finite": true,
+  "evaluated_vertices": 716,
+  "evaluated_faces": 720,
+  "waist_layering_support_margins": {
+    "0.585": {
+      "minimum": 0.0010671839118003845,
+      "maximum": 0.012522771023213863,
+      "non_positive_directions": 0
+    },
+    "0.595": {
+      "minimum": 0.004522332921624184,
+      "maximum": 0.011209063231945038,
+      "non_positive_directions": 0
+    },
+    "0.605": {
+      "minimum": 0.003668181598186493,
+      "maximum": 0.012277960777282715,
+      "non_positive_directions": 0
+    },
+    "0.615": {
+      "minimum": 0.0009527076035737991,
+      "maximum": 0.013346865773200989,
+      "non_positive_directions": 0
+    }
+  },
+  "shirt_drivers": {
+    "hide_render": {
+      "valid": true,
+      "expression": "1.0-visible",
+      "target": "CharacterRig",
+      "data_path": "[\"show_long_sleeve_shirt\"]"
+    },
+    "hide_viewport": {
+      "valid": true,
+      "expression": "1.0-visible",
+      "target": "CharacterRig",
+      "data_path": "[\"show_long_sleeve_shirt\"]"
+    }
+  },
+  "pants_drivers": {
+    "hide_render": {
+      "valid": true,
+      "expression": "1.0-visible",
+      "target": "CharacterRig",
+      "data_path": "[\"show_pants\"]"
+    },
+    "hide_viewport": {
+      "valid": true,
+      "expression": "1.0-visible",
+      "target": "CharacterRig",
+      "data_path": "[\"show_pants\"]"
+    }
+  },
+  "pants_canonical_uv": {
+    "layer": "CodexClothingUV",
+    "loops": 896,
+    "expected_digest": "447B1916DC26A6BB41205A1B232B29E35787573B54F6FB9C87BCCB58C865A2D4",
+    "actual_digest": "447B1916DC26A6BB41205A1B232B29E35787573B54F6FB9C87BCCB58C865A2D4",
+    "object_digest": "447B1916DC26A6BB41205A1B232B29E35787573B54F6FB9C87BCCB58C865A2D4",
+    "mesh_digest": "447B1916DC26A6BB41205A1B232B29E35787573B54F6FB9C87BCCB58C865A2D4",
+    "object_version": 1,
+    "mesh_version": 1,
+    "active": "CodexClothingUV",
+    "active_render": "CodexClothingUV",
+    "passed": true
+  },
+  "shirt_canonical_uv": {
+    "layer": "CodexClothingUV",
+    "loops": 1280,
+    "expected_digest": "16B303174447DE62064C63446CEA0228EB54D79DF071B688FB594FD995B2E9BE",
+    "actual_digest": "16B303174447DE62064C63446CEA0228EB54D79DF071B688FB594FD995B2E9BE",
+    "object_digest": "16B303174447DE62064C63446CEA0228EB54D79DF071B688FB594FD995B2E9BE",
+    "mesh_digest": "16B303174447DE62064C63446CEA0228EB54D79DF071B688FB594FD995B2E9BE",
+    "object_version": 1,
+    "mesh_version": 1,
+    "active": "CodexClothingUV",
+    "active_render": "CodexClothingUV",
+    "passed": true
+  },
+  "visibility_test": [
+    [
+      true,
+      true,
+      false,
+      false,
+      false,
+      false
+    ],
+    [
+      false,
+      true,
+      true,
+      true,
+      false,
+      false
+    ],
+    [
+      true,
+      false,
+      false,
+      false,
+      true,
+      true
+    ],
+    [
+      false,
+      false,
+      true,
+      true,
+      true,
+      true
+    ],
+    [
+      true,
+      true,
+      false,
+      false,
+      false,
+      false
+    ]
+  ],
+  "failures": {},
+  "passed": true
+}

@@ -36,17 +36,30 @@ function neutralIntent(overrides = {}) {
   };
 }
 
-function createController() {
+function horizontalSpeedAtContact(speed, verticalSpeed) {
+  return Math.sqrt(Math.max(0, speed * speed - verticalSpeed * verticalSpeed));
+}
+
+function createController({ fullScaleGear = false, surfaceHeightAt = () => 0 } = {}) {
   const root = new THREE.Object3D();
   const propeller = new THREE.Object3D();
   const leftMainWheel = new THREE.Object3D();
   const rightMainWheel = new THREE.Object3D();
   const tailWheel = new THREE.Object3D();
 
-  propeller.position.set(0, 1.55, 2.6);
-  leftMainWheel.position.set(-1, 0.5, 0.45);
-  rightMainWheel.position.set(1, 0.5, 0.45);
-  tailWheel.position.set(0, 0.2, -2);
+  const mainWheelRadius = fullScaleGear ? 0.52 : 0.5;
+  const propellerSafetyRadius = fullScaleGear ? 1.86 : 1.2;
+  if (fullScaleGear) {
+    propeller.position.set(0, 2.42, 4.34);
+    leftMainWheel.position.set(-1.76, mainWheelRadius, 0.72);
+    rightMainWheel.position.set(1.76, mainWheelRadius, 0.72);
+    tailWheel.position.set(0, 0.2, -4.67);
+  } else {
+    propeller.position.set(0, 1.55, 2.6);
+    leftMainWheel.position.set(-1, mainWheelRadius, 0.45);
+    rightMainWheel.position.set(1, mainWheelRadius, 0.45);
+    tailWheel.position.set(0, 0.2, -2);
+  }
 
   const controller = new ManualFlightController(
     {
@@ -67,10 +80,10 @@ function createController() {
         southThresholdZ: -100_000,
         northThresholdZ: 100_000,
       },
-      mainWheelRadius: 0.5,
+      mainWheelRadius,
       auxiliaryWheelRadius: 0.2,
-      propellerSafetyRadius: 1.2,
-      surfaceHeightAt: () => 0,
+      propellerSafetyRadius,
+      surfaceHeightAt,
     },
   );
 
@@ -343,7 +356,299 @@ test('an upright mild-sink touchdown is accepted near minimum flight speed', () 
   assert.equal(touchdown.altitude, 0);
 });
 
-test('a hard landing remains terminal until an explicit reset', () => {
+test('a flared touchdown with the production taildragger gear remains landable', () => {
+  for (const approachSpeed of [11, 30, 55]) {
+    const { controller, root } = createController({ fullScaleGear: true });
+    assert.equal(controller.start(), true);
+
+    const sinkRate = -6.2;
+    Object.assign(controller, {
+      onGround: false,
+      hasBeenAirborne: true,
+      liftoffSeconds: 1,
+      speed: approachSpeed,
+      throttle: 0.15,
+      pitch: 8 * DEG_TO_RAD,
+      bank: 1 * DEG_TO_RAD,
+      flightPathAngle: Math.asin(sinkRate / approachSpeed),
+      verticalSpeed: sinkRate,
+    });
+    root.position.set(400, 0.2, 400);
+
+    controller.update(FIXED_STEP, neutralIntent());
+
+    assert.equal(controller.state.crashed, false, `touchdown crashed at ${approachSpeed} m/s`);
+    assert.equal(controller.state.onGround, true);
+    assert.equal(controller.state.running, true);
+    assert.equal(controller.state.phase, 'touchdown');
+    assert.equal(controller.state.wheelContact.main, true);
+    assert.equal(controller.state.wheelContact.auxiliary, true);
+    assert.equal(controller.state.wheelContact.all, true);
+    assert.ok(Math.abs(controller.state.pitch) < 0.01 * DEG_TO_RAD);
+    assert.ok(Math.abs(controller.state.bank) < 0.01 * DEG_TO_RAD);
+  }
+});
+
+test('a destructive flared impact settles on all three wheels without ending play', () => {
+  const { controller, root } = createController({ fullScaleGear: true });
+  assert.equal(controller.start(), true);
+
+  const approachSpeed = 30;
+  const sinkRate = -9;
+  Object.assign(controller, {
+    onGround: false,
+    hasBeenAirborne: true,
+    liftoffSeconds: 1,
+    speed: approachSpeed,
+    throttle: 0.15,
+    pitch: 8 * DEG_TO_RAD,
+    bank: 1 * DEG_TO_RAD,
+    flightPathAngle: Math.asin(sinkRate / approachSpeed),
+    verticalSpeed: sinkRate,
+  });
+  root.position.set(400, 0.2, 400);
+
+  controller.update(FIXED_STEP, neutralIntent());
+
+  assert.equal(controller.state.crashed, false);
+  assert.equal(controller.state.running, true);
+  assert.equal(controller.state.completed, false);
+  assert.equal(controller.state.onGround, true);
+  assert.equal(controller.state.phase, 'touchdown');
+  assert.ok(Math.abs(
+    controller.state.speed - horizontalSpeedAtContact(approachSpeed, sinkRate)
+  ) < 0.4);
+  assert.equal(controller.state.verticalSpeed, 0);
+  assert.equal(controller.state.throttle, 0.15);
+  assert.equal(controller.state.wheelContact.main, true);
+  assert.equal(controller.state.wheelContact.auxiliary, true);
+  assert.equal(controller.state.wheelContact.all, true);
+  assert.ok(Math.abs(controller.state.pitch) < 0.01 * DEG_TO_RAD);
+  assert.ok(Math.abs(controller.state.bank) < 0.01 * DEG_TO_RAD);
+});
+
+test('a controlled off-airport touchdown remains valid on moderate terrain', () => {
+  const slope = Math.tan(10 * DEG_TO_RAD);
+  const surfaceHeightAt = (worldX) => worldX * slope;
+  const { controller, root } = createController({ fullScaleGear: true, surfaceHeightAt });
+  assert.equal(controller.start(), true);
+
+  const approachSpeed = 30;
+  const sinkRate = -2.1;
+  Object.assign(controller, {
+    onGround: false,
+    hasBeenAirborne: true,
+    liftoffSeconds: 1,
+    speed: approachSpeed,
+    throttle: 0.15,
+    pitch: 8 * DEG_TO_RAD,
+    bank: 0,
+    flightPathAngle: Math.asin(sinkRate / approachSpeed),
+    verticalSpeed: sinkRate,
+  });
+  root.position.set(40, surfaceHeightAt(40) + 0.2, 400);
+
+  controller.update(FIXED_STEP, neutralIntent());
+
+  assert.equal(controller.state.crashed, false);
+  assert.equal(controller.state.onGround, true);
+  assert.equal(controller.state.running, true);
+  assert.equal(controller.state.phase, 'touchdown');
+});
+
+test('contacts outside the nominal landing envelope remain recoverable', () => {
+  const scenarios = [
+    {
+      name: 'overspeed',
+      speed: 70,
+      pitch: 2 * DEG_TO_RAD,
+      bank: 0,
+      yaw: 0,
+      surfaceHeightAt: () => 0,
+      position: new THREE.Vector3(0, 0.08, 400),
+    },
+    {
+      name: 'excessive bank',
+      speed: 30,
+      pitch: 2 * DEG_TO_RAD,
+      bank: 30 * DEG_TO_RAD,
+      yaw: 0,
+      surfaceHeightAt: () => 0,
+      position: new THREE.Vector3(0, 0.2, 400),
+    },
+    {
+      name: 'cross-runway heading',
+      speed: 30,
+      pitch: 2 * DEG_TO_RAD,
+      bank: 0,
+      yaw: Math.PI / 2,
+      surfaceHeightAt: () => 0,
+      position: new THREE.Vector3(0, 0.08, 400),
+    },
+    {
+      name: 'steep terrain',
+      speed: 30,
+      pitch: 2 * DEG_TO_RAD,
+      bank: 0,
+      yaw: 0,
+      surfaceHeightAt: (worldX) => worldX * Math.tan(20 * DEG_TO_RAD),
+      position: new THREE.Vector3(
+        40,
+        40 * Math.tan(20 * DEG_TO_RAD) + 0.2,
+        400,
+      ),
+    },
+  ];
+
+  for (const scenario of scenarios) {
+    const { controller, root } = createController({
+      fullScaleGear: true,
+      surfaceHeightAt: scenario.surfaceHeightAt,
+    });
+    assert.equal(controller.start(), true, scenario.name);
+    const sinkRate = -2;
+    Object.assign(controller, {
+      onGround: false,
+      hasBeenAirborne: true,
+      liftoffSeconds: 1,
+      speed: scenario.speed,
+      throttle: 0.7,
+      pitch: scenario.pitch,
+      bank: scenario.bank,
+      yaw: scenario.yaw,
+      flightPathAngle: Math.asin(sinkRate / scenario.speed),
+      verticalSpeed: sinkRate,
+    });
+    root.position.copy(scenario.position);
+
+    const recovered = advanceUntil(
+      controller,
+      neutralIntent(),
+      (state) => state.onGround,
+      30,
+      `${scenario.name} did not resolve to a ground state`,
+    );
+
+    assert.equal(recovered.crashed, false, scenario.name);
+    assert.equal(recovered.running, true, scenario.name);
+    assert.equal(recovered.completed, false, scenario.name);
+    assert.equal(recovered.phase, 'touchdown', scenario.name);
+    assert.ok(Number.isFinite(recovered.speed), scenario.name);
+    assert.ok(Math.abs(
+      recovered.speed - horizontalSpeedAtContact(scenario.speed, sinkRate)
+    ) < 0.5, scenario.name);
+    assert.equal(recovered.throttle, 0.7, scenario.name);
+    assert.ok(Number.isFinite(recovered.position.x), scenario.name);
+    assert.ok(Number.isFinite(recovered.position.y), scenario.name);
+    assert.ok(Number.isFinite(recovered.position.z), scenario.name);
+    const throttleBeforeInput = controller.state.throttle;
+    controller.update(FIXED_STEP, neutralIntent({ throttle: 1 }));
+    assert.ok(
+      controller.state.throttle > throttleBeforeInput,
+      `${scenario.name} ignored live pilot input`,
+    );
+  }
+});
+
+test('high-speed ground contact keeps rolling momentum and braking acts over time', () => {
+  const makeOverspeedContact = () => {
+    const { controller, root } = createController({ fullScaleGear: true });
+    assert.equal(controller.start(), true);
+    const speed = 70;
+    const sinkRate = -2;
+    Object.assign(controller, {
+      onGround: false,
+      hasBeenAirborne: true,
+      liftoffSeconds: 1,
+      speed,
+      throttle: 0,
+      pitch: 2 * DEG_TO_RAD,
+      bank: 0,
+      flightPathAngle: Math.asin(sinkRate / speed),
+      verticalSpeed: sinkRate,
+    });
+    root.position.set(0, 0.08, 400);
+    const contact = advanceUntil(
+      controller,
+      neutralIntent(),
+      (state) => state.onGround,
+      30,
+      'The overspeed aircraft did not contact the ground',
+    );
+    return { controller, contact };
+  };
+
+  const unbraked = makeOverspeedContact();
+  const braked = makeOverspeedContact();
+  const expectedContactSpeed = horizontalSpeedAtContact(70, -2);
+  assert.ok(Math.abs(unbraked.contact.speed - expectedContactSpeed) < 0.5);
+  assert.ok(Math.abs(braked.contact.speed - expectedContactSpeed) < 0.5);
+
+  unbraked.controller.update(FIXED_STEP, neutralIntent());
+  braked.controller.update(FIXED_STEP, neutralIntent({ brake: true }));
+  assert.ok(unbraked.controller.state.speed > unbraked.contact.speed * 0.98);
+  assert.ok(braked.controller.state.speed > braked.contact.speed * 0.97);
+  assert.ok(unbraked.controller.state.position.distanceTo(unbraked.contact.position) > 0.5);
+  assert.ok(braked.controller.state.position.distanceTo(braked.contact.position) > 0.5);
+
+  for (let step = 1; step < 120; step += 1) {
+    unbraked.controller.update(FIXED_STEP, neutralIntent());
+    braked.controller.update(FIXED_STEP, neutralIntent({ brake: true }));
+  }
+
+  const unbrakedDistance = unbraked.controller.state.position.distanceTo(
+    unbraked.contact.position,
+  );
+  const brakedDistance = braked.controller.state.position.distanceTo(braked.contact.position);
+  assert.ok(unbrakedDistance > 50, `Unbraked roll was only ${unbrakedDistance.toFixed(2)} m.`);
+  assert.ok(brakedDistance > 35, `Braked roll stopped unrealistically at ${brakedDistance.toFixed(2)} m.`);
+  assert.ok(unbrakedDistance > brakedDistance + 5);
+  assert.ok(unbraked.controller.state.speed > braked.controller.state.speed + 10);
+  assert.equal(unbraked.controller.state.running, true);
+  assert.equal(braked.controller.state.running, true);
+  assert.equal(unbraked.controller.state.crashed, false);
+  assert.equal(braked.controller.state.crashed, false);
+});
+
+test('a propeller-first strike returns to controllable ground operation', () => {
+  const { controller, root } = createController({ fullScaleGear: true });
+  assert.equal(controller.start(), true);
+
+  const speed = 30;
+  const sinkRate = -1;
+  Object.assign(controller, {
+    onGround: false,
+    hasBeenAirborne: true,
+    liftoffSeconds: 1,
+    speed,
+    throttle: 0.8,
+    pitch: -12 * DEG_TO_RAD,
+    bank: 0,
+    flightPathAngle: Math.asin(sinkRate / speed),
+    verticalSpeed: sinkRate,
+  });
+  root.position.set(400, 0.35, 400);
+
+  controller.update(FIXED_STEP, neutralIntent());
+
+  assert.equal(controller.state.crashed, false);
+  assert.equal(controller.state.running, true);
+  assert.equal(controller.state.completed, false);
+  assert.equal(controller.state.onGround, true);
+  assert.equal(controller.state.phase, 'touchdown');
+  assert.ok(Math.abs(
+    controller.state.speed - horizontalSpeedAtContact(speed, sinkRate)
+  ) < 0.4);
+  assert.equal(controller.state.verticalSpeed, 0);
+  assert.equal(controller.state.throttle, 0.8);
+  assert.equal(controller.state.wheelContact.all, true);
+  const contactPosition = controller.state.position.clone();
+  controller.update(FIXED_STEP, neutralIntent({ throttle: 1 }));
+  assert.ok(controller.state.position.distanceTo(contactPosition) > 0.2);
+  assert.ok(controller.state.throttle > 0.8, 'A propeller strike must leave pilot input active.');
+});
+
+test('a hard landing can be followed by a relaunch without reset or restart', () => {
   const { controller, root } = createController();
   takeOff(controller, { start: true });
   root.position.y = 50;
@@ -351,32 +656,25 @@ test('a hard landing remains terminal until an explicit reset', () => {
   const beforeImpact = establishDescent(controller, { hard: true });
   assert.ok(beforeImpact.verticalSpeed < -5.2);
 
-  const crashed = contactGround(controller, root);
-  assert.equal(crashed.phase, 'crashed');
-  assert.equal(crashed.crashed, true);
-  assert.equal(crashed.completed, false);
-  assert.equal(crashed.running, false);
-  assert.equal(crashed.speed, 0);
-  assert.equal(crashed.propellerRpm, 0);
+  const recovered = contactGround(controller, root);
+  assert.equal(recovered.phase, 'touchdown');
+  assert.equal(recovered.crashed, false);
+  assert.equal(recovered.completed, false);
+  assert.equal(recovered.running, true);
+  assert.equal(recovered.onGround, true);
+  const expectedGroundSpeed = horizontalSpeedAtContact(
+    beforeImpact.speed,
+    beforeImpact.verticalSpeed,
+  );
+  assert.ok(Math.abs(recovered.speed - expectedGroundSpeed) < 0.75);
+  assert.equal(recovered.throttle, beforeImpact.throttle);
+  assert.ok(recovered.propellerRpm >= 700);
 
-  const terminalPosition = crashed.position.clone();
-  const aggressiveIntent = neutralIntent({ throttle: 1, pitch: 1 });
-  for (let step = 0; step < 1_200; step += 1) {
-    controller.update(FIXED_STEP, aggressiveIntent);
-  }
-
-  const afterInputs = copyState(controller.state);
-  assert.equal(afterInputs.phase, 'crashed');
-  assert.equal(afterInputs.crashed, true);
-  assert.equal(afterInputs.running, false);
-  assert.equal(afterInputs.speed, 0);
-  assert.equal(afterInputs.throttle, 0);
-  assert.equal(afterInputs.propellerRpm, 0);
-  assert.ok(afterInputs.position.distanceTo(terminalPosition) < 1e-9);
-
-  controller.reset();
-  assert.equal(controller.state.phase, 'parked');
-  assert.equal(controller.state.crashed, false);
-  assert.equal(controller.state.onGround, true);
-  assert.equal(controller.state.speed, 0);
+  const relaunch = takeOff(controller);
+  assert.equal(relaunch.crashed, false);
+  assert.equal(relaunch.completed, false);
+  assert.equal(relaunch.running, true);
+  assert.equal(relaunch.onGround, false);
+  assert.equal(relaunch.phase, 'liftoff');
+  assert.ok(relaunch.position.distanceTo(recovered.position) > 1);
 });

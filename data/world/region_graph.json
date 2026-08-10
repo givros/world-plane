@@ -1,0 +1,835 @@
+{
+  "schemaVersion": "1.0.0",
+  "status": "descriptive-baseline-not-runtime-authority",
+  "sourceRevision": "917550d",
+  "nodeIdentity": {
+    "fixedRegionIdsAreStable": true,
+    "biomeTemplateIdsAreStable": true,
+    "streamedRegionInstanceIdFormat": "chunk:{chunkX}:{chunkZ}",
+    "chunkKeyFormatInCurrentRuntime": "{chunkX}:{chunkZ}",
+    "contiguousVoronoiRegionIdAvailableInCurrentRuntime": false,
+    "semanticColorSpace": "sRGB-hex",
+    "semanticColorsAreUniqueWithinThisFile": true
+  },
+  "semanticPriorityHighToLow": [
+    "operational-zones",
+    "authored-field-zones",
+    "fixed-origin-region",
+    "procedural-biome-template"
+  ],
+  "regions": [
+    {
+      "id": "region-airport-origin",
+      "kind": "fixed-authored-overlay",
+      "label": "Countryside Airport Origin",
+      "semanticColor": "#FF365E",
+      "boundary": {
+        "kind": "exclusive-aabb-xz",
+        "minimum": [-430, -430],
+        "maximum": [430, 430],
+        "rule": "max(abs(x),abs(z)) < 430"
+      },
+      "overlaysChunkId": "chunk:0:0",
+      "underlyingRegionId": "region-biome-sunlit-meadow",
+      "functions": [
+        "controlled-aircraft-spawn",
+        "manual-takeoff-and-landing",
+        "autopilot-showcase",
+        "parked-inspection",
+        "rural-origin-landmark"
+      ],
+      "access": {
+        "aircraft": "implemented",
+        "roadVehicles": "absent",
+        "boats": "absent",
+        "onFoot": "absent"
+      },
+      "routeIds": [
+        "route-airport-manual-runway-departure",
+        "route-autopilot-showcase",
+        "route-airport-manual-landing-relaunch",
+        "route-reset-to-airport"
+      ],
+      "spawnIds": ["spawn-aircraft-primary"],
+      "materialSetIds": ["material-set-airfield"],
+      "preserve": true
+    },
+    {
+      "id": "region-biome-sunlit-meadow",
+      "runtimeBiomeId": "sunlit-meadow",
+      "kind": "procedural-biome-template",
+      "label": "Sunlit Meadow",
+      "semanticColor": "#74B84A",
+      "terrainProfile": "rolling-meadow",
+      "palette": {
+        "ground": "#4f843e",
+        "roughness": 0.96,
+        "primary": "#315f2f",
+        "secondary": "#8eb952",
+        "accent": "#f1cf52",
+        "rock": "#777766",
+        "water": "#4f93a6"
+      },
+      "prototypeTargetsPerChunk": {
+        "trees": 46,
+        "groundCover": 180,
+        "rocks": 32,
+        "deadwood": 12
+      },
+      "repeatedAssetIds": [
+        "proto-biome-trunk",
+        "proto-biome-canopy",
+        "proto-biome-ground-cover",
+        "proto-biome-rock",
+        "proto-biome-deadwood"
+      ],
+      "functions": ["natural-countryside", "off-airport-terrain-landing"],
+      "waterAccess": "none",
+      "roadAccess": "none"
+    },
+    {
+      "id": "region-biome-sahara-dunes",
+      "runtimeBiomeId": "sahara-dunes",
+      "kind": "procedural-biome-template",
+      "label": "Sahara Dunes",
+      "semanticColor": "#D89A3D",
+      "terrainProfile": "wave-dunes",
+      "palette": {
+        "ground": "#c98c45",
+        "roughness": 1,
+        "primary": "#477342",
+        "secondary": "#e8b85f",
+        "accent": "#d66b2d",
+        "rock": "#9f5d32",
+        "water": "#4e9aab"
+      },
+      "prototypeTargetsPerChunk": {
+        "mesas": 34,
+        "cacti": 34,
+        "rocks": 54,
+        "groundCover": 70
+      },
+      "repeatedAssetIds": [
+        "proto-biome-mesa",
+        "proto-biome-cactus",
+        "proto-biome-rock",
+        "proto-biome-ground-cover"
+      ],
+      "functions": ["arid-flight-scenery", "off-airport-terrain-landing"],
+      "waterAccess": "none",
+      "roadAccess": "none"
+    },
+    {
+      "id": "region-biome-alpine-peaks",
+      "runtimeBiomeId": "alpine-peaks",
+      "kind": "procedural-biome-template",
+      "label": "Alpine Peaks",
+      "semanticColor": "#6C7C8C",
+      "terrainProfile": "highest-ridged-relief",
+      "palette": {
+        "ground": "#788276",
+        "roughness": 0.92,
+        "primary": "#234b3f",
+        "secondary": "#dbe1db",
+        "accent": "#c7d9e5",
+        "rock": "#5e6465",
+        "water": "#538aa1"
+      },
+      "prototypeTargetsPerChunk": {
+        "conifers": 74,
+        "mesas": 28,
+        "rocks": 58,
+        "snowPatches": 38
+      },
+      "repeatedAssetIds": [
+        "proto-biome-trunk",
+        "proto-biome-conifer",
+        "proto-biome-mesa",
+        "proto-biome-rock",
+        "proto-biome-snow"
+      ],
+      "functions": ["mountain-flight-scenery", "conditional-off-airport-terrain-landing"],
+      "waterAccess": "none",
+      "roadAccess": "none"
+    },
+    {
+      "id": "region-biome-arctic-tundra",
+      "runtimeBiomeId": "arctic-tundra",
+      "kind": "procedural-biome-template",
+      "label": "Arctic Tundra",
+      "semanticColor": "#D9F1F2",
+      "terrainProfile": "low-icy-ridges",
+      "palette": {
+        "ground": "#c8d6d5",
+        "roughness": 0.76,
+        "primary": "#78918e",
+        "secondary": "#eaf2ef",
+        "accent": "#8bd4df",
+        "rock": "#78878b",
+        "water": "#5e9fb4"
+      },
+      "prototypeTargetsPerChunk": {
+        "snowPatches": 62,
+        "crystals": 58,
+        "visualWaterOrIcePatches": 24,
+        "rocks": 38
+      },
+      "repeatedAssetIds": [
+        "proto-biome-snow",
+        "proto-biome-crystal",
+        "proto-biome-water",
+        "proto-biome-rock"
+      ],
+      "functions": ["polar-flight-scenery", "conditional-off-airport-terrain-landing"],
+      "waterAccess": "visual-only",
+      "roadAccess": "none"
+    },
+    {
+      "id": "region-biome-volcanic-wastes",
+      "runtimeBiomeId": "volcanic-wastes",
+      "kind": "procedural-biome-template",
+      "label": "Volcanic Wastes",
+      "semanticColor": "#4A3033",
+      "terrainProfile": "steep-volcanic-ridges",
+      "palette": {
+        "ground": "#292b2a",
+        "roughness": 0.98,
+        "primary": "#3b3b38",
+        "secondary": "#646158",
+        "accent": "#f05b21",
+        "rock": "#151918",
+        "water": "#f17a20"
+      },
+      "prototypeTargetsPerChunk": {
+        "rocks": 88,
+        "mesas": 38,
+        "glowFissures": 38,
+        "crystals": 24
+      },
+      "repeatedAssetIds": [
+        "proto-biome-rock",
+        "proto-biome-mesa",
+        "proto-biome-glow",
+        "proto-biome-crystal"
+      ],
+      "functions": ["volcanic-flight-scenery", "conditional-off-airport-terrain-landing"],
+      "waterAccess": "none",
+      "roadAccess": "none"
+    },
+    {
+      "id": "region-biome-emerald-marsh",
+      "runtimeBiomeId": "emerald-marsh",
+      "kind": "procedural-biome-template",
+      "label": "Emerald Marsh",
+      "semanticColor": "#2C7D68",
+      "terrainProfile": "very-low-wet-terrain",
+      "palette": {
+        "ground": "#536a43",
+        "roughness": 0.94,
+        "primary": "#314d33",
+        "secondary": "#809047",
+        "accent": "#b3c26a",
+        "rock": "#555d4e",
+        "water": "#315f5c"
+      },
+      "prototypeTargetsPerChunk": {
+        "visualWaterPatches": 38,
+        "reeds": 190,
+        "deadwood": 42,
+        "groundCover": 90
+      },
+      "repeatedAssetIds": [
+        "proto-biome-water",
+        "proto-biome-reed",
+        "proto-biome-deadwood",
+        "proto-biome-ground-cover"
+      ],
+      "functions": ["wetland-flight-scenery", "conditional-off-airport-terrain-landing"],
+      "waterAccess": "visual-only",
+      "roadAccess": "none"
+    },
+    {
+      "id": "region-biome-red-rock-canyon",
+      "runtimeBiomeId": "red-rock-canyon",
+      "kind": "procedural-biome-template",
+      "label": "Red Rock Canyon",
+      "semanticColor": "#B94D35",
+      "terrainProfile": "terraced-canyon-relief",
+      "palette": {
+        "ground": "#a64f32",
+        "roughness": 1,
+        "primary": "#70402d",
+        "secondary": "#d17b43",
+        "accent": "#e6aa58",
+        "rock": "#7d382a",
+        "water": "#447a86"
+      },
+      "prototypeTargetsPerChunk": {
+        "broadMesas": 42,
+        "narrowPillars": 34,
+        "rocks": 58,
+        "cacti": 20
+      },
+      "repeatedAssetIds": [
+        "proto-biome-mesa",
+        "proto-biome-rock",
+        "proto-biome-cactus"
+      ],
+      "functions": ["canyon-flight-scenery", "conditional-off-airport-terrain-landing"],
+      "waterAccess": "none",
+      "roadAccess": "none"
+    },
+    {
+      "id": "region-biome-autumn-forest",
+      "runtimeBiomeId": "autumn-forest",
+      "kind": "procedural-biome-template",
+      "label": "Autumn Forest",
+      "semanticColor": "#C2672E",
+      "terrainProfile": "rolling-forest",
+      "palette": {
+        "ground": "#6f5535",
+        "roughness": 0.98,
+        "primary": "#8d3324",
+        "secondary": "#d37b2d",
+        "accent": "#efb943",
+        "rock": "#665c50",
+        "water": "#476f76"
+      },
+      "prototypeTargetsPerChunk": {
+        "trees": 88,
+        "groundCover": 185,
+        "rocks": 42,
+        "deadwood": 22
+      },
+      "repeatedAssetIds": [
+        "proto-biome-trunk",
+        "proto-biome-canopy",
+        "proto-biome-ground-cover",
+        "proto-biome-rock",
+        "proto-biome-deadwood"
+      ],
+      "functions": ["seasonal-forest-flight-scenery", "conditional-off-airport-terrain-landing"],
+      "waterAccess": "none",
+      "roadAccess": "none"
+    },
+    {
+      "id": "region-biome-tropical-lagoon",
+      "runtimeBiomeId": "tropical-lagoon",
+      "kind": "procedural-biome-template",
+      "label": "Tropical Lagoon",
+      "semanticColor": "#13A58D",
+      "terrainProfile": "low-islands",
+      "palette": {
+        "ground": "#2f794d",
+        "roughness": 0.91,
+        "primary": "#1f6f4b",
+        "secondary": "#62a949",
+        "accent": "#f0d85f",
+        "rock": "#6e7767",
+        "water": "#28a7a4"
+      },
+      "prototypeTargetsPerChunk": {
+        "visualWaterPatches": 38,
+        "palms": 58,
+        "trees": 44,
+        "groundCover": 155,
+        "rocks": 38
+      },
+      "repeatedAssetIds": [
+        "proto-biome-water",
+        "proto-biome-trunk",
+        "proto-biome-frond",
+        "proto-biome-canopy",
+        "proto-biome-ground-cover",
+        "proto-biome-rock"
+      ],
+      "functions": ["tropical-flight-scenery", "conditional-off-airport-terrain-landing"],
+      "waterAccess": "visual-only",
+      "roadAccess": "none"
+    },
+    {
+      "id": "region-biome-crystal-salt-flats",
+      "runtimeBiomeId": "crystal-salt-flats",
+      "kind": "procedural-biome-template",
+      "label": "Crystal Salt Flats",
+      "semanticColor": "#D7CFC2",
+      "terrainProfile": "almost-flat",
+      "palette": {
+        "ground": "#d9d5c9",
+        "roughness": 0.68,
+        "primary": "#c0bbb0",
+        "secondary": "#efeadb",
+        "accent": "#8fc7c9",
+        "rock": "#9a968f",
+        "water": "#83b9bd"
+      },
+      "prototypeTargetsPerChunk": {
+        "crystals": 118,
+        "saltOrSnowCrust": 58,
+        "visualWaterPatches": 28,
+        "rocks": 34
+      },
+      "repeatedAssetIds": [
+        "proto-biome-crystal",
+        "proto-biome-snow",
+        "proto-biome-water",
+        "proto-biome-rock"
+      ],
+      "functions": ["open-flight-scenery", "off-airport-terrain-landing"],
+      "waterAccess": "visual-only",
+      "roadAccess": "none"
+    },
+    {
+      "id": "region-biome-metropolitan-core",
+      "runtimeBiomeId": "metropolitan-core",
+      "kind": "procedural-urban-biome-template",
+      "label": "Metropolitan Core",
+      "semanticColor": "#4D6EA8",
+      "terrainProfile": "nearly-flat-urban-foundation",
+      "palette": {
+        "ground": "#596963",
+        "roughness": 0.82,
+        "primary": "#5f7482",
+        "secondary": "#b9c6c8",
+        "accent": "#55c7df",
+        "rock": "#39464c",
+        "water": "#438da2"
+      },
+      "visualRoles": [
+        "arterial-road-grid",
+        "downtown-towers",
+        "residential-blocks",
+        "civic-plazas",
+        "roof-services",
+        "window-facades",
+        "street-traffic",
+        "urban-parks",
+        "skyline-landmark"
+      ],
+      "landmarkPatternId": "landmark-aerium-spire",
+      "repeatedAssetIds": [
+        "existing-urban-box-pool",
+        "existing-urban-roof-pool",
+        "proto-biome-trunk",
+        "proto-biome-canopy",
+        "proto-biome-crystal"
+      ],
+      "functions": ["dense-city-visual-region", "off-airport-terrain-landing"],
+      "waterAccess": "none",
+      "roadAccess": "visual-only"
+    },
+    {
+      "id": "region-biome-azure-harbor",
+      "runtimeBiomeId": "azure-harbor",
+      "kind": "procedural-urban-biome-template",
+      "label": "Azure Harbor",
+      "semanticColor": "#197EA8",
+      "terrainProfile": "nearly-flat-harbor-foundation",
+      "palette": {
+        "ground": "#65766e",
+        "roughness": 0.86,
+        "primary": "#536d7a",
+        "secondary": "#d0bea0",
+        "accent": "#e77d38",
+        "rock": "#465156",
+        "water": "#287f98"
+      },
+      "visualRoles": [
+        "port-road-grid",
+        "harbor-basins",
+        "working-docks",
+        "warehouse-quarter",
+        "container-yards",
+        "cargo-cranes",
+        "service-traffic",
+        "coastal-promenade",
+        "lighthouse-landmark"
+      ],
+      "landmarkPatternId": "landmark-azure-beacon",
+      "repeatedAssetIds": [
+        "existing-urban-box-pool",
+        "existing-urban-roof-pool",
+        "proto-biome-trunk",
+        "proto-biome-frond",
+        "proto-biome-deadwood"
+      ],
+      "functions": ["port-city-visual-region", "off-airport-terrain-landing"],
+      "waterAccess": "visual-colored-foundations-only",
+      "roadAccess": "visual-only"
+    },
+    {
+      "id": "region-biome-ironworks-district",
+      "runtimeBiomeId": "ironworks-district",
+      "kind": "procedural-urban-biome-template",
+      "label": "Ironworks District",
+      "semanticColor": "#66564A",
+      "terrainProfile": "nearly-flat-industrial-foundation",
+      "palette": {
+        "ground": "#646057",
+        "roughness": 0.93,
+        "primary": "#6a6257",
+        "secondary": "#aa987d",
+        "accent": "#e1a03d",
+        "rock": "#353b3d",
+        "water": "#55757a"
+      },
+      "visualRoles": [
+        "heavy-road-grid",
+        "factory-halls",
+        "rail-yards",
+        "tank-farms",
+        "pipe-racks",
+        "warehouse-belt",
+        "power-infrastructure",
+        "freight-traffic",
+        "foundry-landmark"
+      ],
+      "landmarkPatternId": "landmark-grand-foundry",
+      "repeatedAssetIds": [
+        "existing-urban-box-pool",
+        "existing-urban-roof-pool",
+        "proto-biome-trunk",
+        "proto-biome-mesa"
+      ],
+      "functions": ["industrial-visual-region", "off-airport-terrain-landing"],
+      "waterAccess": "none",
+      "roadAccess": "visual-only"
+    },
+    {
+      "id": "region-biome-sunstone-citadel",
+      "runtimeBiomeId": "sunstone-citadel",
+      "kind": "procedural-urban-biome-template",
+      "label": "Sunstone Citadel",
+      "semanticColor": "#D98C53",
+      "terrainProfile": "gently-raised-desert-city-foundation",
+      "palette": {
+        "ground": "#bd8b58",
+        "roughness": 0.97,
+        "primary": "#c76e3d",
+        "secondary": "#efd09a",
+        "accent": "#3c9da1",
+        "rock": "#8e5139",
+        "water": "#3e98a5"
+      },
+      "visualRoles": [
+        "citadel-street-grid",
+        "adobe-quarters",
+        "courtyard-houses",
+        "market-bazaars",
+        "defensive-walls",
+        "solar-outskirts",
+        "palm-gardens",
+        "ceremonial-gates",
+        "minaret-landmark"
+      ],
+      "landmarkPatternId": "landmark-sunstone-minaret",
+      "repeatedAssetIds": [
+        "existing-urban-box-pool",
+        "existing-urban-roof-pool",
+        "proto-biome-trunk",
+        "proto-biome-frond",
+        "proto-biome-snow",
+        "proto-biome-crystal"
+      ],
+      "functions": ["desert-city-visual-region", "off-airport-terrain-landing"],
+      "waterAccess": "none",
+      "roadAccess": "visual-only"
+    }
+  ],
+  "zones": [
+    {
+      "id": "zone-airport-runway-18-36",
+      "parentRegionId": "region-airport-origin",
+      "kind": "aircraft-surface",
+      "semanticColor": "#F6F7F2",
+      "boundary": {
+        "kind": "aabb-xz",
+        "minimum": [-12, -180],
+        "maximum": [12, 180]
+      },
+      "surfaceY": 0,
+      "preserve": true
+    },
+    {
+      "id": "zone-airport-runway-safe-corridor",
+      "parentRegionId": "region-airport-origin",
+      "kind": "placement-reservation",
+      "semanticColor": "#FFD23F",
+      "centerlineX": 0,
+      "halfWidth": 18,
+      "mechanicallyEnforcedByCurrentController": false,
+      "preserve": true
+    },
+    {
+      "id": "zone-airport-taxiway-apron",
+      "parentRegionId": "region-airport-origin",
+      "kind": "visual-aircraft-path",
+      "semanticColor": "#FF9F1C",
+      "taxiwayCenterlineXZ": [
+        [-11.9, -24],
+        [-17, -24],
+        [-26, -30],
+        [-36, -40],
+        [-48, -47]
+      ],
+      "taxiwayHalfWidth": 4.25,
+      "apron": {
+        "centerXZ": [-54, -49],
+        "baseRadius": 24,
+        "scaleXZ": [1.28, 0.72]
+      },
+      "collisionSurface": false,
+      "preserve": true
+    },
+    {
+      "id": "zone-airport-west-light-meadow",
+      "parentRegionId": "region-airport-origin",
+      "kind": "decorative-field",
+      "semanticColor": "#A3C85E",
+      "polygonXZ": [
+        [-350, -310],
+        [-34, -310],
+        [-28, -126],
+        [-43, -58],
+        [-350, -72]
+      ],
+      "surfaceY": -0.195
+    },
+    {
+      "id": "zone-airport-west-deep-pasture",
+      "parentRegionId": "region-airport-origin",
+      "kind": "decorative-field",
+      "semanticColor": "#3B6D39",
+      "polygonXZ": [
+        [-350, -68],
+        [-44, -55],
+        [-34, 86],
+        [-350, 132]
+      ],
+      "surfaceY": -0.195
+    },
+    {
+      "id": "zone-airport-west-harvest-field",
+      "parentRegionId": "region-airport-origin",
+      "kind": "decorative-field",
+      "semanticColor": "#C8A447",
+      "polygonXZ": [
+        [-350, 136],
+        [-34, 91],
+        [-30, 310],
+        [-350, 310]
+      ],
+      "surfaceY": -0.195
+    },
+    {
+      "id": "zone-airport-east-harvest-field",
+      "parentRegionId": "region-airport-origin",
+      "kind": "decorative-field",
+      "semanticColor": "#D1B14C",
+      "polygonXZ": [
+        [31, -310],
+        [350, -310],
+        [350, -82],
+        [39, -62]
+      ],
+      "surfaceY": -0.195
+    },
+    {
+      "id": "zone-airport-east-light-meadow",
+      "parentRegionId": "region-airport-origin",
+      "kind": "decorative-field",
+      "semanticColor": "#91BD59",
+      "polygonXZ": [
+        [40, -58],
+        [350, -78],
+        [350, 102],
+        [37, 72]
+      ],
+      "surfaceY": -0.195
+    },
+    {
+      "id": "zone-airport-east-deep-pasture",
+      "parentRegionId": "region-airport-origin",
+      "kind": "decorative-field",
+      "semanticColor": "#315C37",
+      "polygonXZ": [
+        [38, 77],
+        [350, 107],
+        [350, 310],
+        [29, 310]
+      ],
+      "surfaceY": -0.195
+    }
+  ],
+  "landmarks": [
+    {
+      "id": "landmark-main-orange-trim-hangar",
+      "regionId": "region-airport-origin",
+      "assetId": "hero-main-orange-trim-hangar",
+      "position": [-63, 0, -48],
+      "yawRadians": 1.5707963267948966,
+      "worldUniqueness": "unique"
+    },
+    {
+      "id": "landmark-maintenance-hangar",
+      "regionId": "region-airport-origin",
+      "assetId": "hero-maintenance-hangar",
+      "position": [-66, 0, 4],
+      "yawRadians": 1.5707963267948966,
+      "worldUniqueness": "unique"
+    },
+    {
+      "id": "landmark-east-field-farm-shed",
+      "regionId": "region-airport-origin",
+      "assetId": "hero-east-field-farm-shed",
+      "position": [73, 0, 92],
+      "yawRadians": -1.5707963267948966,
+      "uniformScale": 0.9,
+      "worldUniqueness": "unique"
+    },
+    {
+      "id": "landmark-airport-operations-office",
+      "regionId": "region-airport-origin",
+      "assetId": "hero-airport-operations-office",
+      "position": [-44, 0, 29],
+      "yawRadians": 1.5707963267948966,
+      "worldUniqueness": "unique"
+    },
+    {
+      "id": "landmark-airfield-fuel-depot",
+      "regionId": "region-airport-origin",
+      "assetId": "hero-airfield-fuel-depot",
+      "position": [-76, 0, 31],
+      "yawRadians": 0.18,
+      "worldUniqueness": "unique"
+    },
+    {
+      "id": "landmark-airfield-windsock",
+      "regionId": "region-airport-origin",
+      "assetId": "existing-airport-windsock",
+      "position": [-35, 0, -76],
+      "worldUniqueness": "unique"
+    },
+    {
+      "id": "landmark-papi-south",
+      "regionId": "region-airport-origin",
+      "assetId": "existing-airport-lighting",
+      "position": [-16.1, 0, -106],
+      "worldUniqueness": "unique"
+    },
+    {
+      "id": "landmark-papi-north",
+      "regionId": "region-airport-origin",
+      "assetId": "existing-airport-lighting",
+      "position": [16.1, 0, 106],
+      "worldUniqueness": "unique"
+    },
+    {
+      "id": "landmark-aerium-spire",
+      "regionId": "region-biome-metropolitan-core",
+      "assetId": "hero-aerium-spire",
+      "localPositionXZ": [80, 80],
+      "worldUniqueness": "repeated-once-per-matching-city-chunk"
+    },
+    {
+      "id": "landmark-azure-beacon",
+      "regionId": "region-biome-azure-harbor",
+      "assetId": "hero-azure-beacon",
+      "localPositionXZ": [-560, -560],
+      "worldUniqueness": "repeated-once-per-matching-city-chunk"
+    },
+    {
+      "id": "landmark-grand-foundry",
+      "regionId": "region-biome-ironworks-district",
+      "assetId": "hero-grand-foundry",
+      "localPositionXZ": [80, -80],
+      "worldUniqueness": "repeated-once-per-matching-city-chunk"
+    },
+    {
+      "id": "landmark-sunstone-minaret",
+      "regionId": "region-biome-sunstone-citadel",
+      "assetId": "hero-sunstone-minaret",
+      "localPositionXZ": [80, 80],
+      "worldUniqueness": "repeated-once-per-matching-city-chunk"
+    }
+  ],
+  "edges": [
+    {
+      "from": "zone-airport-runway-18-36",
+      "to": "zone-airport-taxiway-apron",
+      "relationship": "visual-surface-connection",
+      "gameplayNavigation": false
+    },
+    {
+      "from": "region-airport-origin",
+      "to": "region-biome-sunlit-meadow",
+      "relationship": "fixed-overlay-on-procedural-substrate",
+      "transition": "flat-core-to-natural-height-blend"
+    }
+  ],
+  "proceduralAdjacency": {
+    "kind": "runtime-derived",
+    "chunkNeighbors": "four-cardinal-grid-neighbors",
+    "biomeRegionRule": "nearest-deterministically-jittered-voronoi-site",
+    "regionSpanChunks": 4,
+    "anyBiomeTemplateMayBorderAnyBiomeTemplate": true,
+    "concreteAdjacencyMustBeDerivedFor": [
+      "world-seed",
+      "chunk-window",
+      "artifact-revision"
+    ],
+    "urbanRoadGraphAvailable": false,
+    "waterGraphAvailable": false
+  },
+  "initialChunkWindowDerivedFromCurrentSeed": [
+    {
+      "chunkId": "chunk:-1:-1",
+      "regionId": "region-biome-red-rock-canyon"
+    },
+    {
+      "chunkId": "chunk:0:-1",
+      "regionId": "region-biome-arctic-tundra"
+    },
+    {
+      "chunkId": "chunk:1:-1",
+      "regionId": "region-biome-ironworks-district"
+    },
+    {
+      "chunkId": "chunk:-1:0",
+      "regionId": "region-biome-volcanic-wastes"
+    },
+    {
+      "chunkId": "chunk:0:0",
+      "regionId": "region-biome-sunlit-meadow"
+    },
+    {
+      "chunkId": "chunk:1:0",
+      "regionId": "region-biome-arctic-tundra"
+    },
+    {
+      "chunkId": "chunk:-1:1",
+      "regionId": "region-biome-volcanic-wastes"
+    },
+    {
+      "chunkId": "chunk:0:1",
+      "regionId": "region-biome-arctic-tundra"
+    },
+    {
+      "chunkId": "chunk:1:1",
+      "regionId": "region-biome-arctic-tundra"
+    }
+  ],
+  "pilot": {
+    "id": "pilot-chunk-near-airport-arctic-tundra",
+    "kind": "existing-streamed-chunk",
+    "chunkId": "chunk:0:1",
+    "chunkCoordinates": [0, 1],
+    "center": [0, 0, 1280],
+    "boundsXZ": {
+      "minimum": [-640, 640],
+      "maximum": [640, 1920]
+    },
+    "regionId": "region-biome-arctic-tundra",
+    "createsNewRuntimeRegion": false
+  }
+}
