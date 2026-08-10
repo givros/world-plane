@@ -90,7 +90,7 @@ test('the CharacterRuntime export report records a canonical, unchanged source',
   assert.equal(report.source_saved, false);
   assert.equal(report.source_sha256_before, report.source_sha256_after);
   assert.equal(sha256(sourceBlend), report.source_sha256_after);
-  assert.equal(path.basename(report.source_blend), 'CharacterBase.blend');
+  assert.equal(report.source_blend, 'CharacterBase.blend');
 
   for (const [label, blends] of [
     ['before', report.source_blends_before],
@@ -98,7 +98,7 @@ test('the CharacterRuntime export report records a canonical, unchanged source',
   ]) {
     assert.ok(Array.isArray(blends), `The ${label} canonical blend list must be recorded.`);
     assert.equal(blends.length, 1, `Exactly one canonical blend must exist ${label} export.`);
-    assert.equal(path.basename(blends[0]), 'CharacterBase.blend');
+    assert.deepEqual(blends, ['CharacterBase.blend']);
   }
   assert.deepEqual(report.source_blends_before, report.source_blends_after);
 
@@ -119,7 +119,7 @@ test('the checked runtime GLB contains only the four required clips and an uncom
   const report = JSON.parse(reportText);
   const gltf = parseGlb(glbBuffer);
 
-  assert.equal(path.basename(report.runtime_glb), 'CharacterRuntime.glb');
+  assert.equal(report.runtime_glb, 'CharacterRuntime.glb');
   assert.equal(glbBuffer.length, report.runtime_glb_bytes);
   assert.equal(sha256(glbBuffer), report.runtime_glb_sha256);
   assert.deepEqual(sorted(gltf.animations.map((animation) => animation.name)), sorted(EXPECTED_ANIMATIONS));

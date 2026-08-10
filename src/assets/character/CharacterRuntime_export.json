@@ -90,7 +90,7 @@
     ]
   },
   "passed": true,
-  "runtime_glb": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterRuntime.glb",
+  "runtime_glb": "CharacterRuntime.glb",
   "runtime_glb_bytes": 1464176,
   "runtime_glb_sha256": "5d74aa97cab80c208a58e44300d8eda9633e5522b71293881c70b1aca686b88b",
   "source": {
@@ -187,12 +187,12 @@
       "Pants"
     ]
   },
-  "source_blend": "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase.blend",
+  "source_blend": "CharacterBase.blend",
   "source_blends_after": [
-    "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase.blend"
+    "CharacterBase.blend"
   ],
   "source_blends_before": [
-    "E:\\Dev\\planes3d-sol\\src\\assets\\character\\CharacterBase.blend"
+    "CharacterBase.blend"
   ],
   "source_saved": false,
   "source_sha256_after": "4530ebe1e8c642df5e47db9ad875c74fe995100561d385ef34a8efc38bd19572",
