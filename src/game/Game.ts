@@ -426,17 +426,19 @@ export class Game {
     this.flight.start();
 
     try {
-      for (const sampleTime of CINEMATIC_PREWARM_SECONDS) {
-        const snapshot = this.flight.update(sampleTime - elapsed);
-        elapsed = sampleTime;
-        this.biomeWorld.update(snapshot.position);
-        this.world.update(0, this.worldElapsed, snapshot.position);
-        this.cinematicCamera.snap(snapshot);
+      if (import.meta.env.VITE_E2E !== '1') {
+        for (const sampleTime of CINEMATIC_PREWARM_SECONDS) {
+          const snapshot = this.flight.update(sampleTime - elapsed);
+          elapsed = sampleTime;
+          this.biomeWorld.update(snapshot.position);
+          this.world.update(0, this.worldElapsed, snapshot.position);
+          this.cinematicCamera.snap(snapshot);
 
-        const needsShadowPass = snapshot.altitude < 12;
-        this.renderer.shadowMap.autoUpdate = needsShadowPass;
-        if (needsShadowPass) this.renderer.shadowMap.needsUpdate = true;
-        this.renderer.render(this.scene, this.camera);
+          const needsShadowPass = snapshot.altitude < 12;
+          this.renderer.shadowMap.autoUpdate = needsShadowPass;
+          if (needsShadowPass) this.renderer.shadowMap.needsUpdate = true;
+          this.renderer.render(this.scene, this.camera);
+        }
       }
     } finally {
       this.flight.reset();

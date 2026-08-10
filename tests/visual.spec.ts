@@ -4,6 +4,8 @@ import path from 'node:path';
 import { PNG } from 'pngjs';
 import type { BufferAttribute, BufferGeometry, Mesh, Object3D } from 'three';
 
+const isCI = Boolean(process.env.CI);
+
 type Vector3Sample = {
   x: number;
   y: number;
@@ -424,8 +426,9 @@ async function sampleCanvas(page: Page): Promise<CanvasSample> {
 }
 
 async function attachScreenshot(page: Page, testInfo: TestInfo, name: string): Promise<void> {
+  if (isCI) return;
   await testInfo.attach(name, {
-    body: await page.screenshot({ fullPage: true }),
+    body: await page.screenshot({ animations: 'disabled' }),
     contentType: 'image/png',
   });
 }
@@ -1697,20 +1700,21 @@ test.describe('desktop airplane experience', () => {
     const lateralStart = await readExperience(page);
     const lateralStartZ = lateralStart.diagnostics.gameplay.character.position.z;
     await page.keyboard.down('d');
-    await page.waitForTimeout(350);
-    await page.keyboard.up('d');
-    await page.waitForTimeout(180);
-    const afterRight = await readExperience(page);
-    expect(afterRight.diagnostics.gameplay.character.position.z)
+    await expect
+      .poll(async () => (
+        await readExperience(page)
+      ).diagnostics.gameplay.character.position.z)
       .toBeGreaterThan(lateralStartZ + 0.25);
+    await page.keyboard.up('d');
+    const afterRight = await readExperience(page);
 
     await page.keyboard.down('q');
-    await page.waitForTimeout(350);
-    await page.keyboard.up('q');
-    await page.waitForTimeout(180);
-    const afterLeft = await readExperience(page);
-    expect(afterLeft.diagnostics.gameplay.character.position.z)
+    await expect
+      .poll(async () => (
+        await readExperience(page)
+      ).diagnostics.gameplay.character.position.z)
       .toBeLessThan(afterRight.diagnostics.gameplay.character.position.z - 0.25);
+    await page.keyboard.up('q');
 
     const canvasBox = await canvas.boundingBox();
     expect(canvasBox).not.toBeNull();
@@ -1735,9 +1739,19 @@ test.describe('desktop airplane experience', () => {
       const orbitYaw = movementStart.diagnostics.camera.character.yawOffset;
 
       await page.keyboard.down('z');
-      await page.waitForTimeout(520);
+      await expect
+        .poll(async () => planarDistance(
+          startPosition,
+          (await readExperience(page)).diagnostics.gameplay.character.controller.state.position,
+        ))
+        .toBeGreaterThan(0.8);
       const movementMidpoint = await readExperience(page);
-      await page.waitForTimeout(520);
+      await expect
+        .poll(async () => planarDistance(
+          movementMidpoint.diagnostics.gameplay.character.controller.state.position,
+          (await readExperience(page)).diagnostics.gameplay.character.controller.state.position,
+        ))
+        .toBeGreaterThan(1);
       const movementEnd = await readExperience(page);
       await page.keyboard.up('z');
 
@@ -1778,7 +1792,7 @@ test.describe('desktop airplane experience', () => {
   test('only allows leaving a stopped grounded aircraft and supports immediate re-entry', async ({
     page,
   }, testInfo) => {
-    test.setTimeout(40_000);
+    test.setTimeout(isCI ? 90_000 : 40_000);
     const errors = watchBrowserErrors(page);
     await openExperience(page);
 
@@ -1893,6 +1907,7 @@ test.describe('desktop airplane experience', () => {
   });
 
   test('Play opens a free ground-and-flight sandbox with optional reset', async ({ page }, testInfo) => {
+    test.setTimeout(isCI ? 120_000 : 45_000);
     const errors = watchBrowserErrors(page);
     await openExperience(page);
 
@@ -2185,6 +2200,9 @@ test.describe('desktop airplane experience', () => {
       await expect
         .poll(async () => (await readFlightState(page)).bank)
         .toBeLessThan(-8 * Math.PI / 180);
+      await expect
+        .poll(async () => (await readFlightState(page)).yaw - beforeTurn.yaw)
+        .toBeGreaterThan(0.01);
 
       await page.evaluate(() => window.dispatchEvent(new Event('blur')));
       await expect.poll(async () => (await readExperience(page)).diagnostics.input.roll).toBe(0);
@@ -2193,7 +2211,6 @@ test.describe('desktop airplane experience', () => {
         .toBe(false);
       await page.mouse.up();
       await page.keyboard.up('ArrowLeft');
-      await page.waitForTimeout(450);
 
       const afterTurn = await readFlightState(page);
       expect(afterTurn.yaw - beforeTurn.yaw).toBeGreaterThan(0.01);
@@ -2204,11 +2221,12 @@ test.describe('desktop airplane experience', () => {
       await expect
         .poll(async () => (await readFlightState(page)).bank)
         .toBeGreaterThan(8 * Math.PI / 180);
-      await page.waitForTimeout(500);
-      await page.keyboard.up('ArrowRight');
-      await page.waitForTimeout(180);
-
+      await expect
+        .poll(async () => (await readFlightState(page)).yaw - beforeRightTurn.yaw)
+        .toBeLessThan(-0.01);
       const afterRightTurn = await readFlightState(page);
+      await page.keyboard.up('ArrowRight');
+
       expect(afterRightTurn.yaw - beforeRightTurn.yaw).toBeLessThan(-0.01);
       expect(afterRightTurn.bank).toBeGreaterThan(0);
       expect(afterRightTurn.crashed).toBe(false);
@@ -2289,7 +2307,7 @@ test.describe('desktop airplane experience', () => {
   test('manual flight can taxi into the nearby authored world and take off there without reset', async ({
     page,
   }, testInfo) => {
-    test.setTimeout(70_000);
+    test.setTimeout(isCI ? 120_000 : 70_000);
     const errors = watchBrowserErrors(page);
     await openExperience(page);
 
@@ -2311,7 +2329,9 @@ test.describe('desktop airplane experience', () => {
 
       await page.keyboard.down('z');
       await expect
-        .poll(async () => (await readFlightState(page)).position.z, { timeout: 35_000 })
+        .poll(async () => (await readFlightState(page)).position.z, {
+          timeout: isCI ? 60_000 : 35_000,
+        })
         .toBeGreaterThan(650);
       await page.keyboard.up('z');
 

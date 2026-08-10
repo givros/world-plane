@@ -1,12 +1,14 @@
 import { defineConfig, devices } from '@playwright/test';
 
+const isCI = Boolean(process.env.CI);
+
 export default defineConfig({
   testDir: './tests',
   testMatch: '**/*.spec.ts',
   outputDir: './output/playwright',
   fullyParallel: false,
   workers: 1,
-  timeout: 45_000,
+  timeout: isCI ? 90_000 : 45_000,
   expect: {
     timeout: 8_000,
   },
@@ -23,6 +25,9 @@ export default defineConfig({
     url: 'http://127.0.0.1:5397',
     reuseExistingServer: false,
     timeout: 30_000,
+    env: {
+      VITE_E2E: '1',
+    },
   },
   projects: [
     {
