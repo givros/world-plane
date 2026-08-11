@@ -46,6 +46,10 @@ const DYNAMIC_PRESSURE_SCALE = 0.018;
 const ZERO_LIFT_DRAG = 0.032;
 const INDUCED_DRAG_FACTOR = 0.052;
 const MAX_ENGINE_ACCELERATION = 10.8;
+const ENGINE_IDLE_RPM = 720;
+const ENGINE_MAX_RPM = 2500;
+const ENGINE_AIR_LOAD = 0.14;
+const GROUND_BRAKE_DECELERATION = 24;
 const TAKEOFF_POWER_THRESHOLD = 0.5;
 const LIFTOFF_CONTACT_GRACE_SECONDS = 0.22;
 const LIFTOFF_SUPPORT_CLEARANCE = 0.06;
@@ -166,6 +170,7 @@ export class ManualFlightController {
   private auxiliaryWheelAngle = 0;
   private mainWheelAngularSpeed = 0;
   private auxiliaryWheelAngularSpeed = 0;
+  private engineRpm = 0;
 
   constructor(rig: AircraftMotionRig, options: ManualFlightOptions = {}) {
     this.root = rig.root;
@@ -211,7 +216,8 @@ export class ManualFlightController {
     this.mutableState.running = true;
     this.mutableState.inspectionAllowed = false;
     this.mutableState.phase = 'manual-ready';
-    this.mutableState.propellerRpm = 720;
+    this.engineRpm = ENGINE_IDLE_RPM;
+    this.mutableState.propellerRpm = this.engineRpm;
     return true;
   }
 
@@ -240,6 +246,7 @@ export class ManualFlightController {
     this.auxiliaryWheelAngle = 0;
     this.mainWheelAngularSpeed = 0;
     this.auxiliaryWheelAngularSpeed = 0;
+    this.engineRpm = 0;
 
     this.root.position.set(this.runway.centerlineX, this.groundRootY, this.runway.parkingZ);
     this.root.quaternion.identity();
@@ -295,6 +302,7 @@ export class ManualFlightController {
     state.elapsed += delta;
     const throttleRate = intent.throttle >= 0 ? 0.48 : 0.62;
     this.throttle = clamp01(this.throttle + intent.throttle * throttleRate * delta);
+    this.updateEngineRpm(delta);
 
     if (this.onGround) this.stepGround(delta, intent);
     else this.stepAir(delta, intent);
@@ -319,9 +327,15 @@ export class ManualFlightController {
   private stepGround(delta: number, intent: Readonly<PilotIntent>): void {
     if (this.landingRollActive) this.touchdownSeconds += delta;
 
-    const braking = intent.brake ? 17.5 : 0;
+    // Wheel braking is progressive: a light tap still leaves steering and
+    // rolling control, while a held brake dissipates high-speed momentum over
+    // time instead of teleporting the aircraft to a stop.
+    const brakeAuthority = THREE.MathUtils.smoothstep(this.speed, 0.6, 24);
+    const braking = intent.brake
+      ? THREE.MathUtils.lerp(6.5, GROUND_BRAKE_DECELERATION, brakeAuthority)
+      : 0;
     const propellerEfficiency = 1 - 0.28 * clamp01(this.speed / MAX_SPEED);
-    const engineForce = this.throttle * 13.2 * propellerEfficiency;
+    const engineForce = this.enginePower() * 13.2 * propellerEfficiency;
     const aerodynamicDrag = this.speed * this.speed * 0.0028;
     const rollingResistance = this.speed > 0 ? 0.58 + aerodynamicDrag : 0;
     this.speed = THREE.MathUtils.clamp(
@@ -473,7 +487,7 @@ export class ManualFlightController {
       + angleStall * 0.24;
     const dragAcceleration = dynamicPressure * dragCoefficient;
     const propellerEfficiency = 1 - 0.48 * clamp01(this.speed / MAX_SPEED);
-    const thrustAcceleration = this.throttle * MAX_ENGINE_ACCELERATION * propellerEfficiency;
+    const thrustAcceleration = this.enginePower() * MAX_ENGINE_ACCELERATION * propellerEfficiency;
 
     // Point-mass energy model: climbing consumes speed, descending restores it,
     // while bank angle reduces the lift available to hold altitude.
@@ -750,7 +764,7 @@ export class ManualFlightController {
   }
 
   private updateMechanicalAnimation(delta: number): void {
-    const rpm = this.active ? 720 + this.throttle * 1780 : 0;
+    const rpm = this.active ? this.engineRpm : 0;
     this.mutableState.propellerRpm = rpm;
     this.propellerAngle = (this.propellerAngle + (rpm * TWO_PI * delta) / 60) % TWO_PI;
 
@@ -766,6 +780,23 @@ export class ManualFlightController {
       this.auxiliaryWheelAngle + this.auxiliaryWheelAngularSpeed * delta
     ) % TWO_PI;
     this.applyMechanicalPose();
+  }
+
+  private updateEngineRpm(delta: number): void {
+    const speedLoad = clamp01(this.speed / MAX_SPEED);
+    const loadedPowerRange = (ENGINE_MAX_RPM - ENGINE_IDLE_RPM)
+      * (1 - ENGINE_AIR_LOAD * speedLoad);
+    const targetRpm = this.active
+      ? ENGINE_IDLE_RPM + this.throttle * loadedPowerRange
+      : 0;
+    const response = targetRpm >= this.engineRpm ? 8 : 12;
+    this.engineRpm = damp(this.engineRpm, targetRpm, response, delta);
+  }
+
+  private enginePower(): number {
+    return clamp01(
+      (this.engineRpm - ENGINE_IDLE_RPM) / (ENGINE_MAX_RPM - ENGINE_IDLE_RPM),
+    );
   }
 
   private applyMechanicalPose(): void {

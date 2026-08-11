@@ -56,7 +56,9 @@ const AIRCRAFT_PAINT_STORAGE_KEY = 'cropper-seven-aircraft-paint';
 const CHARACTER_STORAGE_KEY = 'cropper-seven-character';
 const CHARACTER_SPAWN = new THREE.Vector3(-6, 0, -112.4);
 const CHARACTER_SPAWN_YAW = Math.PI / 2;
-const AIRCRAFT_ENTRY_LOCAL = new THREE.Vector3(-1.95, 0, -0.5);
+const AIRCRAFT_ENTRY_LEFT_LOCAL = new THREE.Vector3(-1.95, 0, -0.5);
+const AIRCRAFT_ENTRY_RIGHT_LOCAL = new THREE.Vector3(1.95, 0, -0.5);
+const AIRCRAFT_ENTRY_LOCALS = [AIRCRAFT_ENTRY_LEFT_LOCAL, AIRCRAFT_ENTRY_RIGHT_LOCAL] as const;
 const AIRCRAFT_ENTRY_RADIUS = 2.8;
 
 type GameplayControlMode = 'inspection' | 'on-foot' | 'piloting' | 'autopilot';
@@ -128,6 +130,7 @@ export class Game {
   private controlMode: GameplayControlMode = 'inspection';
   private characterEntryDistance = Number.POSITIVE_INFINITY;
   private characterCanEnterAircraft = false;
+  private aircraftEntryRight = false;
   private disposed = false;
   private reviewMode = false;
   private normalBackground: THREE.Scene['background'] = null;
@@ -159,6 +162,11 @@ export class Game {
       surfaceHeightAt: (worldX, worldZ) => this.landingSurfaceHeightAt(worldX, worldZ),
       spawnPosition: CHARACTER_SPAWN,
       spawnYaw: CHARACTER_SPAWN_YAW,
+      // The airport is the first area of an open world, not a fenced level.
+      // Terrain remains the height source, but no artificial slope/step wall
+      // may stop the character from walking away from the runway.
+      maximumSlopeRadians: Math.PI / 2,
+      maximumStepHeight: 1_000,
     });
     this.characterCameraTarget.position.copy(this.character.root.position);
     this.characterCameraTarget.rotation.y = CHARACTER_SPAWN_YAW;
@@ -577,9 +585,15 @@ export class Game {
     if (this.controlMode !== 'piloting' || !this.canExit) return;
     const aircraftState = this.manualFlight.state;
     this.pilotInput.setEnabled(false);
-    this.aircraftEntryWorld.copy(AIRCRAFT_ENTRY_LOCAL);
+    this.aircraftEntryWorld.copy(
+      this.aircraftEntryRight ? AIRCRAFT_ENTRY_RIGHT_LOCAL : AIRCRAFT_ENTRY_LEFT_LOCAL,
+    );
     this.airplane.root.localToWorld(this.aircraftEntryWorld);
-    this.characterController.reset(this.aircraftEntryWorld, aircraftState.yaw);
+    const faceAircraftYaw = Math.atan2(
+      this.airplane.root.position.x - this.aircraftEntryWorld.x,
+      this.airplane.root.position.z - this.aircraftEntryWorld.z,
+    );
+    this.characterController.reset(this.aircraftEntryWorld, faceAircraftYaw);
     this.characterController.setEnabled(true);
     this.characterInput.setEnabled(true);
     this.character.setVisible(true);
@@ -646,13 +660,25 @@ export class Game {
   private updateAircraftEntryInteraction(
     characterState: Readonly<GroundCharacterSnapshot>,
   ): void {
-    this.aircraftEntryWorld.copy(AIRCRAFT_ENTRY_LOCAL);
-    this.airplane.root.localToWorld(this.aircraftEntryWorld);
-    this.characterEntryDistance = Math.hypot(
-      characterState.position.x - this.aircraftEntryWorld.x,
-      characterState.position.z - this.aircraftEntryWorld.z,
-    );
+    let nearestDistance = Number.POSITIVE_INFINITY;
+    for (let index = 0; index < AIRCRAFT_ENTRY_LOCALS.length; index += 1) {
+      const candidateLocal = AIRCRAFT_ENTRY_LOCALS[index];
+      this.cameraForward.copy(candidateLocal);
+      this.airplane.root.localToWorld(this.cameraForward);
+      const candidateDistance = Math.hypot(
+        characterState.position.x - this.cameraForward.x,
+        characterState.position.z - this.cameraForward.z,
+      );
+      if (candidateDistance >= nearestDistance) continue;
+      nearestDistance = candidateDistance;
+      this.aircraftEntryRight = index === 1;
+      this.aircraftEntryWorld.copy(this.cameraForward);
+    }
+    this.characterEntryDistance = nearestDistance;
+    const aircraftState = this.manualFlight.state;
+    const aircraftStopped = aircraftState.onGround && aircraftState.speed <= 0.05;
     this.characterCanEnterAircraft = this.controlMode === 'on-foot'
+      && aircraftStopped
       && this.characterEntryDistance <= AIRCRAFT_ENTRY_RADIUS;
   }
 
