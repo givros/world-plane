@@ -62,6 +62,8 @@ export class PilotCamera {
   private currentPitchOffset = 0;
   private desiredZoom = 1;
   private currentZoom = 1;
+  private static mouseSensitivity = 1;
+  private static invertY = false;
   private baseDistance = 18;
   private cameraDistance = 18;
   private minimumPitchOffset = -Math.PI / 2;
@@ -113,6 +115,23 @@ export class PilotCamera {
     if (this.disposed) return;
     this.enabledState = enabled;
     if (!enabled) this.finishPointer();
+  }
+
+  toggleMouseLook(): void {
+    if (document.pointerLockElement === this.canvas) document.exitPointerLock();
+    else {
+      this.canvas.requestPointerLock();
+    }
+  }
+
+  releaseMouseLook(): void {
+    if (document.pointerLockElement === this.canvas) document.exitPointerLock();
+    this.finishPointer();
+  }
+
+  static setMouseSettings(sensitivity: number, invertY: boolean): void {
+    PilotCamera.mouseSensitivity = sensitivity || 1;
+    PilotCamera.invertY = invertY;
   }
 
   update(deltaSeconds: number, snapshot: Readonly<FlightSnapshot>): void {
@@ -267,7 +286,7 @@ export class PilotCamera {
     this.canvas.removeEventListener('pointercancel', this.onPointerEnd);
     this.canvas.removeEventListener('lostpointercapture', this.onLostPointerCapture);
     this.canvas.removeEventListener('wheel', this.onWheel);
-    this.canvas.removeEventListener('contextmenu', this.onContextMenu);
+    window.removeEventListener('mousemove', this.onMouseMove);
     window.removeEventListener('blur', this.onBlur);
   }
 
@@ -278,18 +297,18 @@ export class PilotCamera {
     this.canvas.addEventListener('pointercancel', this.onPointerEnd);
     this.canvas.addEventListener('lostpointercapture', this.onLostPointerCapture);
     this.canvas.addEventListener('wheel', this.onWheel, { passive: false });
-    this.canvas.addEventListener('contextmenu', this.onContextMenu);
+    window.addEventListener('mousemove', this.onMouseMove);
     window.addEventListener('blur', this.onBlur);
   }
 
   private readonly onPointerDown = (event: PointerEvent): void => {
-    if (!this.enabledState || this.pointerId !== null || event.button !== 0) return;
+    if (!this.enabledState || this.pointerId !== null
+      || document.pointerLockElement === this.canvas) return;
     this.pointerId = event.pointerId;
     this.pointerX = event.clientX;
     this.pointerY = event.clientY;
     this.canvas.focus({ preventScroll: true });
     this.canvas.setPointerCapture(event.pointerId);
-    event.preventDefault();
   };
 
   private readonly onPointerMove = (event: PointerEvent): void => {
@@ -302,16 +321,30 @@ export class PilotCamera {
     const deltaY = event.clientY - this.pointerY;
     this.pointerX = event.clientX;
     this.pointerY = event.clientY;
+    this.applyOrbitDelta(deltaX, deltaY);
+    event.preventDefault();
+  };
+
+  private readonly onMouseMove = (event: MouseEvent): void => {
+    if (!this.enabledState) return;
+    if (document.pointerLockElement !== this.canvas) {
+      if (this.pointerId !== null) this.finishPointer();
+      return;
+    }
+    this.applyOrbitDelta(event.movementX, event.movementY);
+  };
+
+  private applyOrbitDelta(deltaX: number, deltaY: number): void {
     this.desiredYawOffset = shortestAngle(
-      this.desiredYawOffset - deltaX * POINTER_YAW_SENSITIVITY,
+      this.desiredYawOffset - deltaX * POINTER_YAW_SENSITIVITY * PilotCamera.mouseSensitivity,
     );
     this.desiredPitchOffset = THREE.MathUtils.clamp(
-      this.desiredPitchOffset + deltaY * POINTER_PITCH_SENSITIVITY,
+      this.desiredPitchOffset + deltaY * POINTER_PITCH_SENSITIVITY
+        * PilotCamera.mouseSensitivity * (PilotCamera.invertY ? 1 : -1),
       this.minimumPitchOffset,
       this.maximumPitchOffset,
     );
-    event.preventDefault();
-  };
+  }
 
   private readonly onPointerEnd = (event: PointerEvent): void => {
     if (event.pointerId === this.pointerId) this.finishPointer();
@@ -330,10 +363,6 @@ export class PilotCamera {
     );
     this.desiredZoom = nextDistance / this.baseDistance;
     event.preventDefault();
-  };
-
-  private readonly onContextMenu = (event: MouseEvent): void => {
-    if (this.enabledState) event.preventDefault();
   };
 
   private readonly onBlur = (): void => this.finishPointer();

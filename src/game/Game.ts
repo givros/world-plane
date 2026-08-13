@@ -25,7 +25,8 @@ import {
   type GroundCharacterSnapshot,
 } from '../systems/GroundCharacterController';
 import { PilotCamera } from '../systems/PilotCamera';
-import { PilotInput } from '../systems/PilotInput';
+import { PilotInput, type PilotIntent } from '../systems/PilotInput';
+import { GroundCarController, type GroundCarSnapshot } from '../systems/GroundCarController';
 import { QualityDiagnostics } from '../systems/QualityDiagnostics';
 import {
   createInfiniteBiomeWorld,
@@ -56,12 +57,22 @@ const AIRCRAFT_PAINT_STORAGE_KEY = 'cropper-seven-aircraft-paint';
 const CHARACTER_STORAGE_KEY = 'cropper-seven-character';
 const CHARACTER_SPAWN = new THREE.Vector3(-6, 0, -112.4);
 const CHARACTER_SPAWN_YAW = Math.PI / 2;
-const AIRCRAFT_ENTRY_LEFT_LOCAL = new THREE.Vector3(-1.95, 0, -0.5);
-const AIRCRAFT_ENTRY_RIGHT_LOCAL = new THREE.Vector3(1.95, 0, -0.5);
+// Both authored vehicles face local +Z, so physical right is local -X.
+const AIRCRAFT_ENTRY_LEFT_LOCAL = new THREE.Vector3(1.95, 0, -0.5);
+const AIRCRAFT_ENTRY_RIGHT_LOCAL = new THREE.Vector3(-1.95, 0, -0.5);
 const AIRCRAFT_ENTRY_LOCALS = [AIRCRAFT_ENTRY_LEFT_LOCAL, AIRCRAFT_ENTRY_RIGHT_LOCAL] as const;
 const AIRCRAFT_ENTRY_RADIUS = 2.8;
+const CAR_ENTRY_RADIUS = 2.5;
+const NEUTRAL_PILOT_INTENT: Readonly<PilotIntent> = Object.freeze({
+  throttle: 0,
+  pitch: 0,
+  roll: 0,
+  yaw: 0,
+  brake: false,
+});
 
-type GameplayControlMode = 'inspection' | 'on-foot' | 'piloting' | 'autopilot';
+type GameplayControlMode = 'inspection' | 'on-foot' | 'piloting' | 'driving' | 'autopilot';
+type InteractionTarget = 'aircraft' | 'car';
 
 function readStoredAircraftPaintColor(): string {
   try {
@@ -104,11 +115,13 @@ export class Game {
   private readonly characterInput = new CharacterInput();
   private readonly character: PlayableCharacter;
   private readonly characterController: GroundCharacterController;
+  private readonly carController: GroundCarController;
   private readonly characterCameraTarget = new THREE.Object3D();
   private readonly inspectionCamera: InspectionCamera;
   private readonly cinematicCamera: CinematicCamera;
   private readonly pilotCamera: PilotCamera;
   private readonly characterCamera: PilotCamera;
+  private readonly carCamera: PilotCamera;
   private readonly audio = new AudioSystem();
   private readonly vfx: FlightVfx;
   private readonly hud: FlightHud;
@@ -129,8 +142,10 @@ export class Game {
   private activeMode: Exclude<FlightMode, 'inspection'> = 'manual';
   private controlMode: GameplayControlMode = 'inspection';
   private characterEntryDistance = Number.POSITIVE_INFINITY;
-  private characterCanEnterAircraft = false;
-  private aircraftEntryRight = false;
+  private interactionRadius = AIRCRAFT_ENTRY_RADIUS;
+  private characterCanEnterVehicle = false;
+  private interactionTarget: InteractionTarget | null = null;
+  private interactionRight = false;
   private disposed = false;
   private reviewMode = false;
   private normalBackground: THREE.Scene['background'] = null;
@@ -139,6 +154,10 @@ export class Game {
   private get canExit(): boolean {
     const state = this.manualFlight.state;
     return this.controlMode === 'piloting' && state.onGround && state.speed <= 0.05;
+  }
+
+  private get canExitCar(): boolean {
+    return this.controlMode === 'driving' && Math.abs(this.carController.state.speed) <= 0.1;
   }
 
   constructor(private readonly canvas: HTMLCanvasElement) {
@@ -167,6 +186,18 @@ export class Game {
       // may stop the character from walking away from the runway.
       maximumSlopeRadians: Math.PI / 2,
       maximumStepHeight: 1_000,
+    });
+    this.carController = new GroundCarController(this.world.parkedCar.root, {
+      surfaceHeightAt: (worldX, worldZ) => this.landingSurfaceHeightAt(worldX, worldZ),
+      wheelPivots: this.world.parkedCar.wheelPivots,
+      wheelbase: this.world.parkedCar.diagnostics.dimensions.wheelbase,
+      wheelRadius: this.world.parkedCar.diagnostics.dimensions.wheelRadius,
+      halfTrack: this.world.parkedCar.diagnostics.dimensions.trackWidth * 0.5,
+    });
+    void this.world.parkedCar.ready.then((loaded) => {
+      if (!loaded || this.disposed) return;
+      this.carController.reset();
+      this.updateVehicleEntryInteraction(this.characterController.state);
     });
     this.characterCameraTarget.position.copy(this.character.root.position);
     this.characterCameraTarget.rotation.y = CHARACTER_SPAWN_YAW;
@@ -251,6 +282,19 @@ export class Game {
       fov: [44, 48],
       allowAirborneUnderside: false,
     });
+    this.carCamera = new PilotCamera(this.camera, this.world.parkedCar.root, canvas, {
+      minDistance: 4.8,
+      maxDistance: 22,
+      focusHeight: 0.74,
+      followDistance: [6.8, 10.5],
+      followHeight: [2.6, 4],
+      sideOffset: [0, 0],
+      lookAhead: [2.8, 8],
+      targetHeight: 0.57,
+      speedForMaximumFraming: 38,
+      fov: [48, 55],
+      allowAirborneUnderside: false,
+    });
     this.vfx = new FlightVfx(this.scene);
     this.leftPupilOrigin = this.airplane.face.leftPupil.position.clone();
     this.rightPupilOrigin = this.airplane.face.rightPupil.position.clone();
@@ -262,6 +306,9 @@ export class Game {
       onMuteChange: (muted) => this.audio.setMuted(muted),
       initialPaintColor,
       onPaintColorChange: (hexColor) => this.setAircraftPaintColor(hexColor),
+      onCameraSettingsChange: (sensitivity, invertY) => {
+        PilotCamera.setMouseSettings(sensitivity, invertY);
+      },
       initialCharacter,
       onCharacterChange: (characterId) => {
         this.character.setCharacter(characterId);
@@ -293,9 +340,11 @@ export class Game {
     this.hud.dispose();
     this.pilotInput.dispose();
     this.characterInput.dispose();
+    this.releaseGameplayMouseLook();
     this.inspectionCamera.dispose();
     this.pilotCamera.dispose();
     this.characterCamera.dispose();
+    this.carCamera.dispose();
     this.cinematicCamera.dispose();
     this.vfx.dispose();
     this.audio.dispose();
@@ -307,7 +356,6 @@ export class Game {
     this.reviewStudioFloor.material.dispose();
     this.renderer.dispose();
     window.__AIRPLANE_EXPERIENCE__ = undefined;
-    window.__THREE_GAME_DIAGNOSTICS__ = undefined;
   }
 
   private update(
@@ -330,6 +378,11 @@ export class Game {
     } else if (this.controlMode === 'piloting') {
       vehicleSnapshot = this.manualFlight.update(simulationDelta, this.pilotInput.intent);
       snapshot = vehicleSnapshot;
+    } else if (this.controlMode === 'driving') {
+      vehicleSnapshot = this.manualFlight.update(simulationDelta, NEUTRAL_PILOT_INTENT);
+      snapshot = this.createDrivingSnapshot(
+        this.carController.update(simulationDelta, this.pilotInput.intent),
+      );
     } else if (this.controlMode === 'on-foot') {
       vehicleSnapshot = this.manualFlight.update(simulationDelta, this.pilotInput.intent);
       this.camera.getWorldDirection(this.cameraForward);
@@ -340,7 +393,7 @@ export class Game {
       );
       this.character.setAnimation(characterState.animation);
       this.characterCameraTarget.position.copy(characterState.position);
-      this.updateAircraftEntryInteraction(characterState);
+      this.updateVehicleEntryInteraction(characterState);
       snapshot = this.createOnFootSnapshot(characterState);
     } else {
       vehicleSnapshot = this.manualFlight.state;
@@ -366,22 +419,32 @@ export class Game {
     ) {
       this.characterCamera.setEnabled(false);
       this.pilotCamera.setEnabled(false);
+      this.carCamera.setEnabled(false);
       this.inspectionCamera.setEnabled(true);
       this.inspectionCamera.update(delta, snapshot);
     } else if (this.controlMode === 'on-foot') {
       this.inspectionCamera.setEnabled(false);
       this.pilotCamera.setEnabled(false);
+      this.carCamera.setEnabled(false);
       this.characterCamera.setEnabled(true);
       this.characterCamera.update(delta, snapshot);
     } else if (this.controlMode === 'piloting') {
       this.characterCamera.setEnabled(false);
       this.inspectionCamera.setEnabled(false);
+      this.carCamera.setEnabled(false);
       this.pilotCamera.setEnabled(true);
       this.pilotCamera.update(delta, snapshot);
+    } else if (this.controlMode === 'driving') {
+      this.characterCamera.setEnabled(false);
+      this.inspectionCamera.setEnabled(false);
+      this.pilotCamera.setEnabled(false);
+      this.carCamera.setEnabled(true);
+      this.carCamera.update(delta, snapshot);
     } else {
       this.characterCamera.setEnabled(false);
       this.inspectionCamera.setEnabled(false);
       this.pilotCamera.setEnabled(false);
+      this.carCamera.setEnabled(false);
       this.cinematicCamera.update(delta, snapshot);
     }
 
@@ -393,12 +456,13 @@ export class Game {
       propellerRpm: vehicleSnapshot.propellerRpm,
       wheelContact: vehicleSnapshot.wheelContact.main,
     });
+    const soundSnapshot = this.controlMode === 'driving' ? snapshot : vehicleSnapshot;
     this.audio.update({
-      phase: vehicleSnapshot.phase,
-      speed: vehicleSnapshot.speed,
-      altitude: vehicleSnapshot.altitude,
-      propellerRpm: vehicleSnapshot.propellerRpm,
-      wheelContact: vehicleSnapshot.wheelContact.all,
+      phase: soundSnapshot.phase,
+      speed: soundSnapshot.speed,
+      altitude: soundSnapshot.altitude,
+      propellerRpm: soundSnapshot.propellerRpm,
+      wheelContact: soundSnapshot.wheelContact.all,
     });
     this.hud.update({
       ...snapshot,
@@ -408,12 +472,11 @@ export class Game {
         this.controlMode === 'inspection'
         || (this.controlMode === 'autopilot' && snapshot.inspectionAllowed)
       ),
-      interactionPrompt: this.characterCanEnterAircraft
-        ? 'Enter aircraft'
-        : this.canExit ? 'Exit aircraft' : undefined,
+      interactionPrompt: this.characterCanEnterVehicle
+        ? this.interactionTarget === 'car' ? 'Enter car' : 'Enter aircraft'
+        : this.canExitCar ? 'Exit car' : this.canExit ? 'Exit aircraft' : undefined,
     });
 
-    if (this.frame % 8 === 0) this.publishLegacyDiagnostics();
   }
 
   private render(): void {
@@ -458,6 +521,10 @@ export class Game {
       this.cinematicCamera.reset();
       this.pilotCamera.reset();
       this.characterCamera.reset();
+      this.carCamera.reset();
+      this.carCamera.setEnabled(false);
+      this.carController.setEnabled(false);
+      this.carController.reset();
       this.characterCamera.setEnabled(false);
       this.characterController.setEnabled(false);
       this.characterController.reset();
@@ -477,13 +544,17 @@ export class Game {
   private startAutopilotFlight(): void {
     if (this.activeMode === 'autopilot' && this.flight.state.running) return;
     void this.audio.unlock();
+    this.releaseGameplayMouseLook();
     this.activeMode = 'autopilot';
     this.controlMode = 'autopilot';
     this.pilotInput.setEnabled(false);
     this.characterInput.setEnabled(false);
     this.characterController.setEnabled(false);
+    this.carController.setEnabled(false);
+    this.carController.reset();
     this.character.setVisible(false);
-    this.characterCanEnterAircraft = false;
+    this.characterCanEnterVehicle = false;
+    this.interactionTarget = null;
     this.characterEntryDistance = Number.POSITIVE_INFINITY;
     this.manualFlight.reset();
     const wasComplete = this.flight.state.completed;
@@ -497,9 +568,11 @@ export class Game {
     this.inspectionCamera.setEnabled(false);
     this.pilotCamera.setEnabled(false);
     this.characterCamera.setEnabled(false);
+    this.carCamera.setEnabled(false);
     this.cinematicCamera.reset();
     this.pilotCamera.reset();
     this.characterCamera.reset();
+    this.carCamera.reset();
     this.audio.confirm();
   }
 
@@ -513,6 +586,8 @@ export class Game {
     this.controlMode = 'on-foot';
     this.flight.reset();
     this.manualFlight.reset();
+    this.carController.setEnabled(false);
+    this.carController.reset();
     this.recenterWorldAtAirport();
     this.pilotInput.setEnabled(false);
     this.characterInput.setEnabled(true);
@@ -524,14 +599,17 @@ export class Game {
     this.character.setAnimation('idle', 0);
     this.inspectionCamera.setEnabled(false);
     this.pilotCamera.setEnabled(false);
+    this.carCamera.setEnabled(false);
     this.characterCamera.reset();
     this.characterCamera.setEnabled(true);
     this.cinematicCamera.reset();
     this.pilotCamera.reset();
+    this.carCamera.reset();
     this.vfx.reset();
-    this.updateAircraftEntryInteraction(this.characterController.state);
+    this.updateVehicleEntryInteraction(this.characterController.state);
     this.audio.confirm();
     this.canvas.focus({ preventScroll: true });
+    this.characterCamera.toggleMouseLook();
   }
 
   private startManualFlight(): void {
@@ -545,35 +623,47 @@ export class Game {
     this.flight.reset();
     this.manualFlight.reset();
     this.manualFlight.start();
+    this.carController.setEnabled(false);
+    this.carController.reset();
     this.recenterWorldAtAirport();
     this.characterInput.setEnabled(false);
     this.characterController.setEnabled(false);
     this.character.setVisible(false);
-    this.characterCanEnterAircraft = false;
+    this.characterCanEnterVehicle = false;
+    this.interactionTarget = null;
     this.characterEntryDistance = Number.POSITIVE_INFINITY;
     this.pilotInput.setEnabled(true);
     this.inspectionCamera.setEnabled(false);
     this.characterCamera.setEnabled(false);
+    this.carCamera.setEnabled(false);
     this.cinematicCamera.reset();
     this.characterCamera.reset();
+    this.carCamera.reset();
     this.pilotCamera.reset();
     this.pilotCamera.setEnabled(true);
     this.vfx.reset();
     this.audio.confirm();
     this.canvas.focus({ preventScroll: true });
+    this.pilotCamera.toggleMouseLook();
   }
 
   private enterAircraft(): void {
-    if (this.controlMode !== 'on-foot' || !this.characterCanEnterAircraft) return;
+    if (
+      this.controlMode !== 'on-foot'
+      || !this.characterCanEnterVehicle
+      || this.interactionTarget !== 'aircraft'
+    ) return;
     this.characterInput.setEnabled(false);
     this.characterController.setEnabled(false);
     this.character.setVisible(false);
-    this.characterCanEnterAircraft = false;
+    this.characterCanEnterVehicle = false;
+    this.interactionTarget = null;
     this.characterEntryDistance = Number.POSITIVE_INFINITY;
     this.controlMode = 'piloting';
     this.manualFlight.start();
     this.pilotInput.setEnabled(true);
     this.characterCamera.setEnabled(false);
+    this.carCamera.setEnabled(false);
     this.characterCamera.reset();
     this.pilotCamera.reset();
     this.pilotCamera.setEnabled(true);
@@ -586,7 +676,7 @@ export class Game {
     const aircraftState = this.manualFlight.state;
     this.pilotInput.setEnabled(false);
     this.aircraftEntryWorld.copy(
-      this.aircraftEntryRight ? AIRCRAFT_ENTRY_RIGHT_LOCAL : AIRCRAFT_ENTRY_LEFT_LOCAL,
+      this.interactionRight ? AIRCRAFT_ENTRY_RIGHT_LOCAL : AIRCRAFT_ENTRY_LEFT_LOCAL,
     );
     this.airplane.root.localToWorld(this.aircraftEntryWorld);
     const faceAircraftYaw = Math.atan2(
@@ -600,22 +690,85 @@ export class Game {
     this.characterCameraTarget.position.copy(this.character.root.position);
     this.characterCameraTarget.rotation.y = aircraftState.yaw;
     this.controlMode = 'on-foot';
+    this.pilotCamera.setEnabled(false);
     this.characterCamera.reset();
-    this.updateAircraftEntryInteraction(this.characterController.state);
+    this.characterCamera.setEnabled(true);
+    this.updateVehicleEntryInteraction(this.characterController.state);
+    this.audio.confirm();
+  }
+
+  private enterCar(): void {
+    if (
+      this.controlMode !== 'on-foot'
+      || !this.characterCanEnterVehicle
+      || this.interactionTarget !== 'car'
+    ) return;
+    this.characterInput.setEnabled(false);
+    this.characterController.setEnabled(false);
+    this.character.setVisible(false);
+    this.characterCanEnterVehicle = false;
+    this.interactionTarget = null;
+    this.characterEntryDistance = Number.POSITIVE_INFINITY;
+    this.controlMode = 'driving';
+    this.pilotInput.setEnabled(true);
+    this.carController.setEnabled(true);
+    this.characterCamera.setEnabled(false);
+    this.pilotCamera.setEnabled(false);
+    this.characterCamera.reset();
+    this.carCamera.reset();
+    this.carCamera.setEnabled(true);
+    this.audio.confirm();
+    this.canvas.focus({ preventScroll: true });
+  }
+
+  private exitCar(): void {
+    if (!this.canExitCar) return;
+    this.pilotInput.setEnabled(false);
+    this.carController.setEnabled(false);
+    // The imported source named its sides in raw authoring coordinates. With
+    // runtime +Z forward, physical right is local -X, so the authored names
+    // are intentionally crossed here to keep the player-facing side correct.
+    const socketName = this.interactionRight
+      ? 'socket-driver-entry-left'
+      : 'socket-driver-entry-right';
+    const socket = this.world.parkedCar.runtime.sockets[socketName];
+    this.world.parkedCar.root.updateMatrixWorld(true);
+    if (socket) socket.getWorldPosition(this.aircraftEntryWorld);
+    else this.aircraftEntryWorld.copy(this.world.parkedCar.root.position);
+    const faceCarYaw = Math.atan2(
+      this.world.parkedCar.root.position.x - this.aircraftEntryWorld.x,
+      this.world.parkedCar.root.position.z - this.aircraftEntryWorld.z,
+    );
+    this.characterController.reset(this.aircraftEntryWorld, faceCarYaw);
+    this.characterController.setEnabled(true);
+    this.characterInput.setEnabled(true);
+    this.character.setVisible(true);
+    this.characterCameraTarget.position.copy(this.character.root.position);
+    this.characterCameraTarget.rotation.y = faceCarYaw;
+    this.controlMode = 'on-foot';
+    this.carCamera.setEnabled(false);
+    this.carCamera.reset();
+    this.characterCamera.reset();
+    this.characterCamera.setEnabled(true);
+    this.updateVehicleEntryInteraction(this.characterController.state);
     this.audio.confirm();
   }
 
   private resetFlight(): void {
     this.activeMode = 'manual';
     this.controlMode = 'inspection';
+    this.releaseGameplayMouseLook();
     this.pilotInput.setEnabled(false);
     this.characterInput.setEnabled(false);
     this.characterController.setEnabled(false);
     this.characterController.reset();
+    this.carController.setEnabled(false);
+    this.carController.reset();
     this.characterCameraTarget.position.copy(this.character.root.position);
     this.characterCameraTarget.rotation.set(0, CHARACTER_SPAWN_YAW, 0);
     this.character.setVisible(!this.reviewMode);
-    this.characterCanEnterAircraft = false;
+    this.characterCanEnterVehicle = false;
+    this.interactionTarget = null;
     this.characterEntryDistance = Number.POSITIVE_INFINITY;
     this.flight.reset();
     this.manualFlight.reset();
@@ -624,6 +777,8 @@ export class Game {
     this.cinematicCamera.reset();
     this.pilotCamera.reset();
     this.pilotCamera.setEnabled(false);
+    this.carCamera.reset();
+    this.carCamera.setEnabled(false);
     this.characterCamera.reset();
     this.characterCamera.setEnabled(false);
     this.inspectionCamera.setEnabled(true);
@@ -645,41 +800,74 @@ export class Game {
     if (changed) this.quality.invalidateSceneMetrics();
   }
 
-  private landingSurfaceHeightAt(worldX: number, worldZ: number): number {
-    const environment = this.world.environment;
-    const runwayHalfWidth = environment.runwayWidth * 0.5 + 1.5;
-    const pavedHalfLength = environment.pavedLength * 0.5;
-    const overRunway = Math.abs(worldX - environment.centerlineX) <= runwayHalfWidth
-      && worldZ >= -pavedHalfLength
-      && worldZ <= pavedHalfLength;
-    return overRunway
-      ? environment.landingElevation
-      : this.biomeWorld.getTerrainHeight(worldX, worldZ);
+  private releaseGameplayMouseLook(): void {
+    this.pilotCamera.releaseMouseLook();
+    this.characterCamera.releaseMouseLook();
+    this.carCamera.releaseMouseLook();
   }
 
-  private updateAircraftEntryInteraction(
+  private landingSurfaceHeightAt(worldX: number, worldZ: number): number {
+    return this.world.environment.surfaceHeightAt(worldX, worldZ)
+      ?? this.biomeWorld.getTerrainHeight(worldX, worldZ);
+  }
+
+  private updateVehicleEntryInteraction(
     characterState: Readonly<GroundCharacterSnapshot>,
   ): void {
     let nearestDistance = Number.POSITIVE_INFINITY;
-    for (let index = 0; index < AIRCRAFT_ENTRY_LOCALS.length; index += 1) {
-      const candidateLocal = AIRCRAFT_ENTRY_LOCALS[index];
-      this.cameraForward.copy(candidateLocal);
-      this.airplane.root.localToWorld(this.cameraForward);
+    let nearestTarget: InteractionTarget | null = null;
+    let nearestRight = false;
+    let nearestRadius = AIRCRAFT_ENTRY_RADIUS;
+    const consider = (
+      candidate: Readonly<THREE.Vector3>,
+      target: InteractionTarget,
+      right: boolean,
+      radius: number,
+    ): void => {
       const candidateDistance = Math.hypot(
-        characterState.position.x - this.cameraForward.x,
-        characterState.position.z - this.cameraForward.z,
+        characterState.position.x - candidate.x,
+        characterState.position.z - candidate.z,
       );
-      if (candidateDistance >= nearestDistance) continue;
+      if (candidateDistance >= nearestDistance) return;
       nearestDistance = candidateDistance;
-      this.aircraftEntryRight = index === 1;
-      this.aircraftEntryWorld.copy(this.cameraForward);
-    }
-    this.characterEntryDistance = nearestDistance;
+      nearestTarget = target;
+      nearestRight = right;
+      nearestRadius = radius;
+      this.aircraftEntryWorld.copy(candidate);
+    };
+
     const aircraftState = this.manualFlight.state;
-    const aircraftStopped = aircraftState.onGround && aircraftState.speed <= 0.05;
-    this.characterCanEnterAircraft = this.controlMode === 'on-foot'
-      && aircraftStopped
-      && this.characterEntryDistance <= AIRCRAFT_ENTRY_RADIUS;
+    if (aircraftState.onGround && aircraftState.speed <= 0.05) {
+      for (let index = 0; index < AIRCRAFT_ENTRY_LOCALS.length; index += 1) {
+        this.cameraForward.copy(AIRCRAFT_ENTRY_LOCALS[index]);
+        this.airplane.root.localToWorld(this.cameraForward);
+        consider(this.cameraForward, 'aircraft', index === 1, AIRCRAFT_ENTRY_RADIUS);
+      }
+    }
+
+    if (
+      this.world.parkedCar.diagnostics.loadState === 'ready'
+      && Math.abs(this.carController.state.speed) <= 0.1
+    ) {
+      this.world.parkedCar.root.updateMatrixWorld(true);
+      for (const [socketName, right] of [
+        ['socket-driver-entry-right', false],
+        ['socket-driver-entry-left', true],
+      ] as const) {
+        const socket = this.world.parkedCar.runtime.sockets[socketName];
+        if (!socket) continue;
+        socket.getWorldPosition(this.cameraForward);
+        consider(this.cameraForward, 'car', right, CAR_ENTRY_RADIUS);
+      }
+    }
+
+    this.characterEntryDistance = nearestDistance;
+    this.interactionTarget = nearestTarget;
+    this.interactionRight = nearestRight;
+    this.interactionRadius = nearestRadius;
+    this.characterCanEnterVehicle = this.controlMode === 'on-foot'
+      && nearestTarget !== null
+      && nearestDistance <= nearestRadius;
   }
 
   private createOnFootSnapshot(
@@ -722,6 +910,39 @@ export class Game {
       running: true,
       inspectionAllowed: false,
       position: characterState.position,
+    };
+  }
+
+  private createDrivingSnapshot(carState: Readonly<GroundCarSnapshot>): FlightSnapshot {
+    const base = this.manualFlight.state;
+    return {
+      ...base,
+      mode: 'manual',
+      phase: 'manual-ready',
+      phaseProgress: 0,
+      normalizedProgress: 0,
+      elapsed: carState.elapsed,
+      airborneSeconds: 0,
+      airborneProgress: 0,
+      speed: Math.abs(carState.speed),
+      altitude: 0,
+      verticalSpeed: 0,
+      throttle: Math.abs(carState.throttle),
+      stall: false,
+      crashed: false,
+      onGround: true,
+      propellerRpm: carState.engineRpm,
+      propellerAngle: 0,
+      wheelRotation: carState.wheelRotation,
+      wheelContact: { main: true, auxiliary: true, all: true },
+      pitch: carState.pitch,
+      bank: carState.roll,
+      yaw: carState.yaw,
+      cameraShot: 'aerial-chase',
+      completed: false,
+      running: true,
+      inspectionAllowed: false,
+      position: carState.position,
     };
   }
 
@@ -839,14 +1060,33 @@ export class Game {
           ...this.character.diagnostics,
           controller: this.characterController.diagnostics,
         },
+        car: {
+          loadState: this.world.parkedCar.diagnostics.loadState,
+          visible: this.world.parkedCar.root.visible,
+          controller: this.carController.diagnostics,
+          input: {
+            enabled: this.controlMode === 'driving',
+            intent: { ...this.pilotInput.intent },
+          },
+        },
         interaction: {
           kind: this.controlMode === 'on-foot'
-            ? 'enter-aircraft'
-            : this.controlMode === 'piloting' ? 'exit-aircraft' : null,
-          available: this.characterCanEnterAircraft || this.canExit,
+            ? this.interactionTarget === 'car'
+              ? 'enter-car'
+              : this.interactionTarget === 'aircraft' ? 'enter-aircraft' : null
+            : this.controlMode === 'piloting'
+              ? 'exit-aircraft'
+              : this.controlMode === 'driving' ? 'exit-car' : null,
+          target: this.controlMode === 'driving'
+            ? 'car'
+            : this.controlMode === 'piloting' ? 'aircraft' : this.interactionTarget,
+          side: this.interactionTarget || this.controlMode === 'driving' || this.controlMode === 'piloting'
+            ? this.interactionRight ? 'right' : 'left'
+            : null,
+          available: this.characterCanEnterVehicle || this.canExit || this.canExitCar,
           distance: this.characterEntryDistance,
-          radius: AIRCRAFT_ENTRY_RADIUS,
-          promptVisible: this.characterCanEnterAircraft || this.canExit,
+          radius: this.interactionRadius,
+          promptVisible: this.characterCanEnterVehicle || this.canExit || this.canExitCar,
           worldPosition: {
             x: this.aircraftEntryWorld.x,
             y: this.aircraftEntryWorld.y,
@@ -869,6 +1109,8 @@ export class Game {
           ? 'character'
           : this.controlMode === 'piloting'
             ? 'pilot'
+            : this.controlMode === 'driving'
+              ? 'car'
             : this.controlMode === 'autopilot'
               ? 'cinematic'
               : 'inspection',
@@ -880,6 +1122,7 @@ export class Game {
         fov: this.camera.fov,
         pilot: { ...this.pilotCamera.diagnostics },
         character: { ...this.characterCamera.diagnostics },
+        car: { ...this.carCamera.diagnostics },
       },
       renderer: {
         calls: performance.drawCalls,
@@ -903,15 +1146,12 @@ export class Game {
     };
   }
 
-  private publishLegacyDiagnostics(): void {
-    window.__THREE_GAME_DIAGNOSTICS__ = this.createDiagnostics();
-  }
-
   private currentSnapshot(): Readonly<FlightSnapshot> {
     if (this.controlMode === 'autopilot') return this.flight.state;
     if (this.controlMode === 'on-foot') {
       return this.createOnFootSnapshot(this.characterController.state);
     }
+    if (this.controlMode === 'driving') return this.createDrivingSnapshot(this.carController.state);
     return this.manualFlight.state;
   }
 
@@ -923,9 +1163,36 @@ export class Game {
       this.resetFlight();
       return;
     }
+    if (event.code === 'Tab' && (
+      this.controlMode === 'on-foot'
+      || this.controlMode === 'piloting'
+      || this.controlMode === 'driving'
+    )) {
+      event.preventDefault();
+      const camera = this.controlMode === 'on-foot'
+        ? this.characterCamera
+        : this.controlMode === 'driving' ? this.carCamera : this.pilotCamera;
+      camera.toggleMouseLook();
+      return;
+    }
+    if (event.code === 'Escape' && (
+      this.controlMode === 'on-foot'
+      || this.controlMode === 'piloting'
+      || this.controlMode === 'driving'
+    )) {
+      const camera = this.controlMode === 'on-foot'
+        ? this.characterCamera
+        : this.controlMode === 'driving' ? this.carCamera : this.pilotCamera;
+      camera.releaseMouseLook();
+      return;
+    }
     if (event.code === 'KeyE' && !event.repeat) {
-      if (this.controlMode === 'on-foot') this.enterAircraft();
+      if (this.controlMode === 'on-foot') {
+        if (this.interactionTarget === 'car') this.enterCar();
+        else this.enterAircraft();
+      }
       else if (this.controlMode === 'piloting') this.exitAircraft();
+      else if (this.controlMode === 'driving') this.exitCar();
       event.preventDefault();
       return;
     }
@@ -938,6 +1205,11 @@ export class Game {
     if (event.code === 'KeyC' && this.controlMode === 'piloting') {
       event.preventDefault();
       this.pilotCamera.recenter();
+      return;
+    }
+    if (event.code === 'KeyC' && this.controlMode === 'driving') {
+      event.preventDefault();
+      this.carCamera.recenter();
       return;
     }
     if (event.code === 'KeyC' && this.currentSnapshot().inspectionAllowed) {

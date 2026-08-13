@@ -8,7 +8,7 @@
     "build": "tsc && vite build && npm run check:bundle",
     "preview": "vite preview --host 127.0.0.1",
     "test": "playwright test",
-    "test:node": "node --test tests/attitude-hud-sign.test.mjs tests/manual-flight-relaunch.test.mjs tests/ground-character-controller.test.mjs tests/character-runtime-asset.test.mjs",
+    "test:node": "node --test tests/attitude-hud-sign.test.mjs tests/manual-flight-relaunch.test.mjs tests/ground-character-controller.test.mjs tests/ground-car-controller.test.mjs tests/character-runtime-asset.test.mjs",
     "test:worldclaw:unit": "node tests/worldclaw/worldclaw-compiler.test.mjs && node tests/worldclaw/runtime-module-emitter.test.mjs && node tests/worldclaw/bundle-budget.test.mjs",
     "test:worldclaw:semantic": "node tests/worldclaw/worldclaw-semantic-review.test.mjs",
     "test:worldclaw:runtime": "node tests/worldclaw/worldclaw-runtime-pipeline.test.mjs",

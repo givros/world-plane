@@ -20,11 +20,11 @@ export const WORLD_CHUNK_SEGMENTS = 40;
 export const WORLD_CHUNK_SAMPLES_PER_SIDE = WORLD_CHUNK_SEGMENTS + 1;
 export const WORLD_CHUNK_CELL_SIZE = WORLD_CHUNK_SIZE / WORLD_CHUNK_SEGMENTS;
 export const WORLD_AIRPORT_RESERVE_HALF_EXTENT = 430;
+export const WORLD_AIRPORT_TERRAIN_HEIGHT = -0.245;
 
 const TERRAIN_TRANSITION_WIDTH = 300;
 const AIRPORT_FLAT_HALF_EXTENT = 390;
 const AIRPORT_BLEND_DISTANCE = 170;
-const AIRPORT_TERRAIN_HEIGHT = -0.245;
 const DEFAULT_DESCRIPTOR_CACHE_SIZE = 64;
 const PROCEDURAL_GENERATOR_VERSION = 'procedural-runtime-v1';
 const PROCEDURAL_DATA_REVISION = 'procedural';
@@ -333,7 +333,7 @@ function proceduralVertexHeight(
   const airportBlend = smoothstep01(
     (airportDistance - AIRPORT_FLAT_HALF_EXTENT) / AIRPORT_BLEND_DISTANCE,
   );
-  return lerp(AIRPORT_TERRAIN_HEIGHT, naturalHeight, airportBlend);
+  return lerp(WORLD_AIRPORT_TERRAIN_HEIGHT, naturalHeight, airportBlend);
 }
 
 function createHashState(): { value: number } {

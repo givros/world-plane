@@ -1,0 +1,15 @@
+Source asset: "Sally Carrera (GCN)"
+Creator: kanaleja87
+Source: https://sketchfab.com/3d-models/sally-carrera-gcn-694bf6bb2e69488bbc5b3fa7e68c875f
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+License URL: https://creativecommons.org/licenses/by/4.0/
+
+Modifications made for this project:
+- proportion-calibrated and recentered for the game world;
+- wheel geometry grouped under four runtime pivots;
+- source eye layers corrected into one two-eye texture on the original eye surface;
+- interaction sockets and collider proxies added;
+- original license plate covered by a custom "@givros" plate;
+- materials adjusted for the project's real-time renderer.
+
+The source license does not grant rights to third-party trademarks or characters.

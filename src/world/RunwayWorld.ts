@@ -3,6 +3,12 @@ import {
   createAirportMaterialLibrary,
   type AirportMaterialLibrary,
 } from '../assets/MaterialLibrary';
+import {
+  createGivrosCarModel,
+  type GivrosCarLoadState,
+  type GivrosCarModel,
+} from '../assets/GivrosCarModel';
+import { WORLD_AIRPORT_TERRAIN_HEIGHT } from './WorldChunkSource';
 
 const RUNWAY_WIDTH = 24;
 const PAVED_LENGTH = 360;
@@ -12,6 +18,19 @@ const RUNWAY_SURFACE_Y = 0;
 const SAFE_CORRIDOR_HALF_WIDTH = 18;
 const WORLD_FOG_NEAR = 580;
 const WORLD_FOG_FAR = 1040;
+const TAXIWAY_CONTROL_POINTS = [
+  [-11.9, -24],
+  [-17, -24],
+  [-26, -30],
+  [-36, -40],
+  [-48, -47],
+] as const;
+const TAXIWAY_ASPHALT_HALF_WIDTH = 4.25;
+const TAXIWAY_BORDER_HALF_WIDTH = 5.2;
+const APRON_CENTER_X = -54;
+const APRON_CENTER_Z = -49;
+const APRON_RADIUS_X = 24 * 1.28;
+const APRON_RADIUS_Z = 24 * 0.72;
 const CLOUD_WRAP_SAFETY_DISTANCE = 300;
 const CLOUD_WRAP_DISTANCE = WORLD_FOG_FAR * 2 + CLOUD_WRAP_SAFETY_DISTANCE;
 const CLOUD_MATRIX_SCRATCH = new THREE.Matrix4();
@@ -31,6 +50,7 @@ export type RunwayEnvironmentMetadata = {
   pavedBounds: THREE.Box3;
   safeCorridorHalfWidth: number;
   preferredTakeoffDirectionZ: 1;
+  surfaceHeightAt: (worldX: number, worldZ: number) => number | null;
   parkingPosition: THREE.Vector3;
   rolloutStopPosition: THREE.Vector3;
   sunlightDirection: THREE.Vector3;
@@ -56,10 +76,35 @@ export type RunwayWorldDiagnostics = {
   cloudPuffs: number;
   treeCount: number;
   runwayEdgeLights: number;
+  parkedCar: {
+    name: string;
+    source: 'blender-glb';
+    loadState: GivrosCarLoadState;
+    visible: boolean;
+    position: {
+      x: number;
+      y: number;
+      z: number;
+    };
+    dimensions: {
+      length: number;
+      paintedWidth: number;
+      overallWidth: number;
+      height: number;
+      wheelbase: number;
+      wheelRadius: number;
+      trackWidth: number;
+    };
+    plate: string;
+    partCount: number;
+    triangles: number;
+    colliders: number;
+  };
 };
 
 export type RunwayWorld = {
   group: THREE.Group;
+  parkedCar: GivrosCarModel;
   environment: RunwayEnvironmentMetadata;
   diagnostics: RunwayWorldDiagnostics;
   update: (
@@ -171,6 +216,68 @@ function buildRibbonGeometry(points: readonly THREE.Vector3[], halfWidth: number
   geometry.setIndex(indices);
   geometry.computeVertexNormals();
   return geometry;
+}
+
+function createTaxiwayCurve(): THREE.CatmullRomCurve3 {
+  const curve = new THREE.CatmullRomCurve3(
+    TAXIWAY_CONTROL_POINTS.map(([x, z]) => new THREE.Vector3(x, -0.025, z)),
+  );
+  curve.curveType = 'centripetal';
+  return curve;
+}
+
+const TAXIWAY_SURFACE_SAMPLES = createTaxiwayCurve().getPoints(68);
+
+function distanceSquaredToSegmentXZ(
+  worldX: number,
+  worldZ: number,
+  start: Readonly<THREE.Vector3>,
+  end: Readonly<THREE.Vector3>,
+): number {
+  const segmentX = end.x - start.x;
+  const segmentZ = end.z - start.z;
+  const lengthSquared = segmentX * segmentX + segmentZ * segmentZ;
+  const t = lengthSquared > 0
+    ? THREE.MathUtils.clamp(
+      ((worldX - start.x) * segmentX + (worldZ - start.z) * segmentZ) / lengthSquared,
+      0,
+      1,
+    )
+    : 0;
+  const deltaX = worldX - (start.x + segmentX * t);
+  const deltaZ = worldZ - (start.z + segmentZ * t);
+  return deltaX * deltaX + deltaZ * deltaZ;
+}
+
+function airportSurfaceHeightAt(worldX: number, worldZ: number): number | null {
+  if (!Number.isFinite(worldX) || !Number.isFinite(worldZ)) return null;
+  const pavedHalfLength = PAVED_LENGTH * 0.5;
+  if (
+    Math.abs(worldX) <= RUNWAY_WIDTH * 0.5 + 1.8
+    && Math.abs(worldZ) <= pavedHalfLength
+  ) return RUNWAY_SURFACE_Y;
+
+  let taxiwayDistanceSquared = Number.POSITIVE_INFINITY;
+  for (let index = 1; index < TAXIWAY_SURFACE_SAMPLES.length; index += 1) {
+    taxiwayDistanceSquared = Math.min(
+      taxiwayDistanceSquared,
+      distanceSquaredToSegmentXZ(
+        worldX,
+        worldZ,
+        TAXIWAY_SURFACE_SAMPLES[index - 1],
+        TAXIWAY_SURFACE_SAMPLES[index],
+      ),
+    );
+  }
+  if (taxiwayDistanceSquared <= TAXIWAY_ASPHALT_HALF_WIDTH ** 2) return -0.012;
+  if (taxiwayDistanceSquared <= TAXIWAY_BORDER_HALF_WIDTH ** 2) return -0.025;
+
+  const apronX = (worldX - APRON_CENTER_X) / APRON_RADIUS_X;
+  const apronZ = (worldZ - APRON_CENTER_Z) / APRON_RADIUS_Z;
+  if (apronX * apronX + apronZ * apronZ <= 1) return -0.045;
+
+  if (Math.abs(worldX) <= 17 && Math.abs(worldZ) <= pavedHalfLength + 9) return -0.07;
+  return null;
 }
 
 function createSkyDome(): THREE.Mesh {
@@ -528,23 +635,22 @@ function createRunwaySurface(materials: AirportMaterialLibrary, random: RandomSo
 function createTaxiway(materials: AirportMaterialLibrary): THREE.Group {
   const taxiway = new THREE.Group();
   taxiway.name = 'curved-hangar-taxiway-and-apron';
-  const curve = new THREE.CatmullRomCurve3([
-    new THREE.Vector3(-11.9, -0.025, -24),
-    new THREE.Vector3(-17, -0.025, -24),
-    new THREE.Vector3(-26, -0.025, -30),
-    new THREE.Vector3(-36, -0.025, -40),
-    new THREE.Vector3(-48, -0.025, -47),
-  ]);
-  curve.curveType = 'centripetal';
+  const curve = createTaxiwayCurve();
   const sampled = curve.getPoints(34);
 
-  const border = new THREE.Mesh(buildRibbonGeometry(sampled, 5.2), materials.concrete);
+  const border = new THREE.Mesh(
+    buildRibbonGeometry(sampled, TAXIWAY_BORDER_HALF_WIDTH),
+    materials.concrete,
+  );
   border.name = 'taxiway-paved-border';
   border.receiveShadow = true;
   taxiway.add(border);
 
   const surfacePoints = sampled.map((point) => point.clone().setY(-0.012));
-  const surface = new THREE.Mesh(buildRibbonGeometry(surfacePoints, 4.25), materials.asphalt);
+  const surface = new THREE.Mesh(
+    buildRibbonGeometry(surfacePoints, TAXIWAY_ASPHALT_HALF_WIDTH),
+    materials.asphalt,
+  );
   surface.name = 'taxiway-asphalt-ribbon';
   surface.receiveShadow = true;
   taxiway.add(surface);
@@ -558,7 +664,7 @@ function createTaxiway(materials: AirportMaterialLibrary): THREE.Group {
   apron.name = 'hangar-apron';
   apron.rotation.x = -Math.PI / 2;
   apron.scale.set(1.28, 0.72, 1);
-  apron.position.set(-54, -0.045, -49);
+  apron.position.set(APRON_CENTER_X, -0.045, APRON_CENTER_Z);
   apron.receiveShadow = true;
   taxiway.add(apron);
 
@@ -1223,7 +1329,7 @@ function collectDiagnostics(
   cloudPuffs: number,
   treeCount: number,
   runwayEdgeLights: number,
-): RunwayWorldDiagnostics {
+): Omit<RunwayWorldDiagnostics, 'parkedCar'> {
   let meshes = 0;
   let instancedMeshes = 0;
   let instances = 0;
@@ -1380,6 +1486,13 @@ export function createRunwayWorld(scene?: THREE.Scene): RunwayWorld {
     }
   });
 
+  const parkedCar = createGivrosCarModel();
+  parkedCar.root.position.set(-22, WORLD_AIRPORT_TERRAIN_HEIGHT, -112);
+  parkedCar.root.rotation.y = 0;
+  parkedCar.root.scale.setScalar(1);
+  parkedCar.root.updateMatrixWorld(true);
+  world.add(parkedCar.root);
+
   const fogColor = new THREE.Color('#c4d9df');
   const fog = new THREE.Fog(fogColor, WORLD_FOG_NEAR, WORLD_FOG_FAR);
   const background = fogColor.clone();
@@ -1406,6 +1519,7 @@ export function createRunwayWorld(scene?: THREE.Scene): RunwayWorld {
     ),
     safeCorridorHalfWidth: SAFE_CORRIDOR_HALF_WIDTH,
     preferredTakeoffDirectionZ: 1,
+    surfaceHeightAt: airportSurfaceHeightAt,
     parkingPosition: new THREE.Vector3(0, RUNWAY_SURFACE_Y, -112),
     rolloutStopPosition: new THREE.Vector3(0, RUNWAY_SURFACE_Y, 104),
     sunlightDirection: new THREE.Vector3(-0.48, 0.58, -0.65).normalize(),
@@ -1416,13 +1530,31 @@ export function createRunwayWorld(scene?: THREE.Scene): RunwayWorld {
     },
   };
 
-  const diagnostics = collectDiagnostics(
-    world,
-    5,
-    cloudSystem.puffs.length,
-    trees.count,
-    runwayLights.edgeLightCount,
-  );
+  const diagnostics: RunwayWorldDiagnostics = {
+    ...collectDiagnostics(
+      world,
+      6,
+      cloudSystem.puffs.length,
+      trees.count,
+      runwayLights.edgeLightCount,
+    ),
+    parkedCar: {
+      name: parkedCar.diagnostics.name,
+      source: parkedCar.diagnostics.source,
+      loadState: parkedCar.diagnostics.loadState,
+      visible: parkedCar.root.visible,
+      position: {
+        x: parkedCar.root.position.x,
+        y: parkedCar.root.position.y,
+        z: parkedCar.root.position.z,
+      },
+      dimensions: { ...parkedCar.diagnostics.dimensions },
+      plate: parkedCar.diagnostics.plate,
+      partCount: parkedCar.diagnostics.partCount,
+      triangles: parkedCar.diagnostics.triangleCount,
+      colliders: parkedCar.diagnostics.colliderCount,
+    },
+  };
   const animationHandles: WorldAnimationHandles = {
     cloudSystem,
     windsockPivot: windsock.pivot,
@@ -1434,18 +1566,42 @@ export function createRunwayWorld(scene?: THREE.Scene): RunwayWorld {
   let disposed = false;
   let airportVisible = true;
   let sceneryVisible = true;
+  const syncParkedCarDiagnostics = (): void => {
+    diagnostics.parkedCar.source = parkedCar.diagnostics.source;
+    diagnostics.parkedCar.loadState = parkedCar.diagnostics.loadState;
+    diagnostics.parkedCar.partCount = parkedCar.diagnostics.partCount;
+    diagnostics.parkedCar.triangles = parkedCar.diagnostics.triangleCount;
+    diagnostics.parkedCar.colliders = parkedCar.diagnostics.colliderCount;
+    Object.assign(diagnostics.parkedCar.dimensions, parkedCar.diagnostics.dimensions);
+  };
   const applyVisibility = (): void => {
     airportScenery.forEach((object) => {
       object.visible = sceneryVisible && airportVisible;
     });
+    // The car is a mobile gameplay entity. It follows global scenery visibility
+    // (review mode), but must not disappear when it leaves the airport chunk.
+    parkedCar.root.visible = sceneryVisible;
+    diagnostics.parkedCar.visible = parkedCar.root.visible;
     travellingScenery.forEach((object) => {
       object.visible = sceneryVisible;
     });
     lighting.visible = true;
   };
+  void parkedCar.ready.then((loaded) => {
+    if (disposed) return;
+    syncParkedCarDiagnostics();
+    if (loaded) {
+      Object.assign(
+        diagnostics,
+        collectDiagnostics(world, 6, cloudSystem.puffs.length, trees.count, runwayLights.edgeLightCount),
+      );
+    }
+    applyVisibility();
+  });
 
   return {
     group: world,
+    parkedCar,
     environment,
     diagnostics,
     update: (deltaSeconds, elapsedSeconds, focusPosition) => {
@@ -1466,6 +1622,11 @@ export function createRunwayWorld(scene?: THREE.Scene): RunwayWorld {
       animationHandles.windsockSleeve.rotation.y = Math.sin(internalElapsed * 1.1) * 0.025;
       materials.edgeLight.emissiveIntensity = 2.2 + Math.sin(internalElapsed * 1.4) * 0.13;
       materials.warningAmber.emissiveIntensity = 2.1 + (Math.sin(internalElapsed * 2.8) * 0.5 + 0.5) * 1.15;
+      parkedCar.root.visible = sceneryVisible;
+      diagnostics.parkedCar.visible = parkedCar.root.visible;
+      diagnostics.parkedCar.position.x = parkedCar.root.position.x;
+      diagnostics.parkedCar.position.y = parkedCar.root.position.y;
+      diagnostics.parkedCar.position.z = parkedCar.root.position.z;
     },
     setAirportVisible: (visible) => {
       airportVisible = visible;
@@ -1481,6 +1642,8 @@ export function createRunwayWorld(scene?: THREE.Scene): RunwayWorld {
       scene?.remove(world);
       if (scene?.fog === fog) scene.fog = previousFog;
       if (scene?.background === background) scene.background = previousBackground;
+      parkedCar.root.removeFromParent();
+      parkedCar.dispose();
       disposeGeometries(world);
       materials.dispose();
     },

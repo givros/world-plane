@@ -36,15 +36,14 @@
         <div id="phase-cluster">
           <span class="eyebrow">Flight status</span>
           <strong id="phase-label">RUNWAY READY</strong>
-          <span id="shot-label">Inspection camera</span>
         </div>
 
         <div id="telemetry" aria-label="Flight telemetry">
-          <div class="dial" data-unit="KTS">
-            <span>Airspeed</span>
+          <div id="speed-dial" class="dial" data-unit="KTS">
+            <span id="speed-label">Airspeed</span>
             <strong id="speed-value">000</strong>
           </div>
-          <div class="dial" data-unit="FT">
+          <div id="altitude-dial" class="dial" data-unit="FT">
             <span>Altitude</span>
             <strong id="altitude-value">000</strong>
           </div>
@@ -88,14 +87,6 @@
             <li><span class="key-group"><kbd>Space</kbd></span><strong>Brake</strong></li>
             <li><span class="key-group"><kbd>R</kbd></span><strong>Reset</strong></li>
           </ul>
-        </div>
-      </section>
-
-      <section id="inspection-hint" class="visible" aria-label="Camera controls">
-        <span class="mouse-icon" aria-hidden="true"><i></i></span>
-        <div>
-          <strong>Move camera &middot; C recenters</strong>
-          <span>Drag to orbit · Scroll to zoom</span>
         </div>
       </section>
 
@@ -170,10 +161,19 @@
             <span><strong>Sound</strong><small>Engine, ambience and interface audio</small></span>
             <input id="settings-sound-input" type="checkbox" checked /><i aria-hidden="true"></i>
           </label>
+          <label class="settings-range">
+            <span><strong>Camera sensitivity</strong></span>
+            <input id="camera-sensitivity-input" type="range" min="0.4" max="2" step="0.1" value="1" />
+          </label>
+          <label class="settings-toggle">
+            <span><strong>Invert vertical look</strong><small>Reverse up/down camera movement</small></span>
+            <input id="camera-invert-y-input" type="checkbox" /><i aria-hidden="true"></i>
+          </label>
           <div class="settings-reference">
             <span>Quick controls</span>
             <p><kbd>WASD</kbd> Move <kbd>Shift</kbd> Run <kbd>E</kbd> Enter / exit</p>
-            <p><kbd>C</kbd> Recenter camera <kbd>F</kbd> Full screen</p>
+            <p><kbd>C</kbd> Recenter camera</p>
+            <p><kbd>Tab</kbd> Mouse camera <kbd>Esc</kbd> Release cursor</p>
           </div>
           <button class="settings-done" value="close">Done</button>
         </form>

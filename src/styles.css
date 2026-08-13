@@ -529,6 +529,11 @@ body.on-foot #attitude-indicator {
   display: none;
 }
 
+body.driving #attitude-indicator,
+body.driving #altitude-dial {
+  display: none;
+}
+
 body.manual-flight.flight-running #telemetry {
   border-top: 2px solid rgba(255, 171, 37, 0.86);
 }
@@ -576,73 +581,6 @@ body.flight-ended #pilot-controls {
 
 body.manual-flight #flight-progress {
   display: none;
-}
-
-#inspection-hint {
-  position: absolute;
-  z-index: 5;
-  left: 50%;
-  bottom: 116px;
-  display: flex;
-  align-items: center;
-  gap: 11px;
-  padding: 8px 14px 8px 10px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
-  border-radius: 999px;
-  background: rgba(9, 20, 25, 0.64);
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
-  opacity: 0;
-  pointer-events: none;
-  transform: translate(-50%, 8px);
-  transition: opacity 420ms ease, transform 420ms ease;
-  backdrop-filter: blur(12px);
-}
-
-#inspection-hint.visible {
-  opacity: 1;
-  transform: translate(-50%, 0);
-}
-
-#inspection-hint strong,
-#inspection-hint span {
-  display: block;
-}
-
-#inspection-hint strong {
-  font-family: Bahnschrift, "Arial Narrow", sans-serif;
-  font-size: 13px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-#inspection-hint div > span {
-  color: rgba(255, 255, 255, 0.58);
-  font-size: 10px;
-}
-
-.mouse-icon {
-  position: relative;
-  width: 24px;
-  height: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.52);
-  border-radius: 14px;
-}
-
-.mouse-icon i {
-  position: absolute;
-  top: 6px;
-  left: 50%;
-  width: 2px;
-  height: 6px;
-  border-radius: 2px;
-  background: var(--orange-hot);
-  transform: translateX(-50%);
-  animation: mouse-wheel 1.5s ease-in-out infinite;
-}
-
-@keyframes mouse-wheel {
-  0%, 100% { transform: translate(-50%, 0); opacity: 0.45; }
-  45% { transform: translate(-50%, 5px); opacity: 1; }
 }
 
 #action-dock {
@@ -1240,10 +1178,6 @@ body.cinematic #cinematic-bars span {
   height: 3.2vh;
 }
 
-body.cinematic #inspection-hint {
-  opacity: 0;
-}
-
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -1287,7 +1221,6 @@ body.cinematic #inspection-hint {
   #flight-hud { top: 18px; }
   #action-dock,
   #flight-progress { bottom: 22px; }
-  #inspection-hint { bottom: 96px; }
   #pilot-controls { bottom: 86px; }
   #pilot-alert { top: 88px; }
 }
@@ -1701,7 +1634,6 @@ body.cinematic #inspection-hint {
 
 body:has(#welcome-hub:not([hidden])) #flight-hud,
 body:has(#welcome-hub:not([hidden])) #manual-flight-hud,
-body:has(#welcome-hub:not([hidden])) #inspection-hint,
 body:has(#welcome-hub:not([hidden])) #flight-progress,
 body:has(#welcome-hub:not([hidden])) #action-dock {
   opacity: 0;
@@ -1841,6 +1773,32 @@ body:has(#welcome-hub:not([hidden])) #action-dock {
 .settings-done:focus-visible {
   outline: 2px solid #fff;
   outline-offset: 3px;
+}
+
+.settings-range {
+  display: grid;
+  gap: 9px;
+  padding: 16px 0;
+}
+
+.settings-range > span {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.settings-range strong {
+  font-family: Bahnschrift, "Arial Narrow", sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.settings-range input {
+  width: 100%;
+  accent-color: var(--orange-hot);
+  cursor: pointer;
 }
 
 .settings-reference {

@@ -22,7 +22,7 @@ export interface FlightHudSnapshot {
   running: boolean;
   cameraShot?: string;
   completed?: boolean;
-  controlMode?: 'inspection' | 'on-foot' | 'piloting' | 'autopilot';
+  controlMode?: 'inspection' | 'on-foot' | 'piloting' | 'driving' | 'autopilot';
   interactionPrompt?: string;
   hubVisible?: boolean;
 }
@@ -36,6 +36,7 @@ type FlightHudOptions = {
   onPaintColorChange: (hexColor: string) => void;
   initialCharacter?: CharacterId;
   onCharacterChange?: (characterId: CharacterId) => void;
+  onCameraSettingsChange: (sensitivity: number, invertY: boolean) => void;
 };
 
 export type FlightHudDiagnostics = {
@@ -160,8 +161,10 @@ const PHASE_COPY: Record<string, PhaseCopy> = {
 
 export class FlightHud {
   private readonly phaseLabel = this.getElement('#phase-label');
-  private readonly shotLabel = this.getElement('#shot-label');
   private readonly speedValue = this.getElement('#speed-value');
+  private readonly speedDial = this.getElement('#speed-dial');
+  private readonly speedLabel = this.getElement('#speed-label');
+  private readonly altitudeDial = this.getElement('#altitude-dial');
   private readonly altitudeValue = this.getElement('#altitude-value');
   private readonly rpmValue = this.getElement('#rpm-value');
   private readonly throttleValue = this.getElement('#throttle-value');
@@ -170,14 +173,13 @@ export class FlightHud {
   private readonly progressTotal = this.getElement('#progress-total');
   private readonly progressLabel = this.getElement('#progress-label');
   private readonly progressFill = this.getElement('#progress-fill');
-  private readonly inspectionHint = this.getElement('#inspection-hint');
   private readonly manualFlightHud = this.getElement('#manual-flight-hud');
   private readonly attitudeIndicator = this.getElement('#attitude-indicator');
   private readonly pilotAlert = this.getElement('#pilot-alert');
   private readonly interactionPrompt = this.getElement('#interaction-prompt');
   private readonly interactionPromptLabel = this.getElement('#interaction-prompt span');
-  private readonly controlsRunningCopy = this.getElement('.controls-running-copy');
   private readonly pilotControls = this.getElement('#pilot-controls');
+  private readonly controlsRunningCopy = this.getElement('.controls-running-copy');
   private readonly welcomeHub = this.getElement('#welcome-hub');
   private readonly characterSelector = this.getElement('#character-selector');
   private readonly characterChoices = Array.from(document.querySelectorAll<HTMLButtonElement>('.character-choice'));
@@ -186,6 +188,8 @@ export class FlightHud {
   private readonly settingsButton = this.getElement<HTMLButtonElement>('#settings-button');
   private readonly settingsPanel = this.getElement<HTMLDialogElement>('#settings-panel');
   private readonly settingsSoundInput = this.getElement<HTMLInputElement>('#settings-sound-input');
+  private readonly cameraSensitivityInput = this.getElement<HTMLInputElement>('#camera-sensitivity-input');
+  private readonly cameraInvertYInput = this.getElement<HTMLInputElement>('#camera-invert-y-input');
   private readonly resetButton = this.getElement<HTMLButtonElement>('#reset-button');
   private readonly soundButton = this.getElement<HTMLButtonElement>('#sound-button');
   private readonly paintControl = this.getElement('#paint-control');
@@ -213,6 +217,7 @@ export class FlightHud {
     this.cinematicButton.addEventListener('click', this.onStartAutopilotClick);
     this.settingsButton.addEventListener('click', this.onSettingsClick);
     this.settingsSoundInput.addEventListener('change', this.onSettingsSoundChange);
+    this.settingsPanel.addEventListener('input', this.onCameraSettingChange);
     this.characterSelector.addEventListener('click', this.onCharacterClick);
     this.characterSelector.addEventListener('keydown', this.onCharacterKeyDown);
     this.resetButton.addEventListener('click', this.onResetClick);
@@ -222,7 +227,6 @@ export class FlightHud {
     this.paintColorInput.addEventListener('input', this.onPaintColorInput);
     this.fullscreenButton.addEventListener('click', this.onFullscreenClick);
     document.addEventListener('fullscreenchange', this.onFullscreenChange);
-    window.addEventListener('keydown', this.onFullscreenKeyDown);
     this.fullscreenButton.hidden = !document.fullscreenEnabled;
     this.setPaintColor(this.options.initialPaintColor);
     this.setCharacter(this.options.initialCharacter ?? 'pilot');
@@ -233,6 +237,7 @@ export class FlightHud {
     const phaseKey = this.normalizePhase(snapshot.phase);
     const isManual = snapshot.mode === 'manual';
     const isOnFoot = snapshot.controlMode === 'on-foot';
+    const isDriving = snapshot.controlMode === 'driving';
     const copy = isOnFoot
       ? {
         status: 'On foot',
@@ -242,20 +247,20 @@ export class FlightHud {
       : isManual && snapshot.running
       ? this.manualSandboxCopy(snapshot)
       : PHASE_COPY[phaseKey] ?? {
-        status: this.humanize(snapshot.phase),
+        status: 'On',
         progress: 'Flight in progress',
         step: 'flight' as const,
       };
 
     this.phaseLabel.textContent = copy.status.toUpperCase();
-    this.shotLabel.textContent = isOnFoot
-      ? 'Character camera'
-      : this.humanize(snapshot.cameraShot ?? 'Cinematic camera');
     this.progressLabel.textContent = copy.progress;
 
-    const speedKnots = Math.max(0, snapshot.speed * 1.94384);
+    const displaySpeed = Math.max(0, snapshot.speed * (isDriving ? 3.6 : 1.94384));
     const altitudeFeet = Math.max(0, snapshot.altitude * 3.28084);
-    this.speedValue.textContent = Math.round(speedKnots).toString().padStart(3, '0');
+    this.speedValue.textContent = Math.round(displaySpeed).toString().padStart(3, '0');
+    this.speedLabel.textContent = isDriving ? 'Speed' : 'Airspeed';
+    this.speedDial.dataset.unit = isDriving ? 'KM/H' : 'KTS';
+    this.altitudeDial.hidden = isDriving;
     this.altitudeValue.textContent = Math.round(altitudeFeet).toString().padStart(3, '0');
     this.rpmValue.textContent = Math.round(Math.max(0, snapshot.propellerRpm)).toString().padStart(4, '0');
     const throttlePercent = Math.round(Math.min(1, Math.max(0, snapshot.throttle)) * 100);
@@ -272,20 +277,16 @@ export class FlightHud {
     this.updateSteps(copy.step);
 
     const parked = phaseKey === 'parked';
-    const complete = phaseKey === 'complete' || phaseKey === 'completed' || Boolean(snapshot.completed);
     const running = Boolean(snapshot.running);
-    const ended = !isManual && (complete || snapshot.crashed || phaseKey === 'crashed');
+    const ended = !isManual && (snapshot.completed || snapshot.crashed || phaseKey === 'crashed');
     this.welcomeHub.hidden = !(snapshot.hubVisible ?? !running);
     if (this.welcomeHub.hidden && this.settingsPanel.open) this.settingsPanel.close();
     this.manualFlightHud.hidden = !isManual;
     this.throttleDial.hidden = !isManual || isOnFoot;
-    this.attitudeIndicator.hidden = isOnFoot;
-    this.inspectionHint.classList.toggle(
-      'visible',
-      (isManual && running) || (!isManual && (parked || complete)),
-    );
+    this.attitudeIndicator.hidden = isOnFoot || isDriving;
     document.body.classList.toggle('manual-flight', isManual);
     document.body.classList.toggle('on-foot', isOnFoot);
+    document.body.classList.toggle('driving', isDriving);
     document.body.classList.toggle('cinematic', !isManual && running);
     document.body.classList.toggle('flight-running', running);
     document.body.classList.toggle('flight-parked', parked);
@@ -306,39 +307,22 @@ export class FlightHud {
     const interactionMessage = snapshot.interactionPrompt?.trim() ?? '';
     this.interactionPrompt.hidden = interactionMessage.length === 0;
     this.interactionPromptLabel.textContent = interactionMessage || 'Enter aircraft';
-    this.controlsRunningCopy.textContent = isOnFoot
-      ? 'WASD / ZQSD move · Shift run · Space jump · E enter'
-      : 'Down pull · Up push · Left/right bank · W/Z power';
     this.pilotControls.setAttribute(
       'aria-label',
       isOnFoot
-        ? 'Character controls: W or Z moves forward, S moves backward, A or Q moves left, D moves right, Shift runs, Space jumps, E enters the aircraft, and R resets'
+        ? 'Character controls: W or Z moves forward, S moves backward, A or Q moves left, D moves right, Shift runs, Space jumps, E enters the nearest vehicle, and R resets'
+        : isDriving
+          ? 'Car controls: W or Z accelerates, S brakes then reverses, A or Q steers left, D steers right, Space brakes, E exits when stopped, C recenters the camera, Tab releases the cursor, and R resets'
         : 'Keyboard pilot controls: W or Z increase throttle, S reduces throttle, down arrow pulls the nose up, up arrow pushes the nose down, left and right arrows bank, J and L control the rudder, Space brakes, and R resets',
     );
+    this.controlsRunningCopy.textContent = isOnFoot
+      ? 'WASD move · Shift run · E enter'
+      : isDriving
+        ? 'W/Z accelerate · S reverse · A/Q/D steer · Space brake'
+        : 'Down pull · Up push · Left/right bank · W/Z power';
 
     this.flightButton.disabled = running;
     this.cinematicButton.disabled = running;
-    const manualKicker = this.flightButton.querySelector<HTMLElement>('.button-kicker');
-    const manualLabel = this.flightButton.querySelector<HTMLElement>('strong');
-    const cinematicKicker = this.cinematicButton.querySelector<HTMLElement>('.button-kicker');
-    const cinematicLabel = this.cinematicButton.querySelector<HTMLElement>('strong');
-    if (manualKicker) {
-      manualKicker.textContent = isManual && running ? 'Open world active' : 'Open world';
-    }
-    if (manualLabel) {
-      manualLabel.textContent = isManual && running ? 'Playing' : 'Play';
-    }
-    if (cinematicKicker) {
-      cinematicKicker.textContent = !isManual && running ? 'Cinematic in progress' : 'Autopilot showcase';
-    }
-    if (cinematicLabel) {
-      cinematicLabel.textContent = !isManual && running
-        ? 'Autopilot active'
-        : complete
-          ? 'Replay cinematic'
-          : 'Watch cinematic';
-    }
-
     if (phaseKey !== this.previousPhase) {
       if (!isManual && copy.title) this.showTitle(copy.title);
       this.previousPhase = phaseKey;
@@ -350,6 +334,8 @@ export class FlightHud {
     let tone = 'info';
     if (snapshot.controlMode === 'on-foot') {
       message = 'ON FOOT — CONTROLS ACTIVE';
+    } else if (snapshot.controlMode === 'driving') {
+      message = 'DRIVING — CONTROLS ACTIVE';
     } else if (snapshot.mode !== 'manual' && (snapshot.crashed || phaseKey === 'crashed')) {
       message = 'AIRCRAFT STOPPED — PRESS R TO RESET';
       tone = 'danger';
@@ -384,6 +370,13 @@ export class FlightHud {
   }
 
   private manualSandboxCopy(snapshot: FlightHudSnapshot): PhaseCopy {
+    if (snapshot.controlMode === 'driving') {
+      return {
+        status: snapshot.speed > 0.3 ? 'Driving' : 'Car ready',
+        progress: 'Open world active',
+        step: 'parked',
+      };
+    }
     if (!snapshot.onGround) {
       return {
         status: 'Free flight',
@@ -442,6 +435,7 @@ export class FlightHud {
     this.cinematicButton.removeEventListener('click', this.onStartAutopilotClick);
     this.settingsButton.removeEventListener('click', this.onSettingsClick);
     this.settingsSoundInput.removeEventListener('change', this.onSettingsSoundChange);
+    this.settingsPanel.removeEventListener('input', this.onCameraSettingChange);
     this.characterSelector.removeEventListener('click', this.onCharacterClick);
     this.characterSelector.removeEventListener('keydown', this.onCharacterKeyDown);
     this.resetButton.removeEventListener('click', this.onResetClick);
@@ -451,7 +445,6 @@ export class FlightHud {
     this.paintColorInput.removeEventListener('input', this.onPaintColorInput);
     this.fullscreenButton.removeEventListener('click', this.onFullscreenClick);
     document.removeEventListener('fullscreenchange', this.onFullscreenChange);
-    window.removeEventListener('keydown', this.onFullscreenKeyDown);
   }
 
   private readonly onStartManualClick = () => {
@@ -469,6 +462,11 @@ export class FlightHud {
   private readonly onSettingsSoundChange = (): void => {
     this.setMuted(!this.settingsSoundInput.checked);
     this.options.onMuteChange(this.muted);
+  };
+
+  private readonly onCameraSettingChange = (): void => {
+    const sensitivity = Math.min(2, Math.max(0.4, Number(this.cameraSensitivityInput.value) || 1));
+    this.options.onCameraSettingsChange(sensitivity, this.cameraInvertYInput.checked);
   };
 
   private readonly onCharacterClick = (event: Event): void => {
@@ -523,21 +521,6 @@ export class FlightHud {
     void this.toggleFullscreen();
   };
 
-  private readonly onFullscreenKeyDown = (event: KeyboardEvent): void => {
-    if (
-      event.code !== 'KeyF'
-      || event.repeat
-      || event.ctrlKey
-      || event.metaKey
-      || event.altKey
-    ) return;
-
-    const target = event.target as HTMLElement | null;
-    if (target?.matches('input, textarea, select') || target?.isContentEditable) return;
-    event.preventDefault();
-    void this.toggleFullscreen();
-  };
-
   private readonly onFullscreenChange = (): void => {
     this.syncFullscreenButton();
     this.focusCanvas();
@@ -565,7 +548,7 @@ export class FlightHud {
     const label = active ? 'Exit full screen' : 'Enter full screen';
     this.fullscreenButton.setAttribute('aria-pressed', String(active));
     this.fullscreenButton.setAttribute('aria-label', label);
-    this.fullscreenButton.title = `${label} (F)`;
+    this.fullscreenButton.title = label;
   }
 
   private focusCanvas(): void {
@@ -612,13 +595,6 @@ export class FlightHud {
       .replace(/([a-z])([A-Z])/g, '$1-$2')
       .replace(/[\s_]+/g, '-')
       .toLowerCase();
-  }
-
-  private humanize(value: string): string {
-    return value
-      .replace(/([a-z])([A-Z])/g, '$1 $2')
-      .replace(/[-_]+/g, ' ')
-      .replace(/\b\w/g, (letter) => letter.toUpperCase());
   }
 
   private formatTime(value: number): string {

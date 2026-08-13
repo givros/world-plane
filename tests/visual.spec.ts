@@ -102,15 +102,47 @@ type CharacterDiagnosticsSample = {
   };
 };
 
+type GroundCarDiagnosticsSample = {
+  physics: 'custom-kinematic-bicycle';
+  fixedStep: number;
+  maxForwardSpeed: number;
+  maxReverseSpeed: number;
+  wheelbase: number;
+  wheelRadius: number;
+  state: {
+    enabled: boolean;
+    speed: number;
+    steeringAngle: number;
+    engineRpm: number;
+    gear: 'drive' | 'neutral' | 'reverse';
+    terrainHeight: number;
+    position: Vector3Sample;
+    yaw: number;
+    pitch: number;
+    roll: number;
+  };
+};
+
 type ExperienceDiagnostics = {
   frame: number;
   flight: FlightSnapshotSample;
   input: PilotInputSample;
   gameplay: {
-    controlMode: 'inspection' | 'on-foot' | 'piloting' | 'autopilot';
+    controlMode: 'inspection' | 'on-foot' | 'piloting' | 'driving' | 'autopilot';
     character: CharacterDiagnosticsSample;
+    car: {
+      loadState: 'loading' | 'ready' | 'failed' | 'disposed';
+      visible: boolean;
+      controller: GroundCarDiagnosticsSample;
+      input: {
+        enabled: boolean;
+        intent: PilotInputSample;
+      };
+    };
     interaction: {
-      kind: 'enter-aircraft' | 'exit-aircraft' | null;
+      kind: 'enter-aircraft' | 'exit-aircraft' | 'enter-car' | 'exit-car' | null;
+      target: 'aircraft' | 'car' | null;
+      side: 'left' | 'right' | null;
       available: boolean;
       distance: number;
       radius: number;
@@ -126,11 +158,12 @@ type ExperienceDiagnostics = {
     input: CharacterInputSample;
   };
   camera: {
-    controller: 'inspection' | 'character' | 'pilot' | 'cinematic';
+    controller: 'inspection' | 'character' | 'pilot' | 'car' | 'cinematic';
     position: Vector3Sample;
     fov: number;
     pilot: OrbitCameraSample;
     character: OrbitCameraSample;
+    car: OrbitCameraSample;
   };
   renderer: {
     calls: number;
@@ -158,6 +191,28 @@ type ExperienceDiagnostics = {
       propellerGroundClearance: number;
       mainWheelRadius: number;
       tailWheelRadius: number;
+    };
+  };
+  world: {
+    parkedCar: {
+      name: string;
+      source: 'blender-glb';
+      loadState: 'loading' | 'ready' | 'failed' | 'disposed';
+      visible: boolean;
+      position: Vector3Sample;
+      dimensions: {
+        length: number;
+        paintedWidth: number;
+        overallWidth: number;
+        height: number;
+        wheelbase: number;
+        wheelRadius: number;
+        trackWidth: number;
+      };
+      plate: string;
+      partCount: number;
+      triangles: number;
+      colliders: number;
     };
   };
 };
@@ -313,12 +368,16 @@ async function readExperience(page: Page): Promise<ExperienceReadout> {
           fov: diagnostics.camera.fov,
           pilot: { ...diagnostics.camera.pilot },
           character: { ...diagnostics.camera.character },
+          car: { ...diagnostics.camera.car },
         },
         renderer: { ...diagnostics.renderer },
         canvas: { ...diagnostics.canvas },
         model: {
           paint: { ...diagnostics.model.paint },
           dimensions: { ...diagnostics.model.dimensions },
+        },
+        world: {
+          parkedCar: structuredClone(diagnostics.world.parkedCar),
         },
       },
     };
@@ -458,7 +517,7 @@ test.describe('desktop airplane experience', () => {
     await expect(page.locator('#brand-lockup h1')).toContainText(/Cropper\s+Seven/i);
     await expect(page.locator('#flight-hud')).toBeVisible();
     await expect(page.locator('#telemetry')).toBeVisible();
-    await expect(page.locator('#inspection-hint')).toBeVisible();
+    await expect(page.locator('#inspection-hint')).toHaveCount(0);
     await expect(page.locator('#flight-button')).toBeVisible();
     await expect(page.locator('#flight-button')).toContainText(/Play/i);
     await expect(page.locator('#cinematic-button')).toBeVisible();
@@ -467,6 +526,9 @@ test.describe('desktop airplane experience', () => {
 
     const sample = await sampleCanvas(page);
     expect(sample, JSON.stringify(sample)).toMatchObject({ ok: true });
+
+    await expect.poll(async () => (await readExperience(page)).diagnostics.world.parkedCar.loadState)
+      .toBe('ready');
 
     const readout = await readExperience(page);
     expect(readout.state.phase).toBe('parked');
@@ -493,6 +555,24 @@ test.describe('desktop airplane experience', () => {
     expect(readout.diagnostics.model.dimensions.propellerGroundClearance).toBeGreaterThanOrEqual(0.12);
     expect(readout.diagnostics.model.dimensions.mainWheelRadius).toBeCloseTo(0.52, 2);
     expect(readout.diagnostics.model.dimensions.tailWheelRadius).toBeCloseTo(0.2, 2);
+    expect(readout.diagnostics.world.parkedCar).toMatchObject({
+      name: 'Sally @givros Sports Car',
+      source: 'blender-glb',
+      loadState: 'ready',
+      visible: true,
+      position: { x: -22, z: -112 },
+      plate: '@givros',
+      colliders: 6,
+    });
+    expect(readout.diagnostics.world.parkedCar.position.y).toBeCloseTo(-0.245, 5);
+    expect(readout.diagnostics.world.parkedCar.dimensions.length).toBeCloseTo(4.58, 2);
+    expect(readout.diagnostics.world.parkedCar.dimensions.overallWidth).toBeCloseTo(1.97, 2);
+    expect(readout.diagnostics.world.parkedCar.dimensions.height).toBeCloseTo(1.46, 2);
+    expect(readout.diagnostics.world.parkedCar.dimensions.wheelRadius).toBeCloseTo(0.335, 3);
+    expect(readout.diagnostics.world.parkedCar.dimensions.trackWidth).toBeCloseTo(1.588, 3);
+    expect(readout.diagnostics.world.parkedCar.partCount).toBeGreaterThanOrEqual(80);
+    expect(readout.diagnostics.world.parkedCar.triangles).toBeGreaterThan(3_500);
+    expect(readout.diagnostics.world.parkedCar.triangles).toBeLessThan(5_000);
 
     const streaming = await readStreamingDiagnostics(page);
     expect(streaming.gridSize).toBe(3);
@@ -606,7 +686,7 @@ test.describe('desktop airplane experience', () => {
       .toBe(true);
     const soundSetting = page.locator('#settings-sound-input');
     await expect(soundSetting).toBeChecked();
-    await page.locator('.settings-toggle').click();
+    await page.locator('label.settings-toggle').filter({ has: soundSetting }).click();
     await expect(soundSetting).not.toBeChecked();
     await expect(page.locator('#sound-button')).toHaveAttribute('aria-pressed', 'true');
     await page.locator('#settings-close-button').click();
@@ -1686,6 +1766,88 @@ test.describe('desktop airplane experience', () => {
     expectNoBrowserErrors(errors);
   });
 
+  test('toggles persistent mouse-look and releases the cursor for HUD clicks', async ({ page }) => {
+    const errors = watchBrowserErrors(page);
+    await openExperience(page);
+    const canvas = page.locator('#game-canvas');
+    const invertYInput = page.locator('#camera-invert-y-input');
+    await expect(invertYInput).not.toBeChecked();
+    await page.locator('#flight-button').click();
+    await expect
+      .poll(async () => (await readExperience(page)).diagnostics.gameplay.controlMode)
+      .toBe('on-foot');
+    await expect
+      .poll(async () => page.evaluate(() => document.pointerLockElement?.id ?? null))
+      .toBe('game-canvas');
+
+    const box = await canvas.boundingBox();
+    expect(box).not.toBeNull();
+    if (!box) throw new Error('The game canvas has no interactive bounds.');
+    const centerX = box.x + box.width * 0.5;
+    const centerY = box.y + box.height * 0.5;
+    await page.mouse.move(centerX, centerY);
+    await page.keyboard.press('c');
+    await expect
+      .poll(async () => Math.abs(
+        (await readExperience(page)).diagnostics.camera.character.pitchOffset,
+      ))
+      .toBeLessThan(0.025);
+    await page.mouse.move(centerX, centerY - 100);
+    await expect
+      .poll(async () => (
+        await readExperience(page)
+      ).diagnostics.camera.character.pitchOffset)
+      .toBeGreaterThan(0.08);
+
+    await page.keyboard.press('c');
+    await expect
+      .poll(async () => Math.abs(
+        (await readExperience(page)).diagnostics.camera.character.yawOffset,
+      ))
+      .toBeLessThan(0.025);
+    const beforeLook = await readExperience(page);
+    await page.mouse.move(centerX + box.width * 0.15, centerY - 100);
+    await expect
+      .poll(async () => Math.abs(
+        (await readExperience(page)).diagnostics.camera.character.yawOffset
+          - beforeLook.diagnostics.camera.character.yawOffset,
+      ))
+      .toBeGreaterThan(0.12);
+
+    await page.keyboard.press('Escape');
+    await expect
+      .poll(async () => page.evaluate(() => document.pointerLockElement?.id ?? null))
+      .toBeNull();
+    await page.locator('#reset-button').click();
+    await expect
+      .poll(async () => (await readExperience(page)).diagnostics.gameplay.controlMode)
+      .toBe('inspection');
+
+    await page.locator('#settings-button').click();
+    await page.locator('label.settings-toggle').filter({ has: invertYInput }).click();
+    await expect(invertYInput).toBeChecked();
+    await page.locator('#settings-close-button').click();
+    await page.locator('#flight-button').click();
+    await expect
+      .poll(async () => page.evaluate(() => document.pointerLockElement?.id ?? null))
+      .toBe('game-canvas');
+    await page.mouse.move(centerX, centerY);
+    await page.keyboard.press('c');
+    await expect
+      .poll(async () => Math.abs(
+        (await readExperience(page)).diagnostics.camera.character.pitchOffset,
+      ))
+      .toBeLessThan(0.025);
+    await page.mouse.move(centerX, centerY - 100);
+    await expect
+      .poll(async () => (
+        await readExperience(page)
+      ).diagnostics.camera.character.pitchOffset)
+      .toBeLessThan(-0.08);
+    await page.keyboard.press('Escape');
+    expectNoBrowserErrors(errors);
+  });
+
   test('keeps on-foot movement stable after a lateral camera orbit', async ({ page }) => {
     const errors = watchBrowserErrors(page);
     await openExperience(page);
@@ -1784,6 +1946,203 @@ test.describe('desktop airplane experience', () => {
       await page.keyboard.up('d');
       await page.keyboard.up('z');
       await page.mouse.up();
+    }
+
+    expectNoBrowserErrors(errors);
+  });
+
+  test('walks to Sally, drives, brakes, reverses, exits, and resets with real inputs', async ({
+    page,
+  }, testInfo) => {
+    test.setTimeout(isCI ? 90_000 : 55_000);
+    const errors = watchBrowserErrors(page);
+    await openExperience(page);
+
+    const heldKeys = ['s', 'w', 'q', 'Space'];
+    await expect
+      .poll(async () => (await readExperience(page)).diagnostics.gameplay.car.loadState)
+      .toBe('ready');
+    const carSpawn = (await readExperience(page)).diagnostics.world.parkedCar.position;
+
+    try {
+      await page.locator('#flight-button').click();
+      await expect
+        .poll(async () => (await readExperience(page)).diagnostics.gameplay.controlMode)
+        .toBe('on-foot');
+      await expect
+        .poll(async () => page.evaluate(() => document.pointerLockElement?.id ?? null))
+        .toBe('game-canvas');
+
+      // The character starts east of Sally. With +Z forward, that is the
+      // physical left-hand side of the car.
+      await page.keyboard.down('s');
+      await expect
+        .poll(async () => {
+          const interaction = (await readExperience(page)).diagnostics.gameplay.interaction;
+          return `${interaction.kind}:${interaction.side}:${interaction.available}`;
+        }, { timeout: 12_000 })
+        .toBe('enter-car:left:true');
+      await page.keyboard.up('s');
+
+      const besideCar = await readExperience(page);
+      expect(besideCar.diagnostics.gameplay.interaction).toMatchObject({
+        kind: 'enter-car',
+        target: 'car',
+        side: 'left',
+        available: true,
+        promptVisible: true,
+      });
+      expect(besideCar.diagnostics.gameplay.interaction.distance).toBeLessThanOrEqual(
+        besideCar.diagnostics.gameplay.interaction.radius,
+      );
+      await expect(page.locator('#interaction-prompt')).toContainText(/E\s*Enter car/i);
+
+      await page.keyboard.press('e');
+      await expect
+        .poll(async () => (await readExperience(page)).diagnostics.gameplay.controlMode)
+        .toBe('driving');
+      const enteredCar = await readExperience(page);
+      expect(enteredCar.diagnostics.gameplay.character.visible).toBe(false);
+      expect(enteredCar.diagnostics.gameplay.car.controller.state.enabled).toBe(true);
+      expect(enteredCar.diagnostics.gameplay.car.input.enabled).toBe(true);
+      expect(enteredCar.diagnostics.camera.controller).toBe('car');
+      expect(enteredCar.diagnostics.camera.car.enabled).toBe(true);
+      expect(enteredCar.diagnostics.gameplay.interaction).toMatchObject({
+        kind: 'exit-car',
+        target: 'car',
+        side: 'left',
+        available: true,
+      });
+      await expect(page.locator('body')).toHaveClass(/driving/);
+      await expect(page.locator('#pilot-alert')).toContainText(/DRIVING/i);
+      await expect(page.locator('#interaction-prompt')).toContainText(/E\s*Exit car/i);
+      await expect
+        .poll(async () => page.evaluate(() => document.pointerLockElement?.id ?? null))
+        .toBe('game-canvas');
+
+      const driveStart = enteredCar.diagnostics.gameplay.car.controller.state;
+      await page.keyboard.down('w');
+      await expect
+        .poll(async () => (await readExperience(page)).diagnostics.gameplay.car.input.intent.throttle)
+        .toBe(1);
+      await expect
+        .poll(async () => (await readExperience(page)).diagnostics.gameplay.car.controller.state.speed)
+        .toBeGreaterThan(3);
+      await expect
+        .poll(async () => planarDistance(
+          driveStart.position,
+          (await readExperience(page)).diagnostics.gameplay.car.controller.state.position,
+        ))
+        .toBeGreaterThan(1.25);
+
+      await page.keyboard.down('q');
+      await expect
+        .poll(async () => (await readExperience(page)).diagnostics.gameplay.car.input.intent.roll)
+        .toBe(-1);
+      await expect
+        .poll(async () => (await readExperience(page)).diagnostics.gameplay.car.controller.state.steeringAngle)
+        .toBeGreaterThan(0.1);
+      await expect
+        .poll(async () => (
+          await readExperience(page)
+        ).diagnostics.gameplay.car.controller.state.yaw - driveStart.yaw)
+        .toBeGreaterThan(0.04);
+      await page.keyboard.up('q');
+      await page.keyboard.up('w');
+
+      await page.keyboard.press('e');
+      await page.waitForTimeout(120);
+      const refusedWhileMoving = await readExperience(page);
+      expect(refusedWhileMoving.diagnostics.gameplay.controlMode).toBe('driving');
+      expect(refusedWhileMoving.diagnostics.gameplay.interaction).toMatchObject({
+        kind: 'exit-car',
+        available: false,
+        promptVisible: false,
+      });
+
+      await page.keyboard.down('Space');
+      await expect
+        .poll(async () => (await readExperience(page)).diagnostics.gameplay.car.input.intent.brake)
+        .toBe(true);
+      await expect
+        .poll(async () => Math.abs(
+          (await readExperience(page)).diagnostics.gameplay.car.controller.state.speed,
+        ))
+        .toBeLessThan(0.08);
+      await page.keyboard.up('Space');
+
+      const reverseStart = (await readExperience(page)).diagnostics.gameplay.car.controller.state.position;
+      await page.keyboard.down('s');
+      await expect
+        .poll(async () => (await readExperience(page)).diagnostics.gameplay.car.input.intent.throttle)
+        .toBe(-1);
+      await expect
+        .poll(async () => (await readExperience(page)).diagnostics.gameplay.car.controller.state.gear)
+        .toBe('reverse');
+      await expect
+        .poll(async () => (await readExperience(page)).diagnostics.gameplay.car.controller.state.speed)
+        .toBeLessThan(-1.25);
+      await expect
+        .poll(async () => planarDistance(
+          reverseStart,
+          (await readExperience(page)).diagnostics.gameplay.car.controller.state.position,
+        ))
+        .toBeGreaterThan(0.35);
+      await page.keyboard.up('s');
+
+      await page.keyboard.down('Space');
+      await expect
+        .poll(async () => Math.abs(
+          (await readExperience(page)).diagnostics.gameplay.car.controller.state.speed,
+        ))
+        .toBeLessThan(0.08);
+      await page.keyboard.up('Space');
+      await expect
+        .poll(async () => {
+          const interaction = (await readExperience(page)).diagnostics.gameplay.interaction;
+          return `${interaction.kind}:${interaction.available}`;
+        })
+        .toBe('exit-car:true');
+
+      await page.keyboard.press('e');
+      await expect
+        .poll(async () => (await readExperience(page)).diagnostics.gameplay.controlMode)
+        .toBe('on-foot');
+      const exitedCar = await readExperience(page);
+      expect(exitedCar.diagnostics.gameplay.character.visible).toBe(true);
+      expect(exitedCar.diagnostics.gameplay.car.controller.state.enabled).toBe(false);
+      expect(exitedCar.diagnostics.gameplay.car.input.enabled).toBe(false);
+      expect(exitedCar.diagnostics.camera.controller).toBe('character');
+      expect(exitedCar.diagnostics.camera.car.enabled).toBe(false);
+      expect(exitedCar.diagnostics.gameplay.interaction).toMatchObject({
+        kind: 'enter-car',
+        target: 'car',
+        side: 'left',
+        available: true,
+      });
+      await attachScreenshot(page, testInfo, 'desktop-driveable-car-exit');
+
+      await page.keyboard.press('r');
+      await expect
+        .poll(async () => (await readExperience(page)).diagnostics.gameplay.controlMode)
+        .toBe('inspection');
+      await expect
+        .poll(async () => page.evaluate(() => document.pointerLockElement?.id ?? null))
+        .toBeNull();
+      const reset = await readExperience(page);
+      expect(reset.diagnostics.gameplay.car.controller.state).toMatchObject({
+        enabled: false,
+        speed: 0,
+        steeringAngle: 0,
+        gear: 'neutral',
+      });
+      expect(planarDistance(
+        reset.diagnostics.gameplay.car.controller.state.position,
+        carSpawn,
+      )).toBeLessThan(0.001);
+      expect(reset.diagnostics.camera.car.enabled).toBe(false);
+    } finally {
+      for (const key of heldKeys) await page.keyboard.up(key);
     }
 
     expectNoBrowserErrors(errors);
@@ -1948,8 +2307,7 @@ test.describe('desktop airplane experience', () => {
       await expect(page.locator('body')).toHaveClass(/on-foot/);
       await expect(page.locator('#phase-label')).toHaveText(/ON FOOT/i);
       await expect(page.locator('#pilot-alert')).toContainText('ON FOOT');
-      await expect(page.locator('#inspection-hint')).toHaveClass(/visible/);
-      await expect(page.locator('#inspection-hint')).toContainText('Move camera');
+      await expect(page.locator('#inspection-hint')).toHaveCount(0);
 
       const onFootStart = await readExperience(page);
       const aircraftEntryStart = onFootStart.diagnostics.gameplay.interaction.worldPosition;
@@ -2067,8 +2425,8 @@ test.describe('desktop airplane experience', () => {
       await page.mouse.move(cameraX, cameraY);
       await page.mouse.down();
       await expect
-        .poll(async () => (await readExperience(page)).diagnostics.camera.pilot.dragging)
-        .toBe(true);
+        .poll(async () => page.evaluate(() => document.pointerLockElement?.id ?? null))
+        .toBe('game-canvas');
       await page.keyboard.down('z');
       await expect.poll(async () => (await readExperience(page)).diagnostics.input.throttle).toBe(1);
       await page.mouse.move(cameraX - 220, cameraY + 65, { steps: 14 });
@@ -2079,9 +2437,6 @@ test.describe('desktop airplane experience', () => {
         ))
         .toBeGreaterThan(0.3);
       await page.mouse.up();
-      await expect
-        .poll(async () => (await readExperience(page)).diagnostics.camera.pilot.dragging)
-        .toBe(false);
 
       const groundCameraAfterOrbit = await readExperience(page);
       await page.mouse.wheel(0, 520);
@@ -2194,8 +2549,8 @@ test.describe('desktop airplane experience', () => {
       await page.mouse.move(cameraX, cameraY);
       await page.mouse.down();
       await expect
-        .poll(async () => (await readExperience(page)).diagnostics.camera.pilot.dragging)
-        .toBe(true);
+        .poll(async () => page.evaluate(() => document.pointerLockElement?.id ?? null))
+        .toBe('game-canvas');
       await page.keyboard.down('ArrowLeft');
       await expect
         .poll(async () => (await readFlightState(page)).bank)

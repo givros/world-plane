@@ -5,7 +5,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { fileURLToPath } from 'node:url';
 
-export const WORLDCLAW_JAVASCRIPT_RAW_BUDGET_BYTES = 1_400_000;
+export const WORLDCLAW_JAVASCRIPT_RAW_BUDGET_BYTES = 1_425_000;
 export const WORLDCLAW_JAVASCRIPT_GZIP_BUDGET_BYTES = 550_000;
 
 async function collectJavaScriptFiles(directory) {

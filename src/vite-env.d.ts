@@ -5,6 +5,7 @@ import type { PlayableCharacterDiagnostics } from './entities/PlayableCharacter'
 import type { CharacterInputDiagnostics } from './systems/CharacterInput';
 import type { FlightSnapshot } from './systems/FlightSequence';
 import type { GroundCharacterDiagnostics } from './systems/GroundCharacterController';
+import type { GroundCarDiagnostics } from './systems/GroundCarController';
 import type { PilotIntent } from './systems/PilotInput';
 import type { SceneDiagnostics } from './systems/QualityDiagnostics';
 import type { InfiniteBiomeWorldDiagnostics } from './world/InfiniteBiomeWorld';
@@ -17,12 +18,23 @@ declare global {
     flight: Readonly<FlightSnapshot>;
     input: Readonly<PilotIntent>;
     gameplay: {
-      controlMode: 'inspection' | 'on-foot' | 'piloting' | 'autopilot';
+      controlMode: 'inspection' | 'on-foot' | 'piloting' | 'driving' | 'autopilot';
       character: PlayableCharacterDiagnostics & {
         controller: GroundCharacterDiagnostics;
       };
+      car: {
+        loadState: 'loading' | 'ready' | 'failed' | 'disposed';
+        visible: boolean;
+        controller: GroundCarDiagnostics;
+        input: {
+          enabled: boolean;
+          intent: Readonly<PilotIntent>;
+        };
+      };
       interaction: {
-        kind: 'enter-aircraft' | 'exit-aircraft' | null;
+        kind: 'enter-aircraft' | 'exit-aircraft' | 'enter-car' | 'exit-car' | null;
+        target: 'aircraft' | 'car' | null;
+        side: 'left' | 'right' | null;
         available: boolean;
         distance: number;
         radius: number;
@@ -45,7 +57,7 @@ declare global {
       crashed: boolean;
     };
     camera: {
-      controller: 'inspection' | 'character' | 'pilot' | 'cinematic';
+      controller: 'inspection' | 'character' | 'pilot' | 'car' | 'cinematic';
       position: { x: number; y: number; z: number };
       fov: number;
       pilot: {
@@ -57,6 +69,14 @@ declare global {
         distance: number;
       };
       character: {
+        enabled: boolean;
+        dragging: boolean;
+        yawOffset: number;
+        pitchOffset: number;
+        zoom: number;
+        distance: number;
+      };
+      car: {
         enabled: boolean;
         dragging: boolean;
         yawOffset: number;
@@ -97,7 +117,6 @@ declare global {
 
   interface Window {
     __AIRPLANE_EXPERIENCE__?: AirplaneExperienceApi;
-    __THREE_GAME_DIAGNOSTICS__?: AirplaneExperienceDiagnostics;
   }
 }
 

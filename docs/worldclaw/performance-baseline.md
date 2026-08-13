@@ -206,7 +206,7 @@ The following remain unknown and must not be estimated:
 - Add no texture without a declared budget and compression/color-space policy.
 - Keep repeated assets instanced.
 - Give measured hero assets appropriate LOD and simplified collision sidecars.
-- Keep aggregate generated JavaScript at or below 1,400,000 raw and 550,000 gzip bytes; the checker must fail closed if either limit is exceeded.
+- Keep aggregate generated JavaScript at or below 1,425,000 raw and 550,000 gzip bytes; the checker must fail closed if either limit is exceeded. The later driveable-car feature baseline measures 1,418,845 raw and 518,084 gzip bytes; earlier WorldClaw-only measurements above remain historical baselines.
 
 Initial geometry resources are already at the 240-geometry ceiling, and current approach/rollout reaches 241 after flight effects activate. Pilot content should first replace or reuse resources rather than add geometry or material families.
 

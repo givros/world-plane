@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 2,
+  "passed": true,
+  "source": "blender-mcp-derived-glb",
+  "sourceAsset": {
+    "file": "sally_carrera_gcn.glb",
+    "sha256": "7509301a8eccd3b8bfa5d66df49fea16674c55e56fef26f67b3b96ac061e1a90",
+    "title": "Sally Carrera (GCN)",
+    "author": "kanaleja87",
+    "url": "https://sketchfab.com/3d-models/sally-carrera-gcn-694bf6bb2e69488bbc5b3fa7e68c875f",
+    "license": "CC-BY-4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0/"
+  },
+  "modifications": [
+    "Preserved source body, wheel and window geometry, UVs and textures without decimation.",
+    "Applied measured width/height calibration against the playable character and airplane.",
+    "Set a 4.58 m stylized coupe length and recentered the wheelbase on the ground plane.",
+    "Separated source wheel components into four runtime pivots.",
+    "Replaced the source's coplanar repeating eye layers with one two-eye texture on the original eye surface.",
+    "Covered the original plate with an @givros plate.",
+    "Added sockets, collider proxies and runtime metadata."
+  ],
+  "blend": "GivrosCar.blend",
+  "runtimeGlb": "GivrosCarRuntime.glb",
+  "sha256": "279c6e26c1e988568d3ecd5428ac7bd9e0749f186692bca937dd99816e0a215d",
+  "byteLength": 238148,
+  "plateText": "@givros",
+  "forwardAxis": "+Z",
+  "blenderForwardAxis": "-Y",
+  "boundsBlender": {
+    "min": [
+      -0.985,
+      -2.26978,
+      0.0
+    ],
+    "max": [
+      0.985,
+      2.310219,
+      1.46
+    ],
+    "width": 1.97,
+    "length": 4.58,
+    "height": 1.46
+  },
+  "wheelbaseMeters": 2.637641,
+  "wheelRadiusMeters": 0.335,
+  "trackWidthMeters": 1.587876,
+  "requiredNodes": [
+    "BlueCometGivrosCar",
+    "car-visual",
+    "body-shell",
+    "cabin-glass",
+    "wheel-pivot-front-left",
+    "wheel-pivot-front-right",
+    "wheel-pivot-rear-left",
+    "wheel-pivot-rear-right",
+    "socket-driver-entry-left",
+    "socket-driver-entry-right",
+    "socket-camera-follow",
+    "collider-body",
+    "collider-cabin",
+    "rear-plate-givros",
+    "rear-plate-text-givros"
+  ],
+  "stats": {
+    "objects": 30,
+    "meshes": 10,
+    "vertices": 3497,
+    "triangles": 3906,
+    "materials": 7
+  }
+}
